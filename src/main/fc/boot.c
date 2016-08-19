@@ -64,6 +64,8 @@
 #include "drivers/exti.h"
 #include "drivers/io.h"
 
+#include "drivers/nrf2401.h"
+
 #include "rx/rx.h"
 #include "rx/spektrum.h"
 
@@ -237,7 +239,7 @@ void init(void)
 
     printfSupportInit();
 
-    initEEPROM();
+    initEEPROM();	NRF24L01_INIT();
 
     ensureEEPROMContainsValidData();
     readEEPROM();
