@@ -37,6 +37,8 @@
 #include "drivers/serial.h"
 #include "drivers/adc.h"
 
+#include "drivers/nrf2401.h"////////
+
 #include "io/serial.h"
 
 #include "fc/rc_controls.h"
@@ -491,6 +493,8 @@ static void readRxChannelsApplyRanges(void)
 
         rcRaw[channel] = sample;
     }
+
+
 }
 
 static void detectAndApplySignalLossBehaviour(void)
@@ -500,7 +504,6 @@ static void detectAndApplySignalLossBehaviour(void)
     bool useValueFromRx = true;
     bool rxIsDataDriven = isRxDataDriven();
     uint32_t currentMilliTime = millis();
-
     if (!rxIsDataDriven) {
         rxSignalReceived = rxSignalReceivedNotDataDriven;
         rxIsInFailsafeMode = rxIsInFailsafeModeNotDataDriven;
@@ -558,10 +561,24 @@ static void detectAndApplySignalLossBehaviour(void)
 #ifdef DEBUG_RX_SIGNAL_LOSS
     debug[3] = rcData[THROTTLE];
 #endif
+/***********************************************************************************************************************************************/
+#ifdef NRF
+
+	rcData[0] = Nrf_Irq(0);
+	rcData[1] = Nrf_Irq(1);
+	rcData[2] = Nrf_Irq(2);
+	rcData[3] = Nrf_Irq(3);
+
+#endif
+
 }
 
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
+
+
+
+
     rxUpdateAt = currentTime + DELAY_50_HZ;
 
     // only proceed when no more samples to skip and suspend period is over
@@ -572,10 +589,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
         return;
     }
 
-    readRxChannelsApplyRanges();
+ 
+   readRxChannelsApplyRanges();
     detectAndApplySignalLossBehaviour();
 
+
+
     rcSampleIndex++;
+
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)

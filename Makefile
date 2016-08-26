@@ -251,6 +251,7 @@ SYSTEM_SRC = \
 		   drivers/dma.c \
 		   drivers/serial.c \
 		   drivers/system.c \
+			drivers/nrf2401.c \
 		   scheduler/scheduler.c \
 		   io/serial.c \
 		   io/statusindicator.c \
@@ -677,7 +678,6 @@ RMDO_SRC = \
 SPRACINGF3_SRC = \
 		   $(STM32F30x_COMMON_SRC) \
 		   $(STM32F30x_FC_COMMON_SRC) \
-			drivers/nrf2401.c \
 		   drivers/accgyro_mpu.c \
 		   drivers/accgyro_mpu6050.c \
 		   drivers/barometer_ms5611.c \
@@ -692,7 +692,9 @@ SPRACINGF3_SRC = \
 		   io/flashfs.c \
 		   $(HIGHEND_SRC) \
 		   $(FC_COMMON_SRC) \
-		   $(SYSTEM_SRC)
+		   $(SYSTEM_SRC)\
+		
+
 
 SPRACINGF3EVO_SRC	 = \
 		   $(STM32F30x_COMMON_SRC) \

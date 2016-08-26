@@ -19,6 +19,9 @@
 
 #define TARGET_BOARD_IDENTIFIER "SPEV"
 
+#define BRUSHED_MOTORS
+#define NRF
+
 #define LED0_GPIO   GPIOB
 #define LED0_PIN    Pin_8
 #define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
@@ -59,7 +62,8 @@
 #define MAG_AK8963_ALIGN CW90_DEG_FLIP
 
 //#define SONAR
-#define BEEPER
+//#define BEEPER
+
 #define LED0
 
 #define USB_IO
@@ -123,9 +127,9 @@
 #define SPI2_MISO_PIN_SOURCE    GPIO_PinSource14
 #define SPI2_MOSI_PIN           Pin_15
 #define SPI2_MOSI_PIN_SOURCE    GPIO_PinSource15
-
-#define USE_SDCARD
-#define USE_SDCARD_SPI2
+/*
+//#define USE_SDCARD
+//#define USE_SDCARD_SPI2
 
 #define SDCARD_DETECT_INVERTED
 
@@ -146,6 +150,8 @@
 // Note, this is the same DMA channel as USART1_RX. Luckily we don't use DMA for USART Rx.
 #define SDCARD_DMA_CHANNEL_TX               DMA1_Channel5
 #define SDCARD_DMA_CHANNEL_TX_COMPLETE_FLAG DMA1_FLAG_TC5
+*/
+
 
 #define MPU6500_CS_GPIO_CLK_PERIPHERAL   SPI1_GPIO_PERIPHERAL
 #define MPU6500_CS_GPIO                  SPI1_GPIO
@@ -212,8 +218,8 @@
 #define DEFAULT_FEATURES (FEATURE_TRANSPONDER | FEATURE_RSSI_ADC | FEATURE_CURRENT_METER | FEATURE_TELEMETRY)
 
 #define GPS
-#define BLACKBOX
-#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
+//#define BLACKBOX
+//#define ENABLE_BLACKBOX_LOGGING_ON_SDCARD_BY_DEFAULT
 #define TELEMETRY
 #define SERIAL_RX
 #define GTUNE

@@ -8,166 +8,208 @@
 #include "bus_spi.h"
 #include "system.h"
 #include "gpio.h"
-#include "../target/SPRACINGF3/target.h"
+
+uint8_t  TXData[32];
+uint8_t  TX_ADDRESS[5]= {0x11,0xff,0xff,0xff,0xff};//tx_address
+
+uint8_t  NRF24L01_RXDATA[RX_PLOAD_WIDTH];//rx_data
+uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
 
 
-uint8_t NRF24L01_RXDATA[RX_PLOAD_WIDTH];	//rx_data
-uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x34,0xc3,0x10,0x10,0x01};		//rx_address
+uint16_t bound(uint16_t val,uint16_t max,uint16_t min){return val > max? max : val < min? min : val;}
 
-
-uint8_t SPI_RW(uint8_t dat) 
+bool NRF_Write_Reg(uint8_t reg, uint8_t data)
 {
+    SPI_CSN_L();
+    spiTransferByte(SPI2, reg + 0x20);
+    spiTransferByte(SPI2, data);
+    SPI_CSN_H();
 
-	spiTransferByte(SPI2,dat);
+    return true;
+
 }
 
 
-uint8_t NRF_Write_Reg(uint8_t reg, uint8_t value)
+bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 {
-    uint8_t status;
-    SPI_CSN_L();					  
-    status = SPI_RW(reg);  
-    SPI_RW(value);		 
-    SPI_CSN_H();					 
-    return 	status;
+    SPI_CSN_L();
+    spiTransferByte(SPI2, reg + 0x20);
+    spiTransfer(SPI2, NULL, data, length);
+    SPI_CSN_H();
+
+    return true;
+}
+
+bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
+{
+    SPI_CSN_L();
+    spiTransferByte(SPI2, reg); // read transaction
+    spiTransfer(SPI2, data, NULL, length);
+    SPI_CSN_H();
+
+    return true;
 }
 
 
-uint8_t NRF_Read_Reg(uint8_t reg)
-{
-    uint8_t reg_val;
-    SPI_CSN_L();					 
-    SPI_RW(reg);			  
-    reg_val = SPI_RW(0);	
-    SPI_CSN_H();	
+/*************************************NRF24L01_Receive***************************************/
  
-    return 	reg_val;
-}
-
-
-uint8_t NRF_Write_Buf(uint8_t reg, uint8_t *pBuf, uint8_t uchars)
+uint16_t Nrf_Irq(int8_t channel)
 {
-    uint8_t i;
-    uint8_t status;
-    SPI_CSN_L();				        /* ???? */
-    status = SPI_RW(reg);	/* ?????? */
-    for(i=0; i<uchars; i++)
+    uint8_t sta; 
+	static uint16_t buf[4] = {1500,1500,1500,1000};
+
+    NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
+    if(sta & (1<<RX_DR))
     {
-        SPI_RW(pBuf[i]);		/* ??? */
+        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+
+		if((NRF24L01_RXDATA[0] == '$')&&(NRF24L01_RXDATA[1] == 'M')&&(NRF24L01_RXDATA[2] == '<'))
+	 	{
+			 switch(NRF24L01_RXDATA[4])
+			 {
+				 case MSP_SET_4CON:					
+						 buf[3]=NRF24L01_RXDATA[5] + (NRF24L01_RXDATA[6]<<8);//UdataBuf[6]<<8 | UdataBuf[5];
+						 buf[2]=NRF24L01_RXDATA[7] + (NRF24L01_RXDATA[8]<<8);   //UdataBuf[8]<<8 | UdataBuf[7];
+						 buf[1]=NRF24L01_RXDATA[9] + (NRF24L01_RXDATA[10]<<8);  //UdataBuf[10]<<8 | UdataBuf[9];
+						 buf[0]=NRF24L01_RXDATA[11]+ (NRF24L01_RXDATA[12]<<8); //UdataBuf[12]<<8 | UdataBuf[11];
+
+						 for(uint8_t i =0;i<4;i++)	buf[i] = bound(buf[i],1900,1000);
+						 break;
+
+			}
+		}
+		NRF_Write_Reg(NRFRegSTATUS, 0x40);//清除nrf的中断标志位
+
     }
-    SPI_CSN_H();						/* ????? */
-    return 	status;	
-}
-
-
-uint8_t NRF_Read_Buf(uint8_t reg, uint8_t *pBuf, uint8_t uchars)
-{
-    uint8_t i;
-    uint8_t status;
-    SPI_CSN_L();						/* ???? */
-    status = SPI_RW(reg);	/* ?????? */
-    for(i=0; i<uchars; i++)
-    {
-        pBuf[i] = SPI_RW(0); /* ?????? */ 	
-    }
-    SPI_CSN_H();						/* ????? */
-    return 	status;
-}
-
-
-void NRF_TxPacket(uint8_t * tx_buf, uint8_t len)
-{	
-    SPI_CE_L();		 //StandBy I??	
-    NRF_Write_Buf(WR_TX_PLOAD, tx_buf, len); 			 // ????	
-    SPI_CE_H();		 //??CE,??????
-}
-
-
-uint8_t NRF24L01_RxPacket(uint8_t *rxbuf)
-{
-	uint8_t sta;		    							   
-        //SPI2_SetSpeed(SPI_SPEED_4); //spi???9Mhz(24L01???SPI???10Mhz)   
-	sta=NRF_Read_Reg(NRFRegSTATUS);  //?????????    	 
-	NRF_Write_Reg(NRF_WRITE_REG+NRFRegSTATUS,sta); //??TX_DS?MAX_RT????
-	if(sta&RX_OK)//?????
-	{
-		NRF_Read_Buf(RD_RX_PLOAD,rxbuf,RX_PLOAD_WIDTH);//????
-		NRF_Write_Reg(FLUSH_RX,0xff);//??RX FIFO??? 
-		return 0; 
-	}	   
-	return 1;//???????
-}		
-
-
-void Nrf_Irq(void)
-{
-    uint8_t sta = NRF_Read_Reg(NRF_READ_REG + NRFRegSTATUS);
-    if(sta & (1<<RX_DR))//???????
-    {
-        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
-        ReceiveDataFormNRF();    //?????
-	NRF_Write_Reg(0x27, sta);//??nrf??????
-	sta = 0;
-    }
-    
-}
-   
-   
-/*************************************************************/
-//init 
-char NRF24L01_INIT(void)
-{
-	//spi init
-    spiSetDivisor(SPI2, SPI_0_5625MHZ_CLOCK_DIVIDER);//128DIV
-
-	if(NRF24L01_Check() == 0)
-	{
-		SetRX_Mode();
-		spiSetDivisor(SPI2, SPI_18MHZ_CLOCK_DIVIDER);  // 18 MHz SPI clock  2DIV
-	}
-	else return -1;
-
-}
-
-
-uint8_t NRF24L01_Check(void) 
-{ 
-   uint8_t buf[5]={0xC2,0xC2,0xC2,0xC2,0xC2}; 
-   uint8_t buf1[5]; 
-   uint8_t i=0; 
-    
-   /*??5 ??????.  */ 
-   NRF_Write_Buf(NRF_WRITE_REG+TX_ADDR,buf,5); 
-     
-   /*??????? */ 
-   NRF_Read_Buf(TX_ADDR,buf1,5); 
-   
-    /*??*/ 
-   for (i=0;i<5;i++) 
-   { 
-      if (buf1[i]!=0xC2) 
-      return -1; 
-   } 
+	return buf[channel];
   
-//   if (i==5)   {printf("NRF24L01 found...\r\n");return 1 ;}        //MCU ?NRF ???? 
-//   else        {printf("NRF24L01 check failed...\r\n");return 0 ;}        //MCU?NRF?????   
-	return 0;
+}
+
+	
+
+/*************************************NRF24L01_TX***************************************/
+
+void NRF24L01_TXDATA(void)
+{
+	uint8_t sta;
+	int16_t t_data = micros();
+	SetTX_Mode();
+
+	t_data = t_data * 10;
+	TXData[0] = t_data; 
+	TXData[1] = t_data >> 8;
+	t_data = t_data * 10;
+	TXData[2] = t_data;
+	TXData[3] = t_data >> 8;
+	t_data = t_data * 10;
+	TXData[4] = t_data;
+	TXData[5] = t_data >> 8;
+
+
+	SPI_CE_L();
+    NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
+ 	SPI_CE_H();//启动发送
+
+	delay(5);
+	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
+	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
+/*
+	if(nrf_ & (1<<6)){
+		NRF_Write_Reg(NRFRegSTATUS,nrf_flag); //清除TX_DS或MAX_RT中断标志
+		SetRX_Mode();
+	}
+	if(nrf_flag & MAX_TX)//达到最大重发次数
+		NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//清除TX FIFO寄存器
+	*/
+   
+}
+
+/*
+bool NRF24L01_TxPacket()
+{
+	uint8_t sta;  
+
+	while(NRF24L01_IRQ!=0);//等待发送完成
+	sta=NRF_Read_Reg(NRFRegSTATUS);  //读取状态寄存器的值	   
+	NRF_Write_Reg(NRF_WRITE_REG+NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
+	if(sta&MAX_TX)//达到最大重发次数
+	{
+		NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器
+		return MAX_TX; 
+	}
+	if(sta&TX_OK)//发送完成
+	{
+		return TX_OK;
+	}
+	return 0xff;//其他原因发送失败
+}
+*/
+   
+/*************************************NFR24L01_Init*************************************/
+
+bool NRF24L01_INIT(void)
+{
+
+
+		if(NRF24L01_Check())
+		{
+			SetRX_Mode();
+			//SetTX_Mode();
+			return true;
+		}
+		else return false;
+
+	
+}
+
+
+bool NRF24L01_Check(void) 
+{ 
+
+	uint8_t buf = 0x77; 
+   	uint8_t buf1; 
+	
+	NRF_Write_Buf(TX_ADDR,&buf,1); 
+	delay(2);
+	NRF_Read_Buf(TX_ADDR,&buf1,1); 
+
+	if(buf1 == 0x77)
+		return true;
+	else	return false;
+
 } 
 
 void SetRX_Mode(void)
 {
     SPI_CE_L();
-	NRF_Write_Reg(FLUSH_RX,0xff);//??TX FIFO???			 
-  	NRF_Write_Buf(NRF_WRITE_REG+RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);//?RX????
-   	NRF_Write_Reg(NRF_WRITE_REG+EN_AA,0x01);    //????0?????    
-  	NRF_Write_Reg(NRF_WRITE_REG+EN_RXADDR,0x01);//????0?????  	 
-  	NRF_Write_Reg(NRF_WRITE_REG+RF_CH,40);	     //??RF????		  
-  	NRF_Write_Reg(NRF_WRITE_REG+RX_PW_P0,RX_PLOAD_WIDTH);//????0??????? 	    
-  	NRF_Write_Reg(NRF_WRITE_REG+RF_SETUP,0x0f);//??TX????,0db??,2Mbps,???????   
-  	NRF_Write_Reg(NRF_WRITE_REG+CONFIG, 0x0f);//???????????;PWR_UP,EN_CRC,16BIT_CRC,???? 
+	NRF_Write_Reg(FLUSH_RX,0xff);//清除TX FIFO寄存器			 
+  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);//写RX节点地址
+   	NRF_Write_Reg(EN_AA,0x01);       //使能通道0的自动应答    
+  	NRF_Write_Reg(EN_RXADDR,0x01);   //使能通道0的接收地址  	 
+  	NRF_Write_Reg(RF_CH,40);	     //设置RF通信频率		  
+  	NRF_Write_Reg(RX_PW_P0,RX_PLOAD_WIDTH);//选择通道0的有效数据宽度 	    
+  	NRF_Write_Reg(RF_SETUP,0x0f);   //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
+  	NRF_Write_Reg(CONFIG, 0x0f);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式 
     SPI_CE_H();
-    //printf("NRF24L01 Set to Receiving Mode,RX_ADDR 0x%x...\r\n",RX_ADDRESS[4]);
+
+} 
+
+//发送模式
+void SetTX_Mode(void)
+{
+    SPI_CE_L();
+    NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器		  
+    NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);		//写TX节点地址 
+  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
+  	NRF_Write_Reg(EN_AA,0x01);     //使能通道0的自动应答    
+  	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
+  	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
+  	NRF_Write_Reg(RF_CH,40);       //设置RF通道为40
+  	NRF_Write_Reg(RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
+  	NRF_Write_Reg(CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
+    SPI_CE_H();
+  
 } 
 
 

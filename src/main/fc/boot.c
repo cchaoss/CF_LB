@@ -161,6 +161,7 @@ static uint8_t systemState = SYSTEM_STATE_INITIALISING;
 
 void flashLedsAndBeep(void)
 {
+
     LED1_ON;
     LED0_OFF;
     for (uint8_t i = 0; i < 10; i++) {
@@ -239,7 +240,7 @@ void init(void)
 
     printfSupportInit();
 
-    initEEPROM();	NRF24L01_INIT();
+    initEEPROM();
 
     ensureEEPROMContainsValidData();
     readEEPROM();
@@ -717,7 +718,7 @@ void configureScheduler(void)
     setTaskEnabled(TASK_ACCEL, sensors(SENSOR_ACC));
     setTaskEnabled(TASK_SERIAL, true);
 #ifdef BEEPER
-    setTaskEnabled(TASK_BEEPER, true);
+    //setTaskEnabled(TASK_BEEPER, true);
 #endif
     setTaskEnabled(TASK_BATTERY, feature(FEATURE_VBAT) || feature(FEATURE_CURRENT_METER));
     setTaskEnabled(TASK_RX, true);
@@ -754,15 +755,21 @@ void configureScheduler(void)
 #endif
 }
 
+
 int main(void) {
-    init();
-
+	init();
+#ifdef NRF
+	NRF24L01_INIT();
+#endif
 	configureScheduler();
-
     while (true) {
         scheduler();
         processLoopback();
+
     }
+
+
+
 }
 
 void HardFault_Handler(void)

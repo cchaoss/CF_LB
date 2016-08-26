@@ -289,6 +289,12 @@ void initSpi2(void)
     spi.SPI_CPHA = SPI_CPHA_2Edge;
 #endif
 
+
+#ifdef NRF
+    spi.SPI_CPOL = SPI_CPOL_Low;
+    spi.SPI_CPHA = SPI_CPHA_1Edge;
+#endif
+
 #ifdef STM32F303xC
     // Configure for 8-bit reads.
     SPI_RxFIFOThresholdConfig(SPI2, SPI_RxFIFOThreshold_QF);
