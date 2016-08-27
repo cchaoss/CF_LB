@@ -9,15 +9,17 @@
 #include "system.h"
 #include "gpio.h"
 
+
+
 uint8_t  TXData[32];
 uint8_t  TX_ADDRESS[5]= {0x11,0xff,0xff,0xff,0xff};//tx_address
-
+int16_t roll1,pitch1,yaw1;
 uint8_t  NRF24L01_RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
+#define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
 
-
-uint16_t bound(uint16_t val,uint16_t max,uint16_t min){return val > max? max : val < min? min : val;}
+//uint16_t bound(uint16_t val,uint16_t max,uint16_t min){return (val) > (max)? (max) : (val) < (min)? (min) : (val);}
 
 bool NRF_Write_Reg(uint8_t reg, uint8_t data)
 {
@@ -54,11 +56,10 @@ bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 
 /*************************************NRF24L01_Receive***************************************/
  
-uint16_t Nrf_Irq(int8_t channel)
+void Nrf_Irq(int16_t *buf)
 {
-    uint8_t sta; 
-	static uint16_t buf[4] = {1500,1500,1500,1000};
-
+    uint8_t sta,i; 
+	//int16_t replace[4]={1500,1500,1500,850};
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR))
     {
@@ -69,12 +70,16 @@ uint16_t Nrf_Irq(int8_t channel)
 			 switch(NRF24L01_RXDATA[4])
 			 {
 				 case MSP_SET_4CON:					
-						 buf[3]=NRF24L01_RXDATA[5] + (NRF24L01_RXDATA[6]<<8);//UdataBuf[6]<<8 | UdataBuf[5];
-						 buf[2]=NRF24L01_RXDATA[7] + (NRF24L01_RXDATA[8]<<8);   //UdataBuf[8]<<8 | UdataBuf[7];
-						 buf[1]=NRF24L01_RXDATA[9] + (NRF24L01_RXDATA[10]<<8);  //UdataBuf[10]<<8 | UdataBuf[9];
-						 buf[0]=NRF24L01_RXDATA[11]+ (NRF24L01_RXDATA[12]<<8); //UdataBuf[12]<<8 | UdataBuf[11];
+						 buf[3]=NRF24L01_RXDATA[5] + (NRF24L01_RXDATA[6]<<8); //UdataBuf[6]<<8 | UdataBuf[5];
+						 buf[2]=NRF24L01_RXDATA[7] + (NRF24L01_RXDATA[8]<<8); //UdataBuf[8]<<8 | UdataBuf[7];
+						 buf[1]=NRF24L01_RXDATA[9] + (NRF24L01_RXDATA[10]<<8);//UdataBuf[10]<<8 | UdataBuf[9];
+						 buf[0]=NRF24L01_RXDATA[11]+ (NRF24L01_RXDATA[12]<<8);//UdataBuf[12]<<8 | UdataBuf[11];
 
-						 for(uint8_t i =0;i<4;i++)	buf[i] = bound(buf[i],1900,1000);
+						 for(i = 0;i<4;i++)	
+						 {	
+							 buf[i] = bound(buf[i],1900,1000);
+							 //replace[i] = buf[i];
+						 }
 						 break;
 
 			}
@@ -82,7 +87,8 @@ uint16_t Nrf_Irq(int8_t channel)
 		NRF_Write_Reg(NRFRegSTATUS, 0x40);//清除nrf的中断标志位
 
     }
-	return buf[channel];
+	//else for(i = 0;i<4;i++)	buf[i] = replace[i];
+	
   
 }
 
@@ -90,72 +96,52 @@ uint16_t Nrf_Irq(int8_t channel)
 
 /*************************************NRF24L01_TX***************************************/
 
+
 void NRF24L01_TXDATA(void)
 {
-	uint8_t sta;
-	int16_t t_data = micros();
-	SetTX_Mode();
 
-	t_data = t_data * 10;
-	TXData[0] = t_data; 
+	uint8_t sta;
+	int16_t t_data;
+
+	t_data = roll1;
+	TXData[0] = t_data*100; 
 	TXData[1] = t_data >> 8;
-	t_data = t_data * 10;
-	TXData[2] = t_data;
+	t_data = pitch1;
+	TXData[2] = t_data*100;
 	TXData[3] = t_data >> 8;
-	t_data = t_data * 10;
-	TXData[4] = t_data;
+	t_data = yaw1;
+	TXData[4] = t_data*100;
 	TXData[5] = t_data >> 8;
 
-
+	SetTX_Mode();
 	SPI_CE_L();
     NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
 
-	delay(5);
-	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
-	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
-/*
-	if(nrf_ & (1<<6)){
-		NRF_Write_Reg(NRFRegSTATUS,nrf_flag); //清除TX_DS或MAX_RT中断标志
+	if(tx_done)
+	{
+		tx_done = 0;
+		NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
+		NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
+
+		//if(sta & MAX_TX)//达到最大重发次数
+			//NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//清除TX FIFO寄存器
+
 		SetRX_Mode();
-	}
-	if(nrf_flag & MAX_TX)//达到最大重发次数
-		NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//清除TX FIFO寄存器
-	*/
-   
+
+   }
+
 }
 
-/*
-bool NRF24L01_TxPacket()
-{
-	uint8_t sta;  
-
-	while(NRF24L01_IRQ!=0);//等待发送完成
-	sta=NRF_Read_Reg(NRFRegSTATUS);  //读取状态寄存器的值	   
-	NRF_Write_Reg(NRF_WRITE_REG+NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
-	if(sta&MAX_TX)//达到最大重发次数
-	{
-		NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器
-		return MAX_TX; 
-	}
-	if(sta&TX_OK)//发送完成
-	{
-		return TX_OK;
-	}
-	return 0xff;//其他原因发送失败
-}
-*/
-   
 /*************************************NFR24L01_Init*************************************/
 
 bool NRF24L01_INIT(void)
 {
 
-
+		nrf24l01HardwareInit();
 		if(NRF24L01_Check())
 		{
 			SetRX_Mode();
-			//SetTX_Mode();
 			return true;
 		}
 		else return false;
@@ -212,4 +198,25 @@ void SetTX_Mode(void)
   
 } 
 
+void nrf24l01HardwareInit(void)
+{
+	gpio_config_t IRQPIN;
 
+	IRQPIN.pin = Pin_0;
+	IRQPIN.mode = Mode_IN_FLOATING;
+	
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+	gpioInit(GPIOB,&IRQPIN);
+
+
+	gpio_config_t CE;
+
+	CE.pin = Pin_1;
+	CE.mode = Mode_Out_PP;
+	CE.speed = Speed_10MHz;
+	
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+	gpioInit(GPIOB,&CE);
+
+
+}

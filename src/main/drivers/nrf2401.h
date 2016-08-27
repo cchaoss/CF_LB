@@ -70,29 +70,28 @@
 #define MSP_ACC_CALI	205
 
 
-#define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_3)//CE
-#define SPI_CE_L()   GPIO_ResetBits(GPIOB, GPIO_Pin_3)
+#define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_1)//CE
+#define SPI_CE_L()   GPIO_ResetBits(GPIOB, GPIO_Pin_1)
 
 #define SPI_CSN_H()  GPIO_SetBits(GPIOB, GPIO_Pin_12)//NSS/CSN
 #define SPI_CSN_L()  GPIO_ResetBits(GPIOB, GPIO_Pin_12)
 
-
-
-uint16_t bound(uint16_t val,uint16_t max,uint16_t min);
+extern bool tx_done;
+extern int16_t roll1,pitch1,yaw1;
 
 bool NRF_Write_Reg(uint8_t reg, uint8_t data);
 bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length);
 bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length);
 
-void NRF24L01_TXDATA(void);
-void SetTX_Mode(void);
-
-uint16_t Nrf_Irq(int8_t channel);
 bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
+void nrf24l01HardwareInit(void);
+
+void Nrf_Irq(int16_t *buf);
 void SetRX_Mode(void);
 
-
+void NRF24L01_TXDATA(void);
+void SetTX_Mode(void);
 
 #endif
 

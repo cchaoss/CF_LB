@@ -562,24 +562,18 @@ static void detectAndApplySignalLossBehaviour(void)
     debug[3] = rcData[THROTTLE];
 #endif
 /***********************************************************************************************************************************************/
-#ifdef NRF
-
-	rcData[0] = Nrf_Irq(0);
-	rcData[1] = Nrf_Irq(1);
-	rcData[2] = Nrf_Irq(2);
-	rcData[3] = Nrf_Irq(3);
-
-#endif
 
 }
 
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
 
-
-
-
+#ifdef NRF
+	rxUpdateAt = currentTime + (1000000 / 100);
+#endif
+#ifndef NRF
     rxUpdateAt = currentTime + DELAY_50_HZ;
+#endif
 
     // only proceed when no more samples to skip and suspend period is over
     if (skipRxSamples) {
@@ -593,6 +587,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
    readRxChannelsApplyRanges();
     detectAndApplySignalLossBehaviour();
 
+#ifdef NRF
+	Nrf_Irq(rcData);
+	
+	NRF24L01_TXDATA();
+#endif
 
 
     rcSampleIndex++;

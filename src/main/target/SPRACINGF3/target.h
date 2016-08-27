@@ -19,7 +19,12 @@
 
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
+#define BRUSHED_MOTORS
 #define NRF
+
+
+#define BEEPER
+#define LED0
 
 #define LED0_GPIO   GPIOB
 #define LED0_PIN    Pin_3
@@ -58,9 +63,10 @@
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 
-#define BEEPER
-#define LED0
 
+
+
+#ifndef NRF
 #define SONAR
 #define SONAR_TRIGGER_PIN           Pin_0   // RC_CH7 (PB0) - only 3.3v ( add a 1K Ohms resistor )
 #define SONAR_TRIGGER_GPIO          GPIOB
@@ -68,7 +74,7 @@
 #define SONAR_ECHO_GPIO             GPIOB
 #define SONAR_TRIGGER_IO            PB0
 #define SONAR_ECHO_IO               PB1
-
+#endif
 
 #define USE_UART1
 #define USE_UART2

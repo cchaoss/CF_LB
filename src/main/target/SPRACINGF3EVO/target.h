@@ -19,8 +19,7 @@
 
 #define TARGET_BOARD_IDENTIFIER "SPEV"
 
-#define BRUSHED_MOTORS
-#define NRF
+
 
 #define LED0_GPIO   GPIOB
 #define LED0_PIN    Pin_8

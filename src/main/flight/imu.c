@@ -56,6 +56,10 @@
 
 #include "fc/runtime_config.h"
 
+#ifdef NRF
+#include "drivers/nrf2401.h"
+#endif
+
 // the limit (in degrees/second) beyond which we stop integrating
 // omega_I. At larger spin rates the DCM PI controller can get 'dizzy'
 // which results in false gyro drift. See
@@ -372,6 +376,12 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void)
     } else {
         DISABLE_STATE(SMALL_ANGLE);
     }
+
+#ifdef NRF	
+	roll1 = attitude.values.roll;
+	pitch1= attitude.values.pitch;
+	yaw1  = attitude.values.yaw;
+#endif
 }
 
 bool imuIsAircraftArmable(uint8_t arming_angle)
