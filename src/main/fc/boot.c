@@ -756,30 +756,10 @@ void configureScheduler(void)
 }
 
 
-#ifdef NRF
-bool tx_done;
-#endif
 
 int main(void) 
 {
 	init();
-
-	
-#if 0 
-	GPIO_SetBits(GPIOB, GPIO_Pin_0);
-	delay(1000);
-
-	while(1)
-	{
-		GPIO_SetBits(GPIOB, GPIO_Pin_0);
-		delay(1000);
-		GPIO_ResetBits(GPIOB, GPIO_Pin_0);
-		delay(1000);
-
-	}
-#endif
- 
-
 
 #ifdef NRF
 	NRF24L01_INIT();
@@ -792,8 +772,7 @@ int main(void)
         processLoopback();
 
 
-	if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == 0)
-		tx_done = 1;
+	//if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == 0) 	tx_done = true;
 
 	
     }

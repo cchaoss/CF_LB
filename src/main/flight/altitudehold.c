@@ -36,6 +36,7 @@
 #include "drivers/accgyro.h"
 #include "drivers/sonar_hcsr04.h"
 
+
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
 #include "sensors/barometer.h"
@@ -130,21 +131,28 @@ void applyAltHold(void)
     }
 }
 
+
 void updateAltHoldState(void)
 {
+	
     // Baro alt hold activate
     if (!rcModeIsActive(BOXBARO)) {
         DISABLE_FLIGHT_MODE(BARO_MODE);
         return;
     }
 
-    if (!FLIGHT_MODE(BARO_MODE)) {
+	//DISABLE_FLIGHT_MODE(BARO_MODE);
+	
+    if (!FLIGHT_MODE(BARO_MODE))
+	{
         ENABLE_FLIGHT_MODE(BARO_MODE);
         AltHold = EstAlt;
         initialRawThrottleHold = rcData[THROTTLE];
         initialThrottleHold = rcCommand[THROTTLE];
+		//initialThrottleHold = 1460;
         errorVelocityI = 0;
         altHoldThrottleAdjustment = 0;
+	
     }
 }
 
@@ -276,6 +284,8 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     // Integrator - Altitude in cm
     accAlt += (vel_acc * 0.5f) * dt + vel * dt;                                                                 // integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * barometerConfig()->baro_cf_alt + (float)BaroAlt * (1.0f - barometerConfig()->baro_cf_alt);    // complementary filter for altitude estimation (baro & acc)
+
+
     vel += vel_acc;
 
 #ifdef DEBUG_ALT_HOLD
@@ -313,6 +323,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     // By using CF it's possible to correct the drift of integrated accZ (velocity) without loosing the phase, i.e without delay
     vel = vel * barometerConfig()->baro_cf_vel + baroVel * (1.0f - barometerConfig()->baro_cf_vel);
     vel_tmp = lrintf(vel);
+	
 
     // set vario
     vario = applyDeadband(vel_tmp, 5);

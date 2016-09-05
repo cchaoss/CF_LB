@@ -41,6 +41,8 @@
 #include "drivers/system.h"
 #include "drivers/serial.h"
 #include "drivers/gyro_sync.h"
+#include "drivers/nrf2401.h"
+#include "drivers/pwm_output.h"
 
 #include "fc/rc_controls.h"
 #include "fc/rate_profile.h"
@@ -696,6 +698,8 @@ void taskMainPidLoop(void)
                 applyAltHold();
             }
         }
+	
+	
 #endif
 
     // If we're armed, at minimum throttle, and we do arming via the
@@ -745,6 +749,21 @@ void taskMainPidLoop(void)
     if (motorControlEnable) {
         writeMotors();
     }
+/*
+#ifdef NRF 
+	if(online)
+	{
+		GPIO_ResetBits(GPIOB, GPIO_Pin_3);
+		pwmWriteMotor(0,mspData.motor[0]);
+		pwmWriteMotor(1,mspData.motor[1]);
+		pwmWriteMotor(2,mspData.motor[2]);
+		pwmWriteMotor(3,mspData.motor[3]);
+	}
+	else	GPIO_SetBits(GPIOB, GPIO_Pin_3);	
+
+
+#endif 
+*/
 
 #ifdef USE_SDCARD
         afatfs_poll();
@@ -854,6 +873,7 @@ void taskUpdateRxMain(void)
             updateAltHoldState();
         }
     }
+	
 #endif
 
 #ifdef SONAR

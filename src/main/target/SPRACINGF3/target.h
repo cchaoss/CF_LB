@@ -19,8 +19,8 @@
 
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
-#define BRUSHED_MOTORS
-#define NRF
+
+//#define NRF
 
 
 #define BEEPER

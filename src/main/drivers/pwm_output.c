@@ -138,10 +138,12 @@ static void pwmWriteStandard(uint8_t index, uint16_t value)
     *motors[index]->ccr = value;
 }
 
+
 void pwmWriteMotor(uint8_t index, uint16_t value)
 {
     if (motors[index] && index < MAX_MOTORS && pwmMotorsEnabled)
         motors[index]->pwmWritePtr(index, value);
+
 }
 
 void pwmShutdownPulsesForAllMotors(uint8_t motorCount)

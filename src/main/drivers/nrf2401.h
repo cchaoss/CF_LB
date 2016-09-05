@@ -51,23 +51,14 @@
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
 
-#define MSP_SET_THRO  1
-#define MSP_SET_YAW		2
-#define MSP_SET_PITCH	3
-#define MSP_SET_ROLL	4
-#define MSP_ARM_IT		5
-#define MSP_DISARM_IT	6
-#define MSP_SET_4CON	7
-#define MSP_SETOFF		8
-#define MSP_LAND_DOWN 9
-#define MSP_HOLD_ALT 	10
-#define MSP_STOP_HOLD_ALT 11
-#define MSP_HEAD_FREE 12
-#define MSP_STOP_HEAD_FREE	13
-#define MSP_POS_HOLD 14
-#define MSP_STOP_POS_HOLD 15
-#define MSP_FLY_STATE	16
-#define MSP_ACC_CALI	205
+
+#define RCDATA		1<<0
+#define ARM		1<<1
+#define FREEHEAD	1<<2
+#define MANUAL		1<<3
+#define ALTHOLD		1<<4
+#define POSHOLD		1<<5
+#define ONLINE		1<<6
 
 
 #define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_1)//CE
@@ -76,8 +67,29 @@
 #define SPI_CSN_H()  GPIO_SetBits(GPIOB, GPIO_Pin_12)//NSS/CSN
 #define SPI_CSN_L()  GPIO_ResetBits(GPIOB, GPIO_Pin_12)
 
-extern bool tx_done;
+#define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
+
+typedef struct _dataPackage
+{
+	unsigned char checkCode[4];
+	unsigned char length;
+	unsigned char mspCmd;
+	unsigned short pitch;
+	unsigned short roll;
+	unsigned short throttle;
+	unsigned short yaw;
+	int16_t X;
+	int16_t Y;
+	int16_t Z;
+	unsigned short motor[4];
+	
+}dataPackage;
+extern dataPackage mspData;
+
+extern bool online;
+extern bool tx_done, flag1;
 extern int16_t roll1,pitch1,yaw1;
+
 
 bool NRF_Write_Reg(uint8_t reg, uint8_t data);
 bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length);
@@ -87,10 +99,11 @@ bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);
 
-void Nrf_Irq(int16_t *buf);
+void nrf_rx(int16_t *buf);
 void SetRX_Mode(void);
 
-void NRF24L01_TXDATA(void);
+void nrf_scheduler(int16_t *buf);
+void nrf_tx(void);
 void SetTX_Mode(void);
 
 #endif
