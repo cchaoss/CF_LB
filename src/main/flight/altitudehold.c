@@ -149,7 +149,6 @@ void updateAltHoldState(void)
         AltHold = EstAlt;
         initialRawThrottleHold = rcData[THROTTLE];
         initialThrottleHold = rcCommand[THROTTLE];
-		//initialThrottleHold = 1460;
         errorVelocityI = 0;
         altHoldThrottleAdjustment = 0;
 	

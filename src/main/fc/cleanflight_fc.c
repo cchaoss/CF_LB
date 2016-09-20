@@ -749,21 +749,24 @@ void taskMainPidLoop(void)
     if (motorControlEnable) {
         writeMotors();
     }
-/*
+
 #ifdef NRF 
-	if(online)
-	{
-		GPIO_ResetBits(GPIOB, GPIO_Pin_3);
-		pwmWriteMotor(0,mspData.motor[0]);
-		pwmWriteMotor(1,mspData.motor[1]);
-		pwmWriteMotor(2,mspData.motor[2]);
-		pwmWriteMotor(3,mspData.motor[3]);
+	if(mspData.mspCmd & ONLINE)
+	{	
+		if(mspData.dir == 0)
+		{
+			//GPIO_ResetBits(GPIOB, GPIO_Pin_3);
+			pwmWriteMotor(0,bound(mspData.motor[0],1400,1000));
+			pwmWriteMotor(1,bound(mspData.motor[1],1400,1000));
+			pwmWriteMotor(2,bound(mspData.motor[2],1400,1000));
+			pwmWriteMotor(3,bound(mspData.motor[3],1400,1000));
+		}
 	}
-	else	GPIO_SetBits(GPIOB, GPIO_Pin_3);	
+	//else	GPIO_SetBits(GPIOB, GPIO_Pin_3);	
 
 
 #endif 
-*/
+
 
 #ifdef USE_SDCARD
         afatfs_poll();

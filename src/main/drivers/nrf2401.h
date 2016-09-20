@@ -45,13 +45,12 @@
 //**************************************************************************************
 #define RX_DR			6//中断标志
 #define TX_DS			5
-#define MAX_RT	  4
-
+#define MAX_RT	  		4
 #define MAX_TX  		0x10  //达到最大发送次数中断
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
 
-
+//mspCmd
 #define RCDATA		1<<0
 #define ARM		1<<1
 #define FREEHEAD	1<<2
@@ -59,7 +58,39 @@
 #define ALTHOLD		1<<4
 #define POSHOLD		1<<5
 #define ONLINE		1<<6
+#define CALIBRATION	1<<7
 
+//dir
+#define	UP		1
+#define	DOWN		2
+#define	LEFT		3
+#define	RIGHT		4
+#define	FORWARD		5
+#define	BACKWARD	6
+#define	CR		7
+#define	CCR		8
+
+typedef struct _dataPackage
+{
+	uint8_t checkCode[4];
+	uint8_t length;
+	uint8_t mspCmd;
+	uint16_t pitch;
+	uint16_t roll;
+	uint16_t throttle;
+	uint16_t yaw;
+	int16_t X;
+	int16_t Y;
+	int16_t Z;
+	uint16_t motor[4];
+	uint8_t dir;
+	uint8_t dirdata;
+	
+}dataPackage;
+extern dataPackage mspData;
+
+extern bool tx_done, flag1;
+extern int16_t roll1,pitch1,yaw1;
 
 #define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_1)//CE
 #define SPI_CE_L()   GPIO_ResetBits(GPIOB, GPIO_Pin_1)
@@ -69,27 +100,7 @@
 
 #define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
 
-typedef struct _dataPackage
-{
-	unsigned char checkCode[4];
-	unsigned char length;
-	unsigned char mspCmd;
-	unsigned short pitch;
-	unsigned short roll;
-	unsigned short throttle;
-	unsigned short yaw;
-	int16_t X;
-	int16_t Y;
-	int16_t Z;
-	unsigned short motor[4];
-	
-}dataPackage;
-extern dataPackage mspData;
-
-extern bool online;
-extern bool tx_done, flag1;
-extern int16_t roll1,pitch1,yaw1;
-
+void send_328p_buf(uint8_t len, uint8_t *buf);
 
 bool NRF_Write_Reg(uint8_t reg, uint8_t data);
 bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length);
@@ -99,12 +110,16 @@ bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);
 
-void nrf_rx(int16_t *buf);
+//void nrf_rx(int16_t *buf);
+void rx_data_process(int16_t *buf);
+bool nrf_rx(void);
 void SetRX_Mode(void);
 
 void nrf_scheduler(int16_t *buf);
 void nrf_tx(void);
 void SetTX_Mode(void);
+
+
 
 #endif
 

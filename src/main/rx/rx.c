@@ -37,7 +37,8 @@
 #include "drivers/serial.h"
 #include "drivers/adc.h"
 
-#include "drivers/nrf2401.h"////////
+#include "drivers/bus_i2c.h"
+#include "drivers/nrf2401.h"
 
 #include "io/serial.h"
 
@@ -567,12 +568,8 @@ static void detectAndApplySignalLossBehaviour(void)
 
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
-
-
-	//rxUpdateAt = currentTime + (1000000 / 100);
-
-    rxUpdateAt = currentTime + DELAY_50_HZ;
-
+	rxUpdateAt = currentTime + (1000000 / 100);
+    //rxUpdateAt = currentTime + DELAY_50_HZ;
 
     // only proceed when no more samples to skip and suspend period is over
     if (skipRxSamples) {
@@ -582,23 +579,37 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
         return;
     }
 
- 
-   readRxChannelsApplyRanges();
+    //readRxChannelsApplyRanges();
     detectAndApplySignalLossBehaviour();
 
 #ifdef NRF
+
+	rx_data_process(rcData);
+	if(flag1)	
+	{
+		if(!nrf_rx())
+		{
+			mspData.roll = 1500;
+			mspData.yaw = 1500;
+			mspData.pitch = 1500;
+			mspData.throttle = 1000;
+		}	
+		SetTX_Mode();
+	}else	{
+				nrf_tx();	
+				SetRX_Mode();
+			}
+
+	flag1 = !flag1;
+
 	
-	nrf_rx(rcData);
-	
+
+	//rcData[7] = mspData.motor[0];
+	//i2cWrite(0x08,0,givedata);
+	//i2cWrite(0x08,0,motordata[0]);
 #endif
-
-
-	if(rcData)
-//rcData[3] = 1500;
-//rcData[7] =  rcCommand[THROTTLE];//////////////////////////
-
-    rcSampleIndex++;
-
+    
+	rcSampleIndex++;
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)

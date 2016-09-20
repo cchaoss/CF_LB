@@ -289,7 +289,6 @@ void initSpi2(void)
     spi.SPI_CPHA = SPI_CPHA_2Edge;
 #endif
 
-
 #ifdef NRF
     spi.SPI_CPOL = SPI_CPOL_Low;
     spi.SPI_CPHA = SPI_CPHA_1Edge;
