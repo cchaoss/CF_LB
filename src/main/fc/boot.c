@@ -758,9 +758,30 @@ void configureScheduler(void)
 int main(void) {
     init();
 
+/*	
+	while(1)
+	{
+		
+		delay(1000);
+		data = 0;
+		data = *(uint16_t *)0x0803FFF0;
+		if(data == 0x0011){
+					for(char i = 0;i<5;i++)
+					{	GPIO_SetBits(GPIOB, GPIO_Pin_5);delay(100);
+						GPIO_ResetBits(GPIOB, GPIO_Pin_5);delay(100);
+					}				
+				
+				}
+		else GPIO_ResetBits(GPIOB, GPIO_Pin_5);
+					
+	
+	}
+*/
 #ifdef NRF
 	NRF24L01_INIT();
+	
 #endif
+
 	configureScheduler();
 
     while (true) 

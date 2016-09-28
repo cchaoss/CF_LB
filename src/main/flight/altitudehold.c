@@ -111,6 +111,7 @@ static void applyMultirotorAltHold(void)
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
     }
+	rcData[5] = rcCommand[THROTTLE];/////////////////////
 }
 
 static void applyFixedWingAltHold(void)

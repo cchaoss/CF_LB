@@ -59,7 +59,7 @@
 #define POSHOLD		1<<5
 #define ONLINE		1<<6
 #define CALIBRATION	1<<7
-
+#define NEWADDRESS	1<<8
 //dir
 #define	UP		1
 #define	DOWN		2
@@ -74,15 +74,16 @@ typedef struct _dataPackage
 {
 	uint8_t checkCode[4];
 	uint8_t length;
-	uint8_t mspCmd;
+	uint16_t mspCmd;
 	uint16_t pitch;
 	uint16_t roll;
 	uint16_t throttle;
 	uint16_t yaw;
-	int16_t X;
-	int16_t Y;
-	int16_t Z;
+	//int16_t X;
+	//int16_t Y;
+	//int16_t Z;
 	uint16_t motor[4];
+	uint8_t led;
 	uint8_t dir;
 	uint8_t dirdata;
 	
@@ -91,6 +92,18 @@ extern dataPackage mspData;
 
 extern bool tx_done, flag1;
 extern int16_t roll1,pitch1,yaw1;
+
+#define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
+#define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)
+
+#define LED_B_ON	GPIO_SetBits(GPIOB, GPIO_Pin_4)
+#define LED_B_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_4)
+
+#define LED_C_ON	GPIO_SetBits(GPIOB, GPIO_Pin_5)
+#define LED_C_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_5)
+
+#define LED_D_ON	GPIO_SetBits(GPIOB, GPIO_Pin_2)
+#define LED_D_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_2)
 
 #define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_1)//CE
 #define SPI_CE_L()   GPIO_ResetBits(GPIOB, GPIO_Pin_1)

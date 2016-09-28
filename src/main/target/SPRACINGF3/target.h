@@ -23,13 +23,13 @@
 #define NRF
 #define BRUSHED_MOTORS
 
-#define BEEPER
-#define LED0
 
+#define LED0
 #define LED0_GPIO   GPIOB
-#define LED0_PIN    Pin_3
+#define LED0_PIN    Pin_11
 #define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
 
+#define BEEPER
 #define BEEP_GPIO   GPIOC
 #define BEEP_PIN    Pin_15
 #define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
