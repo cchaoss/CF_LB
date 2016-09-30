@@ -20,7 +20,7 @@ uint8_t  TXData[32];
 uint8_t  TX_ADDRESS[5]= {0x12,0xff,0xff,0xff,0xff};//tx_address
 
 uint8_t  NRF24L01_RXDATA[RX_PLOAD_WIDTH];//rx_data
-uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x66,0xff,0xff,0xff,0xff};//rx_address
+uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
 
 void send_328p_buf(uint8_t len, uint8_t *buf)
@@ -93,7 +93,6 @@ bool nrf_rx(void)
 
 }
 
-bool flag4 = true,flag3 = true; 
 
 void rx_data_process(int16_t *buf)
 {
@@ -107,30 +106,17 @@ void rx_data_process(int16_t *buf)
 			if(mspData.led & 1 << 3) LED_D_ON;else LED_D_OFF;
 			
 			if(mspData.mspCmd & ARM)	mwArm();
-			else{	
-				mwDisarm();
-				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1100;
-				mspData.dirdata = 0;
-				}
+				else{	
+						mwDisarm();
+						buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1100;
+						mspData.dirdata = 0;
+				    }
 
 			if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 			
 			if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
 				else buf[4] = 1100;
-			/*
-			if((mspData.mspCmd & ALTHOLD) && flag4)
-			{	FLASH_Unlock();
-				FLASH_ErasePage(0x0004FC00);
-				FLASH_ProgramWord(0x0004FC00, 0x0011);
-				FLASH_Lock();
-				flag4 = false;
-			}
-			if((mspData.mspCmd & ARM) && flag3)
-			{
-				buf[4] = *(uint16_t *)0x0004FC00;
-				flag3 = false;
-			}*/
-
+			
 			if(mspData.mspCmd & ONLINE)	
 			{	//LED_C_ON;
 				if(mspData.dir)
@@ -244,46 +230,49 @@ void nrf_scheduler(int16_t *buf)
 /************NFR24L01_Init************/
 bool NRF24L01_INIT(void)
 {
-		
+		uint8_t sta;
 		nrf24l01HardwareInit();
 		if(NRF24L01_Check())
 		{
-			SetRX_Mode();
-			/*delay(10);
-
-			NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
-			if(sta & (1<<RX_DR)) 
+			SetRX_Mode();//0x11...
+			delay(10);
+			for(char i = 0;i<3;i++)
 			{
-				nrf_rx();
-				if(!strcmp("$M<",(char *)mspData.checkCode))
+				NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
+				delay(10);
+			}
+			if(sta & (1<<RX_DR))
+			{
+		        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+				memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
+				NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
+				if(mspData.mspCmd & NEWADDRESS)
 				{
-					if(mspData.mspCmd & NEWADDRESS)
-					{
-						FLASH_Unlock();
-						FLASH_ErasePage(0x08030000);
-						FLASH_ProgramWord(0x08030000,mspData.motor[0]);
-						FLASH_ProgramWord(0x08030100,mspData.motor[1]);
-						FLASH_Lock();
 						RX_ADDRESS[0] = mspData.motor[0];
 						RX_ADDRESS[1] = mspData.motor[0] >> 8;
 						RX_ADDRESS[2] = mspData.motor[1];
 						RX_ADDRESS[3] = mspData.motor[1] >> 8;
-						SetRX_Mode();
-						mspData.mspCmd &= ~(NEWADDRESS);
-					}
+						SetRX_Mode();//use the new_address!
+						//save new_address to flash
+						FLASH_Unlock();
+						FLASH_ErasePage(0x0803E800);
+						FLASH_ProgramWord(0x0803E800, mspData.motor[0]);
+						FLASH_ProgramWord(0x0803E820, mspData.motor[1]);
+						FLASH_Lock();
+						for(char i = 0; i<5;i++){LED_C_ON;delay(50);LED_C_OFF;delay(50);}
 				}
-
 			}
-			else{
-				mspData.motor[0] = *(uint16_t *)0x08030000;
-				mspData.motor[1] = *(uint16_t *)0x08030100;
-				RX_ADDRESS[0] = mspData.motor[0];
-				RX_ADDRESS[1] = mspData.motor[0] >> 8;
-				RX_ADDRESS[2] = mspData.motor[1];
-				RX_ADDRESS[3] = mspData.motor[1] >> 8;
-				SetRX_Mode();
-			    }*/
-
+			else
+			{	//load the address form flash!
+				RX_ADDRESS[0] = *(uint16_t *)0x0803E800;
+				RX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
+				RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
+				RX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
+				SetRX_Mode();//use the new_address!
+				for(char i = 0; i<5;i++){LED_D_ON;delay(50);LED_D_OFF;delay(50);}
+			}
+			
+			
 			return true;
 		}
 		else return false;

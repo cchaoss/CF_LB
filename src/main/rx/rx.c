@@ -614,8 +614,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		mspData.throttle = 1000;
 	}
 	rx_data_process(rcData);
-			//rcData[6]	 = *(uint16_t *)0x0803FFF0;
-			//rcData[7] 	= *(uint16_t *)0x080310100;
 /*
 	i2cRead(0x08,0xff,1, &sta);
 	if(sta  > 1)	{GPIO_SetBits(GPIOB, GPIO_Pin_2);rcData[6] = 1300+sta;}
