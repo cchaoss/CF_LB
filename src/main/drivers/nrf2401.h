@@ -1,7 +1,6 @@
 #ifndef _NRF2401_H_
 #define _NRF2401_H_
 
-
 //*********************************************NRF24L01*******************
 #define TX_ADR_WIDTH    5   	// 5 uints TX address width
 #define RX_ADR_WIDTH    5   	// 5 uints RX address width
@@ -88,9 +87,8 @@ typedef struct _dataPackage
 	uint8_t dirdata;
 	
 }dataPackage;
-extern dataPackage mspData;
 
-extern bool tx_done, flag1;
+extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
 
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
@@ -114,7 +112,6 @@ extern int16_t roll1,pitch1,yaw1;
 #define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
 
 void send_328p_buf(uint8_t len, uint8_t *buf);
-
 bool NRF_Write_Reg(uint8_t reg, uint8_t data);
 bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length);
 bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length);
@@ -123,7 +120,6 @@ bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);
 
-//void nrf_rx(int16_t *buf);
 void rx_data_process(int16_t *buf);
 bool nrf_rx(void);
 void SetRX_Mode(void);
@@ -133,8 +129,5 @@ void nrf_tx(void);
 void SetTX_Mode(void);
 
 
-
 #endif
-
-
 

@@ -566,10 +566,11 @@ static void detectAndApplySignalLossBehaviour(void)
 
 }
 
+bool flag1 = true;
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
 	//uint8_t sta=0;
-	rxUpdateAt = currentTime + (1000000 / 50);
+	rxUpdateAt = currentTime + (1000000 / 80);
     //rxUpdateAt = currentTime + DELAY_50_HZ;
 
     // only proceed when no more samples to skip and suspend period is over
@@ -582,11 +583,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
     readRxChannelsApplyRanges();
     //detectAndApplySignalLossBehaviour();
-
+    rcSampleIndex++;
 #ifdef NRF
-	//nrf_rx();
-	//nrf_tx();
-	/*
+#if 1
 	if(flag1)	
 	{
 		if(!nrf_rx())
@@ -603,10 +602,10 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		nrf_tx();	
 		SetRX_Mode();
 	}
-
-	flag1 = !flag1;*/
-
-	if(!nrf_rx())
+	rx_data_process(rcData);
+	flag1 = !flag1;
+#endif
+/*	if(!nrf_rx())
 	{
 		mspData.roll = 1500;
 		mspData.yaw = 1500;
@@ -614,7 +613,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		mspData.throttle = 1000;
 	}
 	rx_data_process(rcData);
-/*
+
+
 	i2cRead(0x08,0xff,1, &sta);
 	if(sta  > 1)	{GPIO_SetBits(GPIOB, GPIO_Pin_2);rcData[6] = 1300+sta;}
 		else {GPIO_ResetBits(GPIOB, GPIO_Pin_2);rcData[6] = 1000;}
@@ -625,7 +625,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 */
 #endif
     
-	rcSampleIndex++;
+	
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)
