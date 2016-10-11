@@ -214,12 +214,12 @@ bool NRF24L01_INIT(void)
 			RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
 			RX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
 			SetRX_Mode();//use the new_address!
-			for(uint8_t i = 0; i<5;i++)
+			/*for(uint8_t i = 0; i<5;i++)
 			{
 				TX_ADDRESS[i] = RX_ADDRESS[i];
 				LED_D_ON;delay(50);
 				LED_D_OFF;delay(50);
-			}
+			}*/
 		}
 		return true;
 	}

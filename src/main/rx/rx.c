@@ -37,8 +37,10 @@
 #include "drivers/serial.h"
 #include "drivers/adc.h"
 
+#ifdef NRF
 #include "drivers/bus_i2c.h"
 #include "drivers/nrf2401.h"
+#endif
 
 #include "io/serial.h"
 
@@ -582,8 +584,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-    //detectAndApplySignalLossBehaviour();
+    //detectAndApplySignalLossBehaviour();S
     rcSampleIndex++;
+
 #ifdef NRF
 #if 1
 	if(flag1)	
@@ -616,9 +619,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 
 	i2cRead(0x08,0xff,1, &sta);
-	if(sta  > 1)	{GPIO_SetBits(GPIOB, GPIO_Pin_2);rcData[6] = 1300+sta;}
-		else {GPIO_ResetBits(GPIOB, GPIO_Pin_2);rcData[6] = 1000;}
-	
 	i2cWrite(0x08,0,sta);
 
 	delayMicroseconds(10);

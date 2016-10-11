@@ -19,17 +19,18 @@
 
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
-
 #define NRF
-#define BRUSHED_MOTORS
 
 
-#define LED0
+#ifndef NRF
+#define BLACKBOX
+#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
+#endif
+
 #define LED0_GPIO   GPIOB
 #define LED0_PIN    Pin_11
 #define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
 
-#define BEEPER
 #define BEEP_GPIO   GPIOC
 #define BEEP_PIN    Pin_15
 #define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
@@ -63,18 +64,10 @@
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 
+#define LED0
+#define BEEPER
 
 
-
-#ifndef NRF
-#define SONAR
-#define SONAR_TRIGGER_PIN           Pin_0   // RC_CH7 (PB0) - only 3.3v ( add a 1K Ohms resistor )
-#define SONAR_TRIGGER_GPIO          GPIOB
-#define SONAR_ECHO_PIN              Pin_1   // RC_CH8 (PB1) - only 3.3v ( add a 1K Ohms resistor )
-#define SONAR_ECHO_GPIO             GPIOB
-#define SONAR_TRIGGER_IO            PB0
-#define SONAR_ECHO_IO               PB1
-#endif
 
 #define USE_UART1
 #define USE_UART2
@@ -168,8 +161,6 @@
 
 #define DEFAULT_RX_FEATURE FEATURE_RX_PPM
 
-//#define BLACKBOX
-//#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
 
 #define DISPLAY
 #define GPS

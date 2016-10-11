@@ -63,7 +63,10 @@
 #include "drivers/gyro_sync.h"
 #include "drivers/exti.h"
 #include "drivers/io.h"
+
+#ifdef NRF
 #include "drivers/nrf2401.h"
+#endif
 
 #include "rx/rx.h"
 #include "rx/spektrum.h"
@@ -776,7 +779,6 @@ int main(void) {
 	}
 	while(1)
 	{
-		
 		delay(1000);
 		data = 0;
 		data = *(uint16_t *)0x0803E800;
@@ -788,8 +790,6 @@ int main(void) {
 				
 				}
 		else GPIO_ResetBits(GPIOB, GPIO_Pin_5);
-					
-	
 	}
 */
 

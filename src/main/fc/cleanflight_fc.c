@@ -41,7 +41,12 @@
 #include "drivers/system.h"
 #include "drivers/serial.h"
 #include "drivers/gyro_sync.h"
+
+
+#ifdef NRF
 #include "drivers/nrf2401.h"
+#endif
+
 #include "drivers/pwm_output.h"
 
 #include "fc/rc_controls.h"
@@ -761,9 +766,6 @@ void taskMainPidLoop(void)
 			pwmWriteMotor(3,bound(mspData.motor[3],1400,1000));
 		}
 	}
-		
-
-
 #endif 
 
 

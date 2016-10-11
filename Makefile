@@ -251,12 +251,12 @@ SYSTEM_SRC = \
 		   drivers/dma.c \
 		   drivers/serial.c \
 		   drivers/system.c \
-			drivers/nrf2401.c \
 		   scheduler/scheduler.c \
 		   io/serial.c \
 		   io/statusindicator.c \
 		   msp/msp.c \
 		   msp/msp_serial.c \
+			drivers/nrf2401.c \
 		   $(TARGET_SRC) \
 		   $(CMSIS_SRC) \
 		   $(DEVICE_STDPERIPH_SRC)
