@@ -530,9 +530,9 @@ void processRx(void)
         processRcAdjustments(currentControlRateProfile, rxConfig());
     }
 
-    bool canUseHorizonMode = true;
 
-    if ((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) {
+    bool canUseHorizonMode = true;
+//   if ((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) {
         // bumpless transfer to Level mode
         canUseHorizonMode = false;
 
@@ -542,9 +542,13 @@ void processRx(void)
 #endif
             ENABLE_FLIGHT_MODE(ANGLE_MODE);
         }
-    } else {
+/*
+    } 
+    else {
         DISABLE_FLIGHT_MODE(ANGLE_MODE); // failsafe support
     }
+*/
+
 
     if (rcModeIsActive(BOXHORIZON) && canUseHorizonMode) {
 

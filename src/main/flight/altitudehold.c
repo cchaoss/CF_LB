@@ -55,6 +55,10 @@
 
 #include "flight/altitudehold.h"
 
+#ifdef NRF
+#include "drivers/nrf2401.h"
+#endif
+
 int32_t setVelocity = 0;
 uint8_t velocityControl = 0;
 int32_t errorVelocityI = 0;
@@ -111,7 +115,7 @@ static void applyMultirotorAltHold(void)
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
     }
-	rcData[5] = rcCommand[THROTTLE];/////////just for display////////////
+	
 }
 
 static void applyFixedWingAltHold(void)
@@ -136,24 +140,31 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 	
-    // Baro alt hold activate
+    /*
     if (!rcModeIsActive(BOXBARO)) {
         DISABLE_FLIGHT_MODE(BARO_MODE);
         return;
-    }
-
-	//DISABLE_FLIGHT_MODE(BARO_MODE);
-	
-    if (!FLIGHT_MODE(BARO_MODE))
+    }*/
+    
+	if(rcData[3] > 1470 && rcData[3] < 1530)
 	{
-        ENABLE_FLIGHT_MODE(BARO_MODE);
-        AltHold = EstAlt;
-        initialRawThrottleHold = rcData[THROTTLE];
-        initialThrottleHold = rcCommand[THROTTLE];
-        errorVelocityI = 0;
-        altHoldThrottleAdjustment = 0;
-	
-    }
+		if (!FLIGHT_MODE(BARO_MODE))
+		{
+			ENABLE_FLIGHT_MODE(BARO_MODE);
+			AltHold = EstAlt;
+			initialRawThrottleHold = rcData[THROTTLE];
+			initialThrottleHold = rcCommand[THROTTLE];
+			errorVelocityI = 0;
+			altHoldThrottleAdjustment = 0;
+		}
+	}
+	else{ 	
+			DISABLE_FLIGHT_MODE(BARO_MODE);
+			if(rcData[3] > 1500)	rcCommand[THROTTLE] = (rcData[3] - 1500)/2 + rcCommand[THROTTLE];
+				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/6 + rcCommand[THROTTLE];
+		}
+	bound(rcCommand[THROTTLE],1050,1850);
+	rcData[5] = rcCommand[THROTTLE];/////////just for display////////////
 }
 
 void updateSonarAltHoldState(void)

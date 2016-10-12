@@ -202,8 +202,8 @@ bool NRF24L01_INIT(void)
 				for(uint8_t i = 0; i<5;i++)
 				{
 					TX_ADDRESS[i] = RX_ADDRESS[i];
-					LED_C_ON;delay(50);
-					LED_C_OFF;delay(50);
+					LED_D_ON;delay(50);
+					LED_D_OFF;delay(50);
 				}
 			}
 		}
