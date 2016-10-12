@@ -139,13 +139,8 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
-	
-    /*
-    if (!rcModeIsActive(BOXBARO)) {
-        DISABLE_FLIGHT_MODE(BARO_MODE);
-        return;
-    }*/
-    
+
+#ifdef NRF 
 	if(rcData[3] > 1470 && rcData[3] < 1530)
 	{
 		if (!FLIGHT_MODE(BARO_MODE))
@@ -163,8 +158,25 @@ void updateAltHoldState(void)
 			if(rcData[3] > 1500)	rcCommand[THROTTLE] = (rcData[3] - 1500)/2 + rcCommand[THROTTLE];
 				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/6 + rcCommand[THROTTLE];
 		}
-	bound(rcCommand[THROTTLE],1050,1850);
-	rcData[5] = rcCommand[THROTTLE];/////////just for display////////////
+	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1050,1850);
+	rcData[5] = rcCommand[THROTTLE];	//just for display
+	
+#else
+    if (!rcModeIsActive(BOXBARO)) {
+        DISABLE_FLIGHT_MODE(BARO_MODE);
+        return;
+    }
+
+    if (!FLIGHT_MODE(BARO_MODE)) {
+        ENABLE_FLIGHT_MODE(BARO_MODE);
+        AltHold = EstAlt;
+        initialRawThrottleHold = rcData[THROTTLE];
+        initialThrottleHold = rcCommand[THROTTLE];
+        errorVelocityI = 0;
+        altHoldThrottleAdjustment = 0;
+    }
+#endif
+
 }
 
 void updateSonarAltHoldState(void)
