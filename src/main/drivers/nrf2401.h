@@ -88,6 +88,7 @@ typedef struct _dataPackage
 	
 }dataPackage;
 
+extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
 

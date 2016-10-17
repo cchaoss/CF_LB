@@ -140,7 +140,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 
-#ifdef NRF 
+#ifdef USE_ALTHOLD
 	if(rcData[3] > 1470 && rcData[3] < 1530)
 	{
 		if (!FLIGHT_MODE(BARO_MODE))

@@ -13,6 +13,7 @@
 #include "pwm_output.h"
 
 
+uint16_t batt;
 int16_t roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 uint8_t  TX_ADDRESS[TX_ADR_WIDTH]= {0x12,0xff,0xff,0xff,0xff};//tx_address
@@ -88,6 +89,7 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
+	
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{	
 		if(mspData.led & 1 << 0) LED_A_ON;else LED_A_OFF;
@@ -109,10 +111,11 @@ void rx_data_process(int16_t *buf)
 		{	//LED_C_ON;
 			if(mspData.dir)
 			{	
+				
 				switch(mspData.dir)
 				{
 					case 	   UP: 
-					case     DOWN: buf[3] = mspData.dirdata*4 + 1100;break;
+					case     DOWN: buf[3] = mspData.dirdata*4 + (125-batt) + 1100;break;
 					case  	 LEFT: buf[0] = 1500 - mspData.dirdata;break;
 					case 	RIGHT: buf[0] = 1500 + mspData.dirdata;break;
 					case  FORWARD: buf[1] = 1500 + mspData.dirdata;break;

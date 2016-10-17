@@ -20,7 +20,8 @@
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
 #define NRF
-
+//#define USE_ALTHOLD
+//#define DEBUG_ALT_HOLD
 
 #ifndef NRF
 #define BLACKBOX

@@ -41,6 +41,10 @@
 
 #include "sensors/battery.h"
 
+#ifdef NRF
+#include "drivers/nrf2401.h"
+#endif
+
 
 // FIXME there is too much going on in here - the code is not re-usable and has lots of shared configuration, suggest splitting into these topics.
 // 1) voltage monitoring/adc conversion
@@ -104,6 +108,11 @@ static void updateBatteryVoltage(void)
 
 void updateBattery(void)
 {
+
+#ifdef NRF
+	batt = vbat;
+#endif 
+
     updateBatteryVoltage();
     
     /* battery has just been connected*/
