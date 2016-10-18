@@ -85,6 +85,8 @@ typedef struct _dataPackage
 	uint8_t led;
 	uint8_t dir;
 	uint8_t dirdata;
+	char trim_pitch;
+	char trim_roll;
 	
 }dataPackage;
 

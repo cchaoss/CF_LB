@@ -73,10 +73,9 @@ bool nrf_rx(void)
     if(sta & (1<<RX_DR))
     {
         NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
-	memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
-	NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
-	count = 0;
-		
+		memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
+		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
+		count = 0;
      }else count++;
 
 	if(count > 25) 
@@ -115,15 +114,25 @@ void rx_data_process(int16_t *buf)
 				switch(mspData.dir)
 				{
 					case 	   UP: 
-					case     DOWN: buf[3] = mspData.dirdata*4 + (125-batt)*10 + 1100;break;
-					case  	 LEFT: buf[0] = 1500 - mspData.dirdata;break;
-					case 	RIGHT: buf[0] = 1500 + mspData.dirdata;break;
-					case  FORWARD: buf[1] = 1500 + mspData.dirdata;break;
-					case BACKWARD: buf[1] = 1500 - mspData.dirdata;break;
-					case   	   CR: buf[2] = 1500 + mspData.dirdata;break;
-					case      CCR: buf[2] = 1500 - mspData.dirdata;break;
-					default      : break;
+					case     DOWN: 	buf[3] = mspData.dirdata*4 + 1100 + (batt > 110 ? 124-batt : 0)*10;
+								   	buf[0] = 1500 + (mspData.trim_roll > 127 ?  mspData.trim_roll-256 : mspData.trim_roll);
+								   	buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch-256 : mspData.trim_pitch);
+								   	break;
+					case  	 LEFT: 	buf[0] = 1500 - mspData.dirdata;
+								   	break;
+					case 	RIGHT: 	buf[0] = 1500 + mspData.dirdata;
+								   	break;
+					case  FORWARD: 	buf[1] = 1500 + mspData.dirdata;
+								   	break;
+					case BACKWARD: 	buf[1] = 1500 - mspData.dirdata;
+								   	break;
+					case   	   CR: 	buf[2] = 1500 + mspData.dirdata;
+								 	break;
+					case      CCR: 	buf[2] = 1500 - mspData.dirdata;
+									break;
+					default      : 	break;
 				}
+				
 			}
 		}
 		else	
@@ -154,7 +163,7 @@ void nrf_tx(void)
 	TXData[5] = yaw1 >> 8;
 
 	SPI_CE_L();
-        NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
+    NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
 	roll1 = 0;
 	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && flag)
@@ -186,7 +195,7 @@ bool NRF24L01_INIT(void)
 		}
 		if(sta & (1<<RX_DR))
 		{
-	        	NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+	        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
 			memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
 			NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 			if(mspData.mspCmd & NEWADDRESS)
