@@ -115,7 +115,7 @@ void rx_data_process(int16_t *buf)
 				switch(mspData.dir)
 				{
 					case 	   UP: 
-					case     DOWN: buf[3] = mspData.dirdata*4 + (125-batt) + 1100;break;
+					case     DOWN: buf[3] = mspData.dirdata*4 + (125-batt)*10 + 1100;break;
 					case  	 LEFT: buf[0] = 1500 - mspData.dirdata;break;
 					case 	RIGHT: buf[0] = 1500 + mspData.dirdata;break;
 					case  FORWARD: buf[1] = 1500 + mspData.dirdata;break;
