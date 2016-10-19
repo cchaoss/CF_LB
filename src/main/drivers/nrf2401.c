@@ -163,7 +163,7 @@ void nrf_tx(void)
 	TXData[5] = yaw1 >> 8;
 
 	SPI_CE_L();
-    NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
+	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
 	roll1 = 0;
 	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && flag)
@@ -195,7 +195,7 @@ bool NRF24L01_INIT(void)
 		}
 		if(sta & (1<<RX_DR))
 		{
-	        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+	        	NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
 			memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
 			NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 			if(mspData.mspCmd & NEWADDRESS)
@@ -257,7 +257,7 @@ void SetRX_Mode(void)
 {
     	SPI_CE_L();
 	NRF_Write_Reg(FLUSH_RX,0xff);//清除TX FIFO寄存器			 
-  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);//写RX节点地址
+  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)TX_ADDRESS,RX_ADR_WIDTH);//写RX节点地址
    	NRF_Write_Reg(EN_AA,0x01);       //使能通道0的自动应答    
   	NRF_Write_Reg(EN_RXADDR,0x01);   //使能通道0的接收地址  	 
   	NRF_Write_Reg(RF_CH,40);	 //设置RF通信频率		  
@@ -272,9 +272,9 @@ void SetRX_Mode(void)
 void SetTX_Mode(void)
 {
     	SPI_CE_L();
-    	NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器		  
-    	NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);		//写TX节点地址 
-  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
+    NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器		  
+    NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);	//写TX节点地址 
+  	//NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
   	NRF_Write_Reg(EN_AA,0x01);     //使能通道0的自动应答    
   	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
   	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
