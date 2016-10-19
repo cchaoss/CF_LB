@@ -596,7 +596,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			mspData.roll = 1500;
 			mspData.yaw = 1500;
 			mspData.pitch = 1500;
-			mspData.throttle = 1000;
+			mspData.throttle = 1050;
 		}	
 		SetTX_Mode();
 	}
