@@ -14,7 +14,7 @@
 
 
 uint16_t batt;
-int16_t roll1,pitch1,yaw1;
+int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 uint8_t  TX_ADDRESS[TX_ADR_WIDTH]= {0x12,0xff,0xff,0xff,0xff};//tx_address
 
@@ -72,14 +72,14 @@ bool nrf_rx(void)
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR))
     {
-        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }else count++;
-
+	
 	if(count > 30) 
-	{	
+	{
 		count = 0;
 		return false;
 	}else 
@@ -89,29 +89,27 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
-	
 	if(!strcmp("$M<",(char *)mspData.checkCode))
-	{	
+	{
 		if(mspData.led & 1 << 0) LED_A_ON;else LED_A_OFF;
 		if(mspData.led & 1 << 1) LED_B_ON;else LED_B_OFF;
 		if(mspData.led & 1 << 2) LED_C_ON;else LED_C_OFF;
 		if(mspData.led & 1 << 3) LED_D_ON;else LED_D_OFF;
-		
+
 		if(mspData.mspCmd & ARM)	mwArm();
 			else{	mwDisarm();
 				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1100;
 				mspData.dirdata = 0;}
 
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
-		
+
 		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
 			else buf[4] = 1100;
-		
+
 		if(mspData.mspCmd & ONLINE)	
 		{	//LED_C_ON;
 			if(mspData.dir)
 			{	
-				
 				switch(mspData.dir)
 				{
 					case	UP: 
@@ -143,7 +141,6 @@ void rx_data_process(int16_t *buf)
 			buf[2] = mspData.yaw;
 			buf[3] = mspData.throttle; 
 		}
-
 		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);	
 	}
 }
