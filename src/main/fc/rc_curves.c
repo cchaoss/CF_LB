@@ -45,6 +45,21 @@ void generatePitchRollCurve(void)
     }
 }
 
+/*
+void generatePitchRollCurve(void)
+{
+    for (int i = 0; i < PITCH_LOOKUP_LENGTH; i++) {
+		const int16_t tmp = 10 * i - 50;
+		uint8_t y = 1;
+		if(tmp > 0)		y = 100 - 50;
+		if(tmp < 0)		y = 50;
+		
+        lookupPitchRollRC[i] = 10*50 + tmp*(100 - 80 + (int32_t) 80*(tmp*tmp)/(y*y))/10;
+		lookupPitchRollRC[i] = 1100 + (int32_t)(1900 -1100) * lookupPitchRollRC[i]/1000;
+    }
+}
+*/
+
 void generateYawCurve(void)
 {
      for (int i = 0; i < YAW_LOOKUP_LENGTH; i++) {

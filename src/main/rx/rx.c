@@ -584,8 +584,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-    //detectAndApplySignalLossBehaviour();S
-    rcSampleIndex++;
+    //detectAndApplySignalLossBehaviour();
+	rcSampleIndex++;
 
 #ifdef NRF
 #if 1
@@ -596,7 +596,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			mspData.roll = 1500;
 			mspData.yaw = 1500;
 			mspData.pitch = 1500;
-			mspData.throttle = 1050;
+			mspData.throttle = 1100;
+			mspData.dir = 0;
 		}	
 		SetTX_Mode();
 	}

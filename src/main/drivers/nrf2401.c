@@ -97,11 +97,11 @@ void rx_data_process(int16_t *buf)
 		if(mspData.led & 1 << 3) LED_D_ON;else LED_D_OFF;
 
 		if(mspData.mspCmd & ARM)	mwArm();
-			else{	
-					mwDisarm();
-					buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
-					mspData.dirdata = 0;
-				}
+		else{	
+				mwDisarm();
+				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
+				mspData.dirdata = 0;
+			}
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 
 		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
@@ -146,7 +146,6 @@ void rx_data_process(int16_t *buf)
 		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);	
 	}
 }
-
 
 /****************NRF24L01_TX*********************/
 void nrf_tx(void)
