@@ -97,10 +97,11 @@ void rx_data_process(int16_t *buf)
 		if(mspData.led & 1 << 3) LED_D_ON;else LED_D_OFF;
 
 		if(mspData.mspCmd & ARM)	mwArm();
-			else{	mwDisarm();
-				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1100;
-				mspData.dirdata = 0;}
-
+			else{	
+					mwDisarm();
+					buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
+					mspData.dirdata = 0;
+				}
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 
 		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
@@ -112,28 +113,29 @@ void rx_data_process(int16_t *buf)
 			{	
 				switch(mspData.dir)
 				{
-					case	UP: 
-					case	DOWN: 	
-						buf[0] = 1500 + (mspData.trim_roll > 127 ?  mspData.trim_roll - 256 : mspData.trim_roll)
-						buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch -256 : mspData.trim_pitch);
-						buf[3] = 1100 + mspData.dirdata * 4 + 10*(batt > 110 ? 124 - batt : 0);break;
-					case	LEFT: 	
-						buf[0] = 1500 - mspData.dirdata;break;
-					case	RIGHT:
-						buf[0] = 1500 + mspData.dirdata;break;
-					case	FORWARD:
-						buf[1] = 1500 + mspData.dirdata;break;
-					case	BACKWARD:
-						buf[1] = 1500 - mspData.dirdata;break;
-					case	CR:
-						buf[2] = 1500 + mspData.dirdata;break;
-					case	CCR:
-						buf[2] = 1500 - mspData.dirdata;break;
-					default      : 	break;
+					case UP: 
+					case DOWN: 	
+								buf[0] = 1500 + (mspData.trim_roll > 127 ? mspData.trim_roll - 256 : mspData.trim_roll);
+								buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch - 256 : mspData.trim_pitch);
+								buf[3] = 1100 + mspData.dirdata *4 + 10*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
+					case LEFT: 	
+								buf[0] = 1500 - mspData.dirdata;break;
+					case RIGHT:
+								buf[0] = 1500 + mspData.dirdata;break;
+					case FORWARD:
+								buf[1] = 1500 + mspData.dirdata;break;
+					case BACKWARD:
+								buf[1] = 1500 - mspData.dirdata;break;
+					case CR:
+								buf[2] = 1500 + mspData.dirdata;break;
+					case CCR:
+								buf[2] = 1500 - mspData.dirdata;break;
+					default :	break;
 				}
 			}
+			else	{buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;}
 		}
-		else	
+		else
 		{	
 			//LED_C_OFF;
 			buf[0] = mspData.roll;

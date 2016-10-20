@@ -762,7 +762,7 @@ void taskMainPidLoop(void)
 #ifdef NRF 
 	if(mspData.mspCmd & ONLINE)
 	{	
-		if(mspData.dir == 0)
+		if(mspData.dir == 0 && !(mspData.mspCmd & ARM))
 		{
 			pwmWriteMotor(0,bound(mspData.motor[0],1400,1000));
 			pwmWriteMotor(1,bound(mspData.motor[1],1400,1000));

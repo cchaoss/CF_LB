@@ -9,10 +9,10 @@
 #define TX_PLOAD_WIDTH  32  	// 32 uints TX payload
 //***************************************NRF24L01寄存器指令****************
 #define NRF_READ_REG    0x00  	// 读寄存器指令
-#define NRF_WRITE_REG   0x20 	  // 写寄存器指令
+#define NRF_WRITE_REG   0x20 	// 写寄存器指令
 #define RD_RX_PLOAD     0x61  	// 读取接收数据指令
 #define WR_TX_PLOAD     0xA0  	// 写待发数据指令
-#define FLUSH_TX        0xE1 	  // 冲洗发送 FIFO指令
+#define FLUSH_TX        0xE1 	// 冲洗发送 FIFO指令
 #define FLUSH_RX        0xE2  	// 冲洗接收 FIFO指令
 #define REUSE_TX_PL     0xE3  	// 定义重复装载数据指令
 #define NOP             0xFF  	// 保留
@@ -42,7 +42,7 @@
 #define RX_PW_P5        0x16  // 接收频道5接收数据长度
 #define FIFO_STATUS     0x17  // FIFO栈入栈出状态寄存器设置
 //**************************************************************************************
-#define RX_DR			6//中断标志
+#define RX_DR			6	  //中断标志
 #define TX_DS			5
 #define MAX_RT	  		4
 #define MAX_TX  		0x10  //达到最大发送次数中断
@@ -51,7 +51,7 @@
 
 //mspCmd
 #define RCDATA		1<<0
-#define ARM		1<<1
+#define ARM			1<<1
 #define FREEHEAD	1<<2
 #define MANUAL		1<<3
 #define ALTHOLD		1<<4
@@ -60,14 +60,14 @@
 #define CALIBRATION	1<<7
 #define NEWADDRESS	1<<8
 //dir
-#define	UP		1
+#define	UP		    1
 #define	DOWN		2
 #define	LEFT		3
 #define	RIGHT		4
 #define	FORWARD		5
 #define	BACKWARD	6
-#define	CR		7
-#define	CCR		8
+#define	CR			7
+#define	CCR			8
 
 typedef struct _dataPackage
 {
