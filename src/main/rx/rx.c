@@ -571,7 +571,7 @@ static void detectAndApplySignalLossBehaviour(void)
 bool flag1 = true;
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
-	//uint8_t sta=0;
+	static uint8_t failsafe_flag = 0;
 	rxUpdateAt = currentTime + (1000000 / 80);
     //rxUpdateAt = currentTime + DELAY_50_HZ;
 
@@ -589,6 +589,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 #ifdef NRF
 #if 1
+	
 	if(flag1)	
 	{
 		if(!nrf_rx())
@@ -596,9 +597,15 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			mspData.roll = 1500;
 			mspData.yaw = 1500;
 			mspData.pitch = 1500;
-			mspData.throttle = 1100;
-			mspData.dir = 0;
-		}	
+			mspData.dir = 0x00;//empty the online data buf
+			failsafe_flag++;
+			if(failsafe_flag > 120)//change throttle to 1000 and disarm
+			{
+				failsafe_flag = 80;
+				mspData.throttle = 1000;
+			}else	mspData.throttle = 1400;//hold the throttle for 3s
+
+		}else failsafe_flag = 0;	
 		SetTX_Mode();
 	}
 	else	

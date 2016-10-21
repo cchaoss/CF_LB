@@ -16,9 +16,8 @@
 uint16_t batt;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
-uint8_t  TX_ADDRESS[TX_ADR_WIDTH]= {0x12,0xff,0xff,0xff,0xff};//tx_address
 
-uint8_t  NRF24L01_RXDATA[RX_PLOAD_WIDTH];//rx_data
+uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
 
@@ -72,18 +71,17 @@ bool nrf_rx(void)
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR))
     {
-        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
-		memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
+        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
+		memcpy(&mspData,RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }else count++;
-	
-	if(count > 30) 
+
+	if(count > 28) 
 	{
-		count = 0;
+		count = 30;
 		return false;
-	}else 
-	return true;
+	}else return true;
 }
 
 
@@ -108,7 +106,8 @@ void rx_data_process(int16_t *buf)
 			else buf[4] = 1100;
 
 		if(mspData.mspCmd & ONLINE)	
-		{	//LED_C_ON;
+		{	
+			//LED_D_ON;//LED for online
 			if(mspData.dir)
 			{	
 				switch(mspData.dir)
@@ -117,7 +116,7 @@ void rx_data_process(int16_t *buf)
 					case DOWN: 	
 								buf[0] = 1500 + (mspData.trim_roll > 127 ? mspData.trim_roll - 256 : mspData.trim_roll);
 								buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch - 256 : mspData.trim_pitch);
-								buf[3] = 1100 + mspData.dirdata *4 + 10*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
+								buf[3] = 1100 + mspData.dirdata *4 + 13*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
 					case LEFT: 	
 								buf[0] = 1500 - mspData.dirdata;break;
 					case RIGHT:
@@ -137,7 +136,7 @@ void rx_data_process(int16_t *buf)
 		}
 		else
 		{	
-			//LED_C_OFF;
+			//LED_D_OFF;
 			buf[0] = mspData.roll;
 			buf[1] = mspData.pitch;
 			buf[2] = mspData.yaw;
@@ -193,8 +192,8 @@ bool NRF24L01_INIT(void)
 		}
 		if(sta & (1<<RX_DR))
 		{
-	        NRF_Read_Buf(RD_RX_PLOAD,NRF24L01_RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
-			memcpy(&mspData,NRF24L01_RXDATA,sizeof(mspData));
+	        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
+			memcpy(&mspData,RXDATA,sizeof(mspData));
 			NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 			if(mspData.mspCmd & NEWADDRESS)
 			{
@@ -209,12 +208,7 @@ bool NRF24L01_INIT(void)
 				FLASH_ProgramWord(0x0803E820, mspData.motor[1]);
 				FLASH_Lock();
 				SetRX_Mode();//use the new_address!
-				for(uint8_t i = 0; i<5;i++)
-				{
-					TX_ADDRESS[i] = RX_ADDRESS[i];
-					LED_D_ON;delay(50);
-					LED_D_OFF;delay(50);
-				}
+				for(uint8_t i = 0; i<5;i++)		{LED_D_ON;delay(50);LED_D_OFF;delay(50);}
 			}
 		}
 		else
@@ -224,12 +218,6 @@ bool NRF24L01_INIT(void)
 			RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
 			RX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
 			SetRX_Mode();//use the new_address!
-			for(uint8_t i = 0; i<5;i++)
-			{
-				TX_ADDRESS[i] = RX_ADDRESS[i];
-				//LED_D_ON;delay(50);
-				//LED_D_OFF;delay(50);
-			}
 		}
 		return true;
 	}
@@ -271,8 +259,8 @@ void SetTX_Mode(void)
 {
 	SPI_CE_L();
 	NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器
-	NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);	//写TX节点地址 
-  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
+	NRF_Write_Buf(TX_ADDR,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);	//写TX节点地址 
+  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
   	NRF_Write_Reg(EN_AA,0x01);     //使能通道0的自动应答    
   	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
   	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
