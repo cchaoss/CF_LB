@@ -1,6 +1,7 @@
 #ifndef _NRF2401_H_
 #define _NRF2401_H_
 
+
 //*********************************************NRF24L01*******************
 #define TX_ADR_WIDTH    5   	// 5 uints TX address width
 #define RX_ADR_WIDTH    5   	// 5 uints RX address width
@@ -49,6 +50,17 @@
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
 
+
+#define	BLACK 	0
+#define WHITE 	1
+#define RED 	2
+#define ORANGE 	3
+#define YELLOW 	4	
+#define GREEN 	5
+#define BLUE 	6
+#define PINK 	7
+#define VIOLET 	8
+
 //mspCmd
 #define RCDATA		1<<0
 #define ARM			1<<1
@@ -87,6 +99,7 @@ typedef struct _dataPackage
 	uint8_t dirdata;
 	char trim_pitch;
 	char trim_roll;
+	uint8_t beep;
 	
 }dataPackage;
 

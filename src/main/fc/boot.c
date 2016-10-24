@@ -397,7 +397,7 @@ void init(void)
         feature(FEATURE_CURRENT_METER)
         && batteryConfig()->currentMeterType == CURRENT_SENSOR_ADC
     );
-    pwm_params.useLEDStrip = feature(FEATURE_LED_STRIP);
+    pwm_params.useLEDStrip = true;//feature(FEATURE_LED_STRIP);
     pwm_params.usePPM = feature(FEATURE_RX_PPM);
     pwm_params.useSerialRx = feature(FEATURE_RX_SERIAL);
 #ifdef SONAR
@@ -586,9 +586,10 @@ void init(void)
 #ifdef LED_STRIP
     ledStripInit();
 
-    if (feature(FEATURE_LED_STRIP)) {
+    /*if (feature(FEATURE_LED_STRIP)) {
         ledStripEnable();
-    }
+    }*/
+	ledStripEnable();
 #endif
 
 #ifdef TELEMETRY
@@ -751,7 +752,8 @@ void configureScheduler(void)
     setTaskEnabled(TASK_TELEMETRY, feature(FEATURE_TELEMETRY));
 #endif
 #ifdef LED_STRIP
-    setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
+    //setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
+	setTaskEnabled(TASK_LEDSTRIP, true);
 #endif
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));

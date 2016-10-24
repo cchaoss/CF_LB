@@ -976,9 +976,10 @@ void taskTelemetry(void)
 #ifdef LED_STRIP
 void taskLedStrip(void)
 {
-    if (feature(FEATURE_LED_STRIP)) {
+    /*if (feature(FEATURE_LED_STRIP)) {
         updateLedStrip();
-    }
+    }*/
+	updateLedStrip();
 }
 #endif
 

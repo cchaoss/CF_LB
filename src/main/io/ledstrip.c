@@ -42,6 +42,10 @@
 #include "drivers/system.h"
 #include "drivers/serial.h"
 
+#ifdef	NRF
+#include "drivers/nrf2401.h"
+#endif
+
 #include "flight/pid.h"
 #include "flight/failsafe.h"
 
@@ -982,7 +986,35 @@ void updateLedStrip(void)
     if (!(ledStripInitialised && isWS2811LedStripReady())) {
         return;
     }
+#ifdef NRF	
+	if(mspData.mspCmd & ONLINE)
+	{
+		
+		if(mspData.led & 1 << 4) LED_A_ON;else LED_A_OFF;
+		if(mspData.led & 1 << 5) LED_B_ON;else LED_B_OFF;
+		if(mspData.led & 1 << 6) LED_C_ON;else LED_C_OFF;
+		if(mspData.led & 1 << 7) LED_D_ON;else LED_D_OFF;
 
+		switch(mspData.led & 0X0F) 
+		{
+			case BLACK:setStripColor(&HSV(BLACK));break;
+			case WHITE:setStripColor(&HSV(WHITE));break;
+			case RED:setStripColor(&HSV(RED));break;
+			case ORANGE:setStripColor(&HSV(ORANGE));break;
+			case YELLOW:setStripColor(&HSV(YELLOW));break;
+			case GREEN:setStripColor(&HSV(GREEN));break;
+			case BLUE:setStripColor(&HSV(BLUE));break;
+			case PINK:setStripColor(&HSV(DEEP_PINK));break;
+			case VIOLET:setStripColor(&HSV(DARK_VIOLET));break;
+		}
+	}
+/*
+	if(mspData.pitch < 1300)	setStripColor(&HSV(BLUE));
+	else if(mspData.pitch < 1500)	setStripColor(&HSV(RED));
+		else if(mspData.pitch < 1700)	setStripColor(&HSV(DEEP_PINK));
+			else setStripColor(&HSV(CYAN));
+*/
+#else
     if (rcModeIsActive(BOXLEDLOW)) {
         if (ledStripEnabled) {
             ledStripDisable();
@@ -1022,6 +1054,8 @@ void updateLedStrip(void)
         bool updateNow = timActive & (1 << timId);
         (*layerTable[timId])(updateNow, timer);
     }
+
+#endif
     ws2811UpdateStrip();
 }
 
@@ -1132,6 +1166,8 @@ void ledStripEnable(void)
     ledStripInitialised = true;
 
     ws2811LedStripInit();
+	setStripColor(&HSV(BLACK));
+	ws2811UpdateStrip();
 }
 
 static void ledStripDisable(void)

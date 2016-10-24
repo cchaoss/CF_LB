@@ -11,7 +11,7 @@
 #include "system.h"
 #include "gpio.h"
 #include "pwm_output.h"
-
+#include "sound_beeper.h"
 
 uint16_t batt;
 int16_t  roll1,pitch1,yaw1;
@@ -19,7 +19,6 @@ uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 
 uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
-
 
 
 void send_328p_buf(uint8_t len, uint8_t *buf)
@@ -87,19 +86,29 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
+	static uint8_t x = 0;
+	
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-		if(mspData.led & 1 << 0) LED_A_ON;else LED_A_OFF;
-		if(mspData.led & 1 << 1) LED_B_ON;else LED_B_OFF;
-		if(mspData.led & 1 << 2) LED_C_ON;else LED_C_OFF;
-		if(mspData.led & 1 << 3) LED_D_ON;else LED_D_OFF;
-
+		switch (mspData.beep)
+		{	
+			case 1: BEEP_OFF;break;
+			case 2: BEEP_ON;x++;
+					if(x > 8 ) {BEEP_OFF;x = 0;}break;
+			case 3: BEEP_ON;x++;
+					if(x > 40) {BEEP_OFF;x = 0;}break;
+			case 4: BEEP_ON;x++;
+					if(x > 80) {BEEP_OFF;x = 0;}break;
+			case 5: BEEP_ON;break;
+		}
+				
 		if(mspData.mspCmd & ARM)	mwArm();
 		else{	
 				mwDisarm();
 				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
 				mspData.dirdata = 0;
 			}
+
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 
 		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
@@ -145,6 +154,7 @@ void rx_data_process(int16_t *buf)
 		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);	
 	}
 }
+
 
 /****************NRF24L01_TX*********************/
 void nrf_tx(void)
