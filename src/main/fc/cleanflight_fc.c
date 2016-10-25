@@ -532,7 +532,13 @@ void processRx(void)
 
 
     bool canUseHorizonMode = true;
-//   if ((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) {
+
+#ifdef NRF
+	if(true)
+#else
+	if((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) 
+#endif	
+	{
         // bumpless transfer to Level mode
         canUseHorizonMode = false;
 
@@ -542,12 +548,10 @@ void processRx(void)
 #endif
             ENABLE_FLIGHT_MODE(ANGLE_MODE);
         }
-/*
+
     } 
-    else {
-        DISABLE_FLIGHT_MODE(ANGLE_MODE); // failsafe support
-    }
-*/
+    else {DISABLE_FLIGHT_MODE(ANGLE_MODE);}
+
 
 
     if (rcModeIsActive(BOXHORIZON) && canUseHorizonMode) {
@@ -760,6 +764,34 @@ void taskMainPidLoop(void)
     }
 
 #ifdef NRF 
+/*
+	static bool a;
+	static uint32_t b = 0,c = 0;
+	if(mspData.mspCmd & ALTHOLD)
+	{
+		
+		if(a) {b = millis();a = false;}
+		c = millis();
+		if(c - b < 500)
+		{
+			LED_A_ON;
+			LED_B_OFF;
+			pwmWriteMotor(0,1000);
+			pwmWriteMotor(1,1000);
+			pwmWriteMotor(2,1900);
+			pwmWriteMotor(3,1900);
+		}
+		else if(c - b < 700)
+		{
+			LED_A_OFF;
+			LED_B_ON;
+			pwmWriteMotor(0,1600);
+			pwmWriteMotor(1,1600);
+			pwmWriteMotor(2,1600);
+			pwmWriteMotor(3,1600);
+		}
+	}else  a = true;*/
+	/////////////////////////////
 	if(mspData.mspCmd & ONLINE)
 	{	
 		if(mspData.dir == 0 && !(mspData.mspCmd & ARM))

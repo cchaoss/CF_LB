@@ -306,9 +306,8 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     vel_acc = accZ_tmp * accVelScale * (float)accTimeSum;
 
     // Integrator - Altitude in cm
-    accAlt += (vel_acc * 0.5f) * dt + vel * dt;                                                                 // integrate velocity to get distance (x= a/2 * t^2)
+    accAlt += (vel_acc * 0.5f) * dt + vel * dt;                                                            // integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * barometerConfig()->baro_cf_alt + (float)BaroAlt * (1.0f - barometerConfig()->baro_cf_alt);    // complementary filter for altitude estimation (baro & acc)
-
 
     vel += vel_acc;
 

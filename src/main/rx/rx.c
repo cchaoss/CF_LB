@@ -602,7 +602,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			if(failsafe_flag > 120)//change throttle to 1000 and disarm
 			{
 				failsafe_flag = 120;
-				mspData.throttle = 1000;
+				mspData.throttle = 1100;
 			}else	mspData.throttle = 1400;//hold the throttle for 3s
 
 		}else failsafe_flag = 0;	
