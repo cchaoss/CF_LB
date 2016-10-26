@@ -107,6 +107,18 @@ extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
 
+//328 data define
+#define		ARM_P 			1<<0
+#define 	ALTHOLD_P 		1<<1
+#define		ROLL_P 			1<<2
+#define		PITCH_P 		1<<3
+#define		THROTTLE_P 		1<<4
+#define 	YAW_P 			1<<5
+#define		LEDORBEEP_P 	1<<6
+#define 	TRIMORMOTOR_P 	1<<7
+
+
+
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
 #define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)
 

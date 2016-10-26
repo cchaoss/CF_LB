@@ -588,7 +588,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	rcSampleIndex++;
 
 #ifdef NRF
-#if 1
 	
 	if(flag1)	
 	{
@@ -613,24 +612,34 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		nrf_tx();	
 		SetRX_Mode();
 	}
+
+	//328P
+	if(mspData.mspCmd & ARM)
+	{
+		uint8_t sta = 0;
+		i2cRead(0x08,0xff,1, &sta);
+		if(sta == '$')
+		{
+			i2cRead(0x08,0xff,1, &sta);
+			if(sta == '<')
+			{
+				i2cRead(0x08,0xff,1, &sta);
+				if(sta & ALTHOLD_P)	mspData.mspCmd |= ALTHOLD; 
+			}
+
+		}
+	}
+
 	rx_data_process(rcData);
 	flag1 = !flag1;
-#endif
-/*	if(!nrf_rx())
-	{
-		mspData.roll = 1500;
-		mspData.yaw = 1500;
-		mspData.pitch = 1500;
-		mspData.throttle = 1000;
-	}
-	rx_data_process(rcData);
 
 
-	i2cRead(0x08,0xff,1, &sta);
-	i2cWrite(0x08,0,sta);
+
+	
+	//i2cWrite(0x08,0,sta);
 
 	delayMicroseconds(10);
-*/
+
 #endif
     
 	

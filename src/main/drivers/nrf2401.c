@@ -101,14 +101,14 @@ void rx_data_process(int16_t *buf)
 					if(x > 80) {BEEP_OFF;x = 0;}break;
 			case 5: BEEP_ON;break;
 		}
-				
+			
 		if(mspData.mspCmd & ARM)	mwArm();
 		else{	
 				mwDisarm();
 				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
 				mspData.dirdata = 0;
 			}
-
+		
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 
 		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
