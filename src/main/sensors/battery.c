@@ -108,11 +108,6 @@ static void updateBatteryVoltage(void)
 
 void updateBattery(void)
 {
-
-#ifdef NRF
-	batt = vbat;
-#endif 
-
     updateBatteryVoltage();
     
     /* battery has just been connected*/
@@ -174,6 +169,26 @@ void updateBattery(void)
         case BATTERY_NOT_PRESENT:
             break;
     }
+
+#ifdef NRF
+	batt = vbat;
+	static bool a;
+	static uint32_t b,c;
+	if(batteryState == BATTERY_WARNING || batteryState == BATTERY_CRITICAL)
+	{
+		if(a)	{b = millis();	a = false;}
+		c = millis();
+		if(c-b > 6000)	
+		{
+			beeper(BEEPER_BAT_CRIT_LOW);
+			batt_low = true;
+		}
+		else if(c-b > 3000)	beeper(BEEPER_BAT_LOW);
+	}else a = true;
+#endif 
+
+
+
 }
 
 batteryState_e getBatteryState(void)

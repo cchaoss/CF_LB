@@ -13,6 +13,7 @@
 #include "pwm_output.h"
 #include "sound_beeper.h"
 
+bool batt_low = false;
 uint16_t batt;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data

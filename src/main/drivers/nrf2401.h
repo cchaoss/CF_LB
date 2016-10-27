@@ -71,6 +71,7 @@
 #define ONLINE		1<<6
 #define CALIBRATION	1<<7
 #define NEWADDRESS	1<<8
+#define OFFLINE     1<<9
 //dir
 #define	UP		    1
 #define	DOWN		2
@@ -103,6 +104,7 @@ typedef struct _dataPackage
 	
 }dataPackage;
 
+extern bool batt_low;
 extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;

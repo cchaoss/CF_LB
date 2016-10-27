@@ -591,18 +591,19 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	
 	if(flag1)	
 	{
-		if(!nrf_rx())
+		if(!nrf_rx() || batt_low)
 		{
 			mspData.roll = 1500;
 			mspData.yaw = 1500;
 			mspData.pitch = 1500;
 			mspData.dir = 0x00;//empty the online data buf
 			failsafe_flag++;
-			if(failsafe_flag > 120)//change throttle to 1000 and disarm
+			if(failsafe_flag > 100)//change throttle to 1000 and disarm
 			{
-				failsafe_flag = 120;
-				mspData.throttle = 1100;
-			}else	mspData.throttle = 1400;//hold the throttle for 3s
+				failsafe_flag = 100;
+				mspData.throttle = 1000;
+				mspData.mspCmd &= ~ARM;
+			}else	mspData.throttle = bound(mspData.throttle,1000,1400);//hold the throttle for 3s
 
 		}else failsafe_flag = 0;	
 		SetTX_Mode();
@@ -614,7 +615,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 
 	//328P
-	if(mspData.mspCmd & ARM)
+	if(mspData.mspCmd & OFFLINE)
 	{
 		uint8_t sta = 0;
 		i2cRead(0x08,0xff,1, &sta);
@@ -630,16 +631,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		}
 	}
 
+
 	rx_data_process(rcData);
 	flag1 = !flag1;
-
-
-
-	
 	//i2cWrite(0x08,0,sta);
-
-	delayMicroseconds(10);
-
+	//delayMicroseconds(10);
 #endif
     
 	
