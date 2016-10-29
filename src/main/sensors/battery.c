@@ -78,8 +78,8 @@ PG_RESET_TEMPLATE(batteryConfig_t, batteryConfig,
     .vbatresdivval = VBAT_RESDIVVAL_DEFAULT,
     .vbatresdivmultiplier = VBAT_RESDIVMULTIPLIER_DEFAULT,
     .vbatmaxcellvoltage = 43,
-    .vbatmincellvoltage = 33,
-    .vbatwarningcellvoltage = 35,
+    .vbatmincellvoltage = 25,
+    .vbatwarningcellvoltage = 30,
     .currentMeterScale = 400, // for Allegro ACS758LCB-100U (40mV/A)
     .currentMeterType = CURRENT_SENSOR_ADC,
 );
@@ -172,18 +172,20 @@ void updateBattery(void)
 
 #ifdef NRF
 	batt = vbat;
+	if(batt < 10)	beeperSilence();
 	static bool a;
 	static uint32_t b,c;
 	if(batteryState == BATTERY_WARNING || batteryState == BATTERY_CRITICAL)
 	{
 		if(a)	{b = millis();	a = false;}
 		c = millis();
-		if(c-b > 6000)	
+	
+		if(c-b > 8000)	
 		{
 			beeper(BEEPER_BAT_CRIT_LOW);
 			batt_low = true;
 		}
-		else if(c-b > 3000)	beeper(BEEPER_BAT_LOW);
+		else if(c-b > 3500)	beeper(BEEPER_BAT_LOW);
 	}else a = true;
 #endif 
 

@@ -568,10 +568,10 @@ static void detectAndApplySignalLossBehaviour(void)
 
 }
 
-bool flag1 = true;
+
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
-	static uint8_t failsafe_flag = 0;
+	
 	rxUpdateAt = currentTime + (1000000 / 80);
     //rxUpdateAt = currentTime + DELAY_50_HZ;
 
@@ -588,8 +588,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	rcSampleIndex++;
 
 #ifdef NRF
-	
-	if(flag1)	
+	static bool overturn = true;
+	static uint8_t failsafe_flag = 0;
+	if(overturn)	
 	{
 		if(!nrf_rx() || batt_low)
 		{
@@ -598,46 +599,101 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			mspData.pitch = 1500;
 			mspData.dir = 0x00;//empty the online data buf
 			failsafe_flag++;
-			if(failsafe_flag > 100)//change throttle to 1000 and disarm
+			if(failsafe_flag > 120)//change throttle to 1000 and disarm
 			{
-				failsafe_flag = 100;
+				failsafe_flag = 120;
 				mspData.throttle = 1000;
 				mspData.mspCmd &= ~ARM;
-			}else	mspData.throttle = bound(mspData.throttle,1000,1400);//hold the throttle for 3s
-
+			}
+			else	
+			{	
+				if(mspData.throttle >= 1600)mspData.throttle = 1550;
+					else if(mspData.throttle >= 1495)mspData.throttle = 1450;
+						else mspData.throttle = 1300;
+			}	
 		}else failsafe_flag = 0;	
 		SetTX_Mode();
 	}
-	else	
-	{
-		nrf_tx();	
-		SetRX_Mode();
-	}
+	else	{nrf_tx();	SetRX_Mode();}
 
 	//328P
 	if(mspData.mspCmd & OFFLINE)
 	{
 		uint8_t sta = 0;
+		static uint8_t msp_328p = 0,data_328p = 0;
 		i2cRead(0x08,0xff,1, &sta);
 		if(sta == '$')
 		{
 			i2cRead(0x08,0xff,1, &sta);
 			if(sta == '<')
 			{
-				i2cRead(0x08,0xff,1, &sta);
-				if(sta & ALTHOLD_P)	mspData.mspCmd |= ALTHOLD; 
-			}
+				i2cRead(0x08,0xff,1, &msp_328p);
+				if(msp_328p < LEFT_P)
+					switch(msp_328p)
+					{
+						case ARM_P: 	mspData.mspCmd |= ARM;break;
+						case DISARM_P:	mspData.mspCmd &= ~ARM;break;
+						case CALIBRAT_P:mspData.mspCmd |= CALIBRATION;break;
+						case ALTHOLD_P:	mspData.mspCmd |= ALTHOLD;break;
+						case NALTHOLD_P:mspData.mspCmd &= ~ALTHOLD;break;
 
+						case LED_AON:	mspData.led |= 1 << 4;break;
+						case LED_AOFF:	mspData.led &= ~(1 << 4);break;
+						case LED_BON:	mspData.led |= 1 << 5;break;
+						case LED_BOFF:	mspData.led &= ~(1 << 5);break;
+						case LED_CON:	mspData.led |= 1 << 6;break;
+						case LED_COFF:	mspData.led &= ~(1 << 6);break;
+						case LED_DON:	mspData.led |= 1 << 7;break;
+						case LED_DOFF:	mspData.led &= ~(1 << 7);break;
+						case LED_AL_ON:	mspData.led |= 0xf0;break;
+						case LED_AL_OFF:mspData.led &= 0x0f;break;
+
+						case RGBB_BLAC:mspData.led &= 0xf0;break;
+						case RGBB_WHIT:mspData.led &= 0xf1;break;
+						case RGBB_RED: mspData.led &= 0xf2;break;
+						case RGBB_GREE:mspData.led &= 0xf5;break;
+						case RGBB_BLUE:mspData.led &= 0xf6;break;
+						case RGBB_ORAN:mspData.led &= 0xf3;break;
+						case RGBB_YELL:mspData.led &= 0xf4;break;
+						case RGBB_PINK:mspData.led &= 0xf6;break;
+						case RGBB_VIOL:mspData.led &= 0xf7;break;
+
+						case BEEP_OPEN:	mspData.beep = 1;break;
+						case BEEP_STOP:	mspData.beep = 2;break;
+						case BEEP_S:	mspData.beep = 3;break;
+						case BEEP_M:	mspData.beep = 4;break;
+						case BEEP_L:	mspData.beep = 5;break;
+						default:break;
+					}
+				else 
+				{	
+					i2cRead(0x08,0xff,1, &data_328p);
+					switch(msp_328p)
+					{
+	  					case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
+						case RIGHT_P:	mspData.dir = RIGHT;mspData.dirdata = data_328p;break;
+						case FORWARD_p:	mspData.dir = FORWARD;mspData.dirdata = data_328p;break;
+						case BACK_P:	mspData.dir = BACKWARD;mspData.dirdata = data_328p;break;
+						case UP_P:		mspData.dir = UP;mspData.dirdata = data_328p;break;
+						case CR_P:		mspData.dir = CR;mspData.dirdata = data_328p;break;
+						case CCR_P:		mspData.dir = CCR;mspData.dirdata = data_328p;break;
+						case TRIM_ROLL:	mspData.dir = UP;mspData.trim_roll = data_328p;break;
+						case TRIM_PITCH:mspData.dir = UP;mspData.trim_pitch = data_328p;break;
+						case MOTOR0:	mspData.motor[0] = data_328p;break;
+						case MOTOR1:	mspData.motor[1] = data_328p;break;
+						case MOTOR2:	mspData.motor[2] = data_328p;break;
+						case MOTOR3:	mspData.motor[3] = data_328p;break;
+						default:break;
+					}
+				}
+			}
 		}
 	}
-
-
-	rx_data_process(rcData);
-	flag1 = !flag1;
 	//i2cWrite(0x08,0,sta);
 	//delayMicroseconds(10);
+	rx_data_process(rcData);
+	overturn = !overturn;
 #endif
-    
 	
 }
 

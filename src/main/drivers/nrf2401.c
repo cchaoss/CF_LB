@@ -88,32 +88,22 @@ bool nrf_rx(void)
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
-	
+	static bool arm_flag = false;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-		switch (mspData.beep)
+		if(mspData.mspCmd & ARM)	
+			if(arm_flag) mwArm();
+				else  mwDisarm();
+		else
 		{	
-			case 1: BEEP_OFF;break;
-			case 2: BEEP_ON;x++;
-					if(x > 8 ) {BEEP_OFF;x = 0;}break;
-			case 3: BEEP_ON;x++;
-					if(x > 40) {BEEP_OFF;x = 0;}break;
-			case 4: BEEP_ON;x++;
-					if(x > 80) {BEEP_OFF;x = 0;}break;
-			case 5: BEEP_ON;break;
+			if(batt < 100) arm_flag = false;
+				else arm_flag = true;
+			mwDisarm();
+			buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
+			mspData.dirdata = 0;
 		}
-			
-		if(mspData.mspCmd & ARM)	mwArm();
-		else{	
-				mwDisarm();
-				buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
-				mspData.dirdata = 0;
-			}
 		
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
-
-		if(mspData.mspCmd & ALTHOLD)	buf[4] = 1900;
-			else buf[4] = 1100;
 
 		if(mspData.mspCmd & ONLINE)	
 		{	
@@ -143,6 +133,32 @@ void rx_data_process(int16_t *buf)
 				}
 			}
 			else	{buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;}
+
+
+			if(mspData.beep == 1)	BEEP_OFF;
+			if(mspData.beep == 2)
+			{
+				x++;
+				if(x < 10) BEEP_ON;
+				else if(x < 120) BEEP_OFF;else x = 0;
+			}
+
+			else if(mspData.beep == 3)
+			{
+				x++;
+				if(x < 40) BEEP_ON;
+				else if(x < 120) BEEP_OFF;else x = 0;
+			}
+
+			else if(mspData.beep == 4)
+			{
+				x++;
+				if(x < 70) BEEP_ON;
+				else if(x < 120) BEEP_OFF;else x = 0;
+			}else x = 0;
+
+			if(mspData.beep == 5)BEEP_ON;
+			
 		}
 		else
 		{	

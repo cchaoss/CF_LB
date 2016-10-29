@@ -93,7 +93,11 @@ PG_RESET_TEMPLATE(armingConfig_t, armingConfig,
 
 bool isUsingSticksForArming(void)
 {
+#ifndef NRF
     return isUsingSticksToArm;
+#else
+	return false;
+#endif
 }
 
 

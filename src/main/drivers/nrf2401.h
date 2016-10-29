@@ -71,7 +71,7 @@
 #define ONLINE		1<<6
 #define CALIBRATION	1<<7
 #define NEWADDRESS	1<<8
-#define OFFLINE     1<<9
+#define OFFLINE		1<<9
 //dir
 #define	UP		    1
 #define	DOWN		2
@@ -109,15 +109,53 @@ extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
 
-//328 data define
-#define		ARM_P 			1<<0
-#define 	ALTHOLD_P 		1<<1
-#define		ROLL_P 			1<<2
-#define		PITCH_P 		1<<3
-#define		THROTTLE_P 		1<<4
-#define 	YAW_P 			1<<5
-#define		LEDORBEEP_P 	1<<6
-#define 	TRIMORMOTOR_P 	1<<7
+//328 data flag
+enum _CMD
+{
+	ARM_P = 1,
+	DISARM_P,
+	CALIBRAT_P,
+	ALTHOLD_P,
+	NALTHOLD_P,
+	LED_AON,
+	LED_AOFF,
+	LED_BON,
+	LED_BOFF,
+	LED_CON,
+	LED_COFF,
+	LED_DON,
+	LED_DOFF,
+	LED_AL_ON,
+	LED_AL_OFF,
+	RGBB_BLAC,
+	RGBB_WHIT,
+	RGBB_RED,
+	RGBB_GREE,
+	RGBB_BLUE,
+	RGBB_ORAN,
+	RGBB_YELL,
+	RGBB_PINK,
+	RGBB_VIOL,
+	BEEP_OPEN,
+	BEEP_STOP,
+	BEEP_S,
+	BEEP_M,
+	BEEP_L,
+
+	LEFT_P,
+	RIGHT_P,
+	FORWARD_p,
+	BACK_P,
+	UP_P,
+	CR_P,
+	CCR_P,
+	TRIM_ROLL,
+	TRIM_PITCH,
+	MOTOR0,
+	MOTOR1,
+	MOTOR2,
+	MOTOR3,
+};
 
 
 
