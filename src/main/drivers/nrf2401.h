@@ -158,7 +158,6 @@ enum _CMD
 };
 
 
-
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
 #define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)
 

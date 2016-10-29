@@ -140,7 +140,6 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
-
 #ifdef USE_ALTHOLD
 	if(rcData[3] > 1470 && rcData[3] < 1530)
 	{
@@ -161,8 +160,25 @@ void updateAltHoldState(void)
 		}
 	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1050,1850);
 	rcData[5] = rcCommand[THROTTLE];	//just for display
-	
+#endif
+
+#ifdef NRF
+	if(mspData.mspCmd & ALTHOLD)
+	{	
+
+		if (!FLIGHT_MODE(BARO_MODE)) 
+		{
+		    ENABLE_FLIGHT_MODE(BARO_MODE);
+		    AltHold = EstAlt;
+		    initialRawThrottleHold = rcData[THROTTLE];
+		    initialThrottleHold = rcCommand[THROTTLE];
+		    errorVelocityI = 0;
+		    altHoldThrottleAdjustment = 0;
+		}
+	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+
 #else
+
     if (!rcModeIsActive(BOXBARO)) {
         DISABLE_FLIGHT_MODE(BARO_MODE);
         return;

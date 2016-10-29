@@ -93,11 +93,7 @@ PG_RESET_TEMPLATE(armingConfig_t, armingConfig,
 
 bool isUsingSticksForArming(void)
 {
-#ifndef NRF
-    return isUsingSticksToArm;
-#else
-	return false;
-#endif
+	return isUsingSticksToArm;
 }
 
 
@@ -362,6 +358,10 @@ int32_t getRcStickDeflection(int32_t axis, uint16_t midrc)
 
 void useRcControlsConfig(modeActivationCondition_t *modeActivationConditions)
 {
+#ifdef NRF
+	isUsingSticksToArm = false;
+#else
     isUsingSticksToArm = !rcModeIsActivationConditionPresent(modeActivationConditions, BOXARM);
+#endif
 }
 

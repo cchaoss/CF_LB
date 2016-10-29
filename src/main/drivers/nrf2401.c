@@ -91,23 +91,22 @@ void rx_data_process(int16_t *buf)
 	static bool arm_flag = false;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-		if(mspData.mspCmd & ARM)	
+		if(mspData.mspCmd & ARM)
 			if(arm_flag) mwArm();
 				else  mwDisarm();
 		else
 		{	
-			if(batt < 100) arm_flag = false;
-				else arm_flag = true;
 			mwDisarm();
 			buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
 			mspData.dirdata = 0;
+			if(batt < 100) arm_flag = false;
+				else arm_flag = true;
 		}
 		
 		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
 
 		if(mspData.mspCmd & ONLINE)	
 		{	
-			//LED_D_ON;//LED for online
 			if(mspData.dir)
 			{	
 				switch(mspData.dir)
@@ -131,9 +130,7 @@ void rx_data_process(int16_t *buf)
 								buf[2] = 1500 - mspData.dirdata;break;
 					default :	break;
 				}
-			}
-			else	{buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;}
-
+			}else	{buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;}
 
 			if(mspData.beep == 1)	BEEP_OFF;
 			if(mspData.beep == 2)
@@ -142,27 +139,22 @@ void rx_data_process(int16_t *buf)
 				if(x < 10) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}
-
 			else if(mspData.beep == 3)
 			{
 				x++;
 				if(x < 40) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}
-
 			else if(mspData.beep == 4)
 			{
 				x++;
 				if(x < 70) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}else x = 0;
-
 			if(mspData.beep == 5)BEEP_ON;
-			
 		}
 		else
 		{	
-			//LED_D_OFF;
 			buf[0] = mspData.roll;
 			buf[1] = mspData.pitch;
 			buf[2] = mspData.yaw;
