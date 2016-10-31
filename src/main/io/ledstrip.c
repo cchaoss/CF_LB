@@ -987,7 +987,7 @@ void updateLedStrip(void)
         return;
     }
 #ifdef NRF	
-	if(mspData.mspCmd & ONLINE)
+	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)
 	{
 		
 		if(mspData.led & 1 << 4) LED_A_ON;else LED_A_OFF;

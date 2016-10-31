@@ -26,6 +26,9 @@
 #ifndef NRF
 #define BLACKBOX
 #define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
+
+#define USE_FLASHFS
+#define USE_FLASH_M25P16
 #endif
 
 #define LED0_GPIO   GPIOB
@@ -62,8 +65,7 @@
 #define USE_MAG_HMC5883
 #define MAG_HMC5883_ALIGN CW270_DEG
 
-#define USE_FLASHFS
-#define USE_FLASH_M25P16
+
 
 #define LED0
 #define BEEPER

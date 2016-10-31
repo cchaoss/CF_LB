@@ -619,6 +619,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	//328P
 	if(mspData.mspCmd & OFFLINE)
 	{
+		LED_A_ON;//
 		uint8_t sta = 0;
 		static uint8_t msp_328p = 0,data_328p = 0;
 		i2cRead(0x08,0xff,1, &sta);
@@ -626,8 +627,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		{
 			i2cRead(0x08,0xff,1, &sta);
 			if(sta == '<')
-			{
+			{	
 				i2cRead(0x08,0xff,1, &msp_328p);
+				rcData[7] = msp_328p;
 				if(msp_328p < LEFT_P)
 					switch(msp_328p)
 					{
@@ -649,14 +651,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						case LED_AL_OFF:mspData.led &= 0x0f;break;
 
 						case RGBB_BLAC:mspData.led &= 0xf0;break;
-						case RGBB_WHIT:mspData.led &= 0xf1;break;
-						case RGBB_RED: mspData.led &= 0xf2;break;
-						case RGBB_GREE:mspData.led &= 0xf5;break;
-						case RGBB_BLUE:mspData.led &= 0xf6;break;
-						case RGBB_ORAN:mspData.led &= 0xf3;break;
-						case RGBB_YELL:mspData.led &= 0xf4;break;
-						case RGBB_PINK:mspData.led &= 0xf6;break;
-						case RGBB_VIOL:mspData.led &= 0xf7;break;
+						case RGBB_WHIT:mspData.led = (mspData.led&0xf0) + 0x01;break;
+						case RGBB_RED: mspData.led = (mspData.led&0xf0) + 0x02;break;
+						case RGBB_GREE:mspData.led = (mspData.led&0xf0) + 0x05;break;
+						case RGBB_BLUE:mspData.led = (mspData.led&0xf0) + 0x06;break;
+						case RGBB_ORAN:mspData.led = (mspData.led&0xf0) + 0x03;break;
+						case RGBB_YELL:mspData.led = (mspData.led&0xf0) + 0x04;break;					
+						case RGBB_PINK:mspData.led = (mspData.led&0xf0) + 0x06;break;
+						case RGBB_VIOL:mspData.led = (mspData.led&0xf0) + 0x07;break;
 
 						case BEEP_OPEN:	mspData.beep = 1;break;
 						case BEEP_STOP:	mspData.beep = 2;break;
@@ -688,7 +690,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				}
 			}
 		}
-	}
+	}else LED_A_OFF;
 	//i2cWrite(0x08,0,sta);
 	//delayMicroseconds(10);
 	rx_data_process(rcData);

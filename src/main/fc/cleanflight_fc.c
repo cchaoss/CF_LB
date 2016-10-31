@@ -792,9 +792,9 @@ void taskMainPidLoop(void)
 		}
 	}else  a = true;*/
 	/////////////////////////////
-	if(mspData.mspCmd & ONLINE)
+	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)
 	{	
-		if(mspData.dir == 0 && !(mspData.mspCmd & ARM))
+		if(mspData.dir == 0 && !(mspData.mspCmd & ARM))//上锁状态
 		{
 			pwmWriteMotor(0,bound(mspData.motor[0],1400,1000));
 			pwmWriteMotor(1,bound(mspData.motor[1],1400,1000));
