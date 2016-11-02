@@ -13,7 +13,7 @@
 #include "pwm_output.h"
 #include "sound_beeper.h"
 
-bool batt_low = false;
+bool batt_low = false,offline_flag;
 uint16_t batt;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
@@ -68,11 +68,15 @@ bool nrf_rx(void)
 {
     uint8_t sta;
     static uint8_t count;
+	dataPackage t_mspData;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR))
     {
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
-		memcpy(&mspData,RXDATA,sizeof(mspData));
+		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
+		if(!(t_mspData.mspCmd & OFFLINE))
+			mspData = t_mspData;
+		else mspData.mspCmd |= OFFLINE;
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }else count++;

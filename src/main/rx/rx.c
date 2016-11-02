@@ -584,7 +584,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-    //detectAndApplySignalLossBehaviour();
+#ifndef NRF
+    detectAndApplySignalLossBehaviour();
+#endif	
 	rcSampleIndex++;
 
 #ifdef NRF
@@ -607,8 +609,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			}
 			else	
 			{	
-				if(mspData.throttle >= 1600)mspData.throttle = 1550;
-					else if(mspData.throttle >= 1495)mspData.throttle = 1450;
+				if(mspData.throttle >= 1650)mspData.throttle = 1550;
+					else if(mspData.throttle >= 1497)mspData.throttle = 1430;
 						else mspData.throttle = 1300;
 			}	
 		}else failsafe_flag = 0;	
@@ -616,20 +618,30 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
+	/*uint8_t sta = 0;
+	i2cRead(0x08,0xff,1, &sta);
+	delayMicroseconds(10);
+	i2cWrite(0x08,0,sta+1);
+	*/
 	//328P
+	static uint8_t sta1 = 0;
 	if(mspData.mspCmd & OFFLINE)
 	{
-		LED_A_ON;//
+		//delayMicroseconds(50);
+		//LED_A_ON;//
 		uint8_t sta = 0;
 		static uint8_t msp_328p = 0,data_328p = 0;
 		i2cRead(0x08,0xff,1, &sta);
-		if(sta == '$')
-		{
-			i2cRead(0x08,0xff,1, &sta);
-			if(sta == '<')
-			{	
-				i2cRead(0x08,0xff,1, &msp_328p);
-				rcData[7] = msp_328p;
+
+		if(sta == '$'){sta1=1;}
+		if(sta == '<' && sta1 == 1){sta1++;}
+		if(sta1 == 2 && sta != '<')
+		{		
+				offline_flag = true;
+				i2cWrite(0x08,0,'$');
+				sta1 = 0;
+				msp_328p = sta;
+				LED_A_ON;//
 				if(msp_328p < LEFT_P)
 					switch(msp_328p)
 					{
@@ -667,9 +679,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						case BEEP_L:	mspData.beep = 5;break;
 						default:break;
 					}
-				else 
+				/*else 
 				{	
-					i2cRead(0x08,0xff,1, &data_328p);
+			
 					switch(msp_328p)
 					{
 	  					case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
@@ -687,12 +699,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						case MOTOR3:	mspData.motor[3] = data_328p;break;
 						default:break;
 					}
-				}
-			}
-		}
-	}else LED_A_OFF;
-	//i2cWrite(0x08,0,sta);
-	//delayMicroseconds(10);
+				}*/
+
+			
+		}else {LED_A_OFF; offline_flag = false;}
+	}else	i2cWrite(0x08,0,'<');
 	rx_data_process(rcData);
 	overturn = !overturn;
 #endif
