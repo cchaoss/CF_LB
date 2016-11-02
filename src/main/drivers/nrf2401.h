@@ -104,7 +104,7 @@ typedef struct _dataPackage
 	
 }dataPackage;
 
-extern bool batt_low,offline_flag;
+extern bool batt_low;
 extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
@@ -186,6 +186,7 @@ bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length);
 bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);
+void led_beep_sleep(void);
 
 void rx_data_process(int16_t *buf);
 bool nrf_rx(void);

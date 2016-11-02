@@ -594,6 +594,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	static uint8_t failsafe_flag = 0;
 	if(overturn)	
 	{
+		
 		if(!nrf_rx() || batt_low)
 		{
 			mspData.roll = 1500;
@@ -614,6 +615,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						else mspData.throttle = 1300;
 			}	
 		}else failsafe_flag = 0;	
+
 		SetTX_Mode();
 	}
 	else	{nrf_tx();	SetRX_Mode();}
@@ -624,85 +626,93 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	i2cWrite(0x08,0,sta+1);
 	*/
 	//328P
-	static uint8_t sta1 = 0;
+	
 	if(mspData.mspCmd & OFFLINE)
 	{
 		//delayMicroseconds(50);
 		//LED_A_ON;//
 		uint8_t sta = 0;
-		static uint8_t msp_328p = 0,data_328p = 0;
+		static uint8_t sta1 = 0,msp_328p = 0,data_328p = 0;
 		i2cRead(0x08,0xff,1, &sta);
-
 		if(sta == '$'){sta1=1;}
-		if(sta == '<' && sta1 == 1){sta1++;}
-		if(sta1 == 2 && sta != '<')
-		{		
-				offline_flag = true;
-				i2cWrite(0x08,0,'$');
+		if(sta == '<' && sta1 == 1)	sta1 = 2;
+		if(sta1 == 2 & sta != '<')
+		{	
+			i2cWrite(0x08,0,'$');
+			
+			msp_328p = sta;
+			if(msp_328p < LEFT_P)
+			{
 				sta1 = 0;
-				msp_328p = sta;
-				LED_A_ON;//
-				if(msp_328p < LEFT_P)
-					switch(msp_328p)
-					{
-						case ARM_P: 	mspData.mspCmd |= ARM;break;
-						case DISARM_P:	mspData.mspCmd &= ~ARM;break;
-						case CALIBRAT_P:mspData.mspCmd |= CALIBRATION;break;
-						case ALTHOLD_P:	mspData.mspCmd |= ALTHOLD;break;
-						case NALTHOLD_P:mspData.mspCmd &= ~ALTHOLD;break;
+				switch(msp_328p)
+				{
+					case ARM_P: 	mspData.mspCmd |= ARM;break;
+					case DISARM_P:	mspData.mspCmd &= ~ARM;break;
+					case CALIBRAT_P:mspData.mspCmd |= CALIBRATION;break;
+					case ALTHOLD_P:	mspData.mspCmd |= ALTHOLD;break;
+					case NALTHOLD_P:mspData.mspCmd &= ~ALTHOLD;break;
 
-						case LED_AON:	mspData.led |= 1 << 4;break;
-						case LED_AOFF:	mspData.led &= ~(1 << 4);break;
-						case LED_BON:	mspData.led |= 1 << 5;break;
-						case LED_BOFF:	mspData.led &= ~(1 << 5);break;
-						case LED_CON:	mspData.led |= 1 << 6;break;
-						case LED_COFF:	mspData.led &= ~(1 << 6);break;
-						case LED_DON:	mspData.led |= 1 << 7;break;
-						case LED_DOFF:	mspData.led &= ~(1 << 7);break;
-						case LED_AL_ON:	mspData.led |= 0xf0;break;
-						case LED_AL_OFF:mspData.led &= 0x0f;break;
+					case LED_AON:	mspData.led |= 1 << 4;break;
+					case LED_AOFF:	mspData.led &= ~(1 << 4);break;
+					case LED_BON:	mspData.led |= 1 << 5;break;
+					case LED_BOFF:	mspData.led &= ~(1 << 5);break;
+					case LED_CON:	mspData.led |= 1 << 6;break;
+					case LED_COFF:	mspData.led &= ~(1 << 6);break;
+					case LED_DON:	mspData.led |= 1 << 7;break;
+					case LED_DOFF:	mspData.led &= ~(1 << 7);break;
+					case LED_AL_ON:	mspData.led |= 0xf0;break;
+					case LED_AL_OFF:mspData.led &= 0x0f;break;
 
-						case RGBB_BLAC:mspData.led &= 0xf0;break;
-						case RGBB_WHIT:mspData.led = (mspData.led&0xf0) + 0x01;break;
-						case RGBB_RED: mspData.led = (mspData.led&0xf0) + 0x02;break;
-						case RGBB_GREE:mspData.led = (mspData.led&0xf0) + 0x05;break;
-						case RGBB_BLUE:mspData.led = (mspData.led&0xf0) + 0x06;break;
-						case RGBB_ORAN:mspData.led = (mspData.led&0xf0) + 0x03;break;
-						case RGBB_YELL:mspData.led = (mspData.led&0xf0) + 0x04;break;					
-						case RGBB_PINK:mspData.led = (mspData.led&0xf0) + 0x06;break;
-						case RGBB_VIOL:mspData.led = (mspData.led&0xf0) + 0x07;break;
+					case RGBB_BLAC:mspData.led &= 0xf0;break;
+					case RGBB_WHIT:mspData.led = (mspData.led&0xf0) + 0x01;break;
+					case RGBB_RED: mspData.led = (mspData.led&0xf0) + 0x02;break;
+					case RGBB_GREE:mspData.led = (mspData.led&0xf0) + 0x05;break;
+					case RGBB_BLUE:mspData.led = (mspData.led&0xf0) + 0x06;break;
+					case RGBB_ORAN:mspData.led = (mspData.led&0xf0) + 0x03;break;
+					case RGBB_YELL:mspData.led = (mspData.led&0xf0) + 0x04;break;					
+					case RGBB_PINK:mspData.led = (mspData.led&0xf0) + 0x06;break;
+					case RGBB_VIOL:mspData.led = (mspData.led&0xf0) + 0x07;break;
 
-						case BEEP_OPEN:	mspData.beep = 1;break;
-						case BEEP_STOP:	mspData.beep = 2;break;
-						case BEEP_S:	mspData.beep = 3;break;
-						case BEEP_M:	mspData.beep = 4;break;
-						case BEEP_L:	mspData.beep = 5;break;
-						default:break;
-					}
-				/*else 
-				{	
+					case BEEP_OPEN:	mspData.beep = 1;break;
+					case BEEP_STOP:	mspData.beep = 2;break;
+					case BEEP_S:	mspData.beep = 3;break;
+					case BEEP_M:	mspData.beep = 4;break;
+					case BEEP_L:	mspData.beep = 5;break;
+					default:break;
+				}
+			}	
+			else	sta1++;
+		}
+		else if(sta1 == 3)
+		{	
+			data_328p = sta;
+			//rcData[6] = data_328p;
 			
-					switch(msp_328p)
-					{
-	  					case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
-						case RIGHT_P:	mspData.dir = RIGHT;mspData.dirdata = data_328p;break;
-						case FORWARD_p:	mspData.dir = FORWARD;mspData.dirdata = data_328p;break;
-						case BACK_P:	mspData.dir = BACKWARD;mspData.dirdata = data_328p;break;
-						case UP_P:		mspData.dir = UP;mspData.dirdata = data_328p;break;
-						case CR_P:		mspData.dir = CR;mspData.dirdata = data_328p;break;
-						case CCR_P:		mspData.dir = CCR;mspData.dirdata = data_328p;break;
-						case TRIM_ROLL:	mspData.dir = UP;mspData.trim_roll = data_328p;break;
-						case TRIM_PITCH:mspData.dir = UP;mspData.trim_pitch = data_328p;break;
-						case MOTOR0:	mspData.motor[0] = data_328p;break;
-						case MOTOR1:	mspData.motor[1] = data_328p;break;
-						case MOTOR2:	mspData.motor[2] = data_328p;break;
-						case MOTOR3:	mspData.motor[3] = data_328p;break;
-						default:break;
-					}
-				}*/
-
+			sta1 = 0;
+			switch(msp_328p)
+			{
+				case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
+				case RIGHT_P:	mspData.dir = RIGHT;mspData.dirdata = data_328p;break;
+				case FORWARD_p:	mspData.dir = FORWARD;mspData.dirdata = data_328p;break;
+				case BACK_P:	mspData.dir = BACKWARD;mspData.dirdata = data_328p;break;
+				case UP_P:		mspData.dir = UP;mspData.dirdata = data_328p;break;
+				case CR_P:		mspData.dir = CR;mspData.dirdata = data_328p;break;
+				case CCR_P:		mspData.dir = CCR;mspData.dirdata = data_328p;break;
+				case TRIM_ROLL:	mspData.dir = UP;mspData.trim_roll = data_328p;break;
+				case TRIM_PITCH:mspData.dir = UP;mspData.trim_pitch = data_328p;break;
+				case MOTOR0:	mspData.motor[0] = data_328p*2 + 1000;break;
+				case MOTOR1:	mspData.motor[1] = data_328p*2 + 1000;break;
+				case MOTOR2:	mspData.motor[2] = data_328p*2 + 1000;break;
+				case MOTOR3:	mspData.motor[3] = data_328p*2 + 1000;break;
+				default:break;
+			}
+			rcData[4] =  mspData.motor[0];
+			rcData[5] =  mspData.motor[1];
+			rcData[6] =  mspData.motor[2];
+			rcData[7] =  mspData.motor[3];
+			rcData[8] =  msp_328p;
 			
-		}else {LED_A_OFF; offline_flag = false;}
+		}
 	}else	i2cWrite(0x08,0,'<');
 	rx_data_process(rcData);
 	overturn = !overturn;

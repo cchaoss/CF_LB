@@ -12,8 +12,9 @@
 #include "gpio.h"
 #include "pwm_output.h"
 #include "sound_beeper.h"
+#include "light_led.h"
 
-bool batt_low = false,offline_flag;
+bool batt_low = false;
 uint16_t batt;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
@@ -74,9 +75,12 @@ bool nrf_rx(void)
     {
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
-		if(!(t_mspData.mspCmd & OFFLINE))
-			mspData = t_mspData;
-		else mspData.mspCmd |= OFFLINE;
+		if(!(t_mspData.mspCmd & OFFLINE))	mspData = t_mspData;
+			else if(!(mspData.mspCmd & OFFLINE))
+				 {
+					mspData.mspCmd |= OFFLINE;
+					mspData.throttle = 1000;
+				 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }else count++;
@@ -92,24 +96,27 @@ bool nrf_rx(void)
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
-	static bool arm_flag = false;
+	static bool arm_flag = false,roll_flag = true;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
+		if(fabs(pitch1) > 800 || fabs(roll1) > 800)	{mspData.mspCmd &= ~ARM;roll_flag =false;}
+		if(batt < 20 && millis() > 5000)	led_beep_sleep();
+
 		if(mspData.mspCmd & ARM)
-			if(arm_flag) mwArm();
+			if(arm_flag & roll_flag) mwArm();
 				else  mwDisarm();
 		else
 		{	
 			mwDisarm();
-			buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
-			mspData.dirdata = 0;
 			if(batt < 100) arm_flag = false;
 				else arm_flag = true;
+			mspData.dirdata = 0;
+			buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
 		}
 		
-		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);
+		if(mspData.mspCmd & CALIBRATION)	{accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;}
 
-		if(mspData.mspCmd & ONLINE)	
+		if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)	
 		{	
 			if(mspData.dir)
 			{	
@@ -185,12 +192,12 @@ void nrf_tx(void)
 	SPI_CE_L();
 	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
-	roll1 = 0;
+	yaw1 = 0;
 	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && flag)
 	{
 		delayMicroseconds(10);
-		roll1++;
-		if(roll1 > 450)	
+		yaw1++;
+		if(yaw1 > 450)	
 			flag = false;
 	}
 	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
@@ -323,5 +330,24 @@ void nrf24l01HardwareInit(void)
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&LED);
 
+}
+
+void led_beep_sleep(void)
+{
+	gpio_config_t led0;	
+
+	led0.pin = Pin_11;
+	led0.mode = Mode_IN_FLOATING;
+	
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+	gpioInit(GPIOB,&led0);
+
+	gpio_config_t beep;	
+
+	beep.pin = Pin_15;
+	beep.mode = Mode_IN_FLOATING;
+	
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
+	gpioInit(GPIOC,&beep);
 }
 

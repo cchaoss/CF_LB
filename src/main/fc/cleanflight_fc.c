@@ -802,6 +802,10 @@ void taskMainPidLoop(void)
 			pwmWriteMotor(3,bound(mspData.motor[3],1400,1000));
 		}
 	}
+	else 
+	{
+		for( uint8_t i = 0;i<4;i++)	mspData.motor[i] = 1000;
+	}
 #endif 
 
 
