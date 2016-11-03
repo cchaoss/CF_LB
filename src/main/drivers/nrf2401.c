@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 #include <string.h>
 #include <platform.h>
 #include "nrf2401.h"
@@ -96,17 +97,21 @@ bool nrf_rx(void)
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
-	static bool arm_flag = false,roll_flag = true;
+	static bool arm_flag = false,roll_flag = false;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-		if(fabs(pitch1) > 800 || fabs(roll1) > 800)	{mspData.mspCmd &= ~ARM;roll_flag =false;}
+		
 		if(batt < 20 && millis() > 5000)	led_beep_sleep();
 
 		if(mspData.mspCmd & ARM)
-			if(arm_flag & roll_flag) mwArm();
+		{
+			if(arm_flag && roll_flag) mwArm();
 				else  mwDisarm();
+			if(fabs(pitch1) > 800 || fabs(roll1) > 800)	{mwDisarm();roll_flag =false;}
+		}		
 		else
 		{	
+			roll_flag = true;
 			mwDisarm();
 			if(batt < 100) arm_flag = false;
 				else arm_flag = true;

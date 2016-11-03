@@ -626,25 +626,24 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	i2cWrite(0x08,0,sta+1);
 	*/
 	//328P
-	
+	static uint8_t sta1 = 0,cmd_328p = 0,data_328p = 0;
 	if(mspData.mspCmd & OFFLINE)
 	{
-		//delayMicroseconds(50);
 		//LED_A_ON;//
 		uint8_t sta = 0;
-		static uint8_t sta1 = 0,msp_328p = 0,data_328p = 0;
+		
 		i2cRead(0x08,0xff,1, &sta);
-		if(sta == '$'){sta1=1;}
-		if(sta == '<' && sta1 == 1)	sta1 = 2;
-		if(sta1 == 2 & sta != '<')
+		if(sta == '$'){sta1=1; cmd_328p  = 0;data_328p = 0;}
+		if((sta == '<') && (sta1 == 1))	{sta1 = 2;	cmd_328p = 0;data_328p = 0;}
+		if((sta1 == 2) && (sta != '<'))
 		{	
 			i2cWrite(0x08,0,'$');
 			
-			msp_328p = sta;
-			if(msp_328p < LEFT_P)
+			cmd_328p = sta;
+			if(cmd_328p < LEFT_P)
 			{
 				sta1 = 0;
-				switch(msp_328p)
+				switch(cmd_328p)
 				{
 					case ARM_P: 	mspData.mspCmd |= ARM;break;
 					case DISARM_P:	mspData.mspCmd &= ~ARM;break;
@@ -689,7 +688,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			//rcData[6] = data_328p;
 			
 			sta1 = 0;
-			switch(msp_328p)
+			switch(cmd_328p)
 			{
 				case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
 				case RIGHT_P:	mspData.dir = RIGHT;mspData.dirdata = data_328p;break;
@@ -700,20 +699,25 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				case CCR_P:		mspData.dir = CCR;mspData.dirdata = data_328p;break;
 				case TRIM_ROLL:	mspData.dir = UP;mspData.trim_roll = data_328p;break;
 				case TRIM_PITCH:mspData.dir = UP;mspData.trim_pitch = data_328p;break;
-				case MOTOR0:	mspData.motor[0] = data_328p*2 + 1000;break;
-				case MOTOR1:	mspData.motor[1] = data_328p*2 + 1000;break;
-				case MOTOR2:	mspData.motor[2] = data_328p*2 + 1000;break;
-				case MOTOR3:	mspData.motor[3] = data_328p*2 + 1000;break;
+				case MOTOR0:	mspData.motor[0] = data_328p*2 + 1000;data_328p = 0;break;
+				case MOTOR1:	mspData.motor[1] = data_328p*2 + 1000;data_328p = 0;break;
+				case MOTOR2:	mspData.motor[2] = data_328p*2 + 1000;data_328p = 0;break;
+				case MOTOR3:	mspData.motor[3] = data_328p*2 + 1000;data_328p = 0;break;
 				default:break;
 			}
 			rcData[4] =  mspData.motor[0];
 			rcData[5] =  mspData.motor[1];
 			rcData[6] =  mspData.motor[2];
 			rcData[7] =  mspData.motor[3];
-			rcData[8] =  msp_328p;
+			rcData[8] =  cmd_328p;
 			
 		}
-	}else	i2cWrite(0x08,0,'<');
+	}
+	else	
+	{	
+		i2cWrite(0x08,0,'<');
+		cmd_328p = 0;data_328p = 0;
+	}
 	rx_data_process(rcData);
 	overturn = !overturn;
 #endif

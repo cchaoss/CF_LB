@@ -533,11 +533,8 @@ void processRx(void)
 
     bool canUseHorizonMode = true;
 
-#ifdef NRF
-	if(true)
-#else
+
 	if((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) 
-#endif	
 	{
         // bumpless transfer to Level mode
         canUseHorizonMode = false;
