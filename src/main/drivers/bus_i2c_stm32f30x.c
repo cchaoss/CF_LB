@@ -220,6 +220,8 @@ bool i2cWrite(uint8_t addr_, uint8_t reg, uint8_t data)
         }
     }
 
+if(reg != 0xff)// for 328p 2016/9/8
+{
     /* Configure slave address, nbytes, reload, end mode and start or stop generation */
     I2C_TransferHandling(I2Cx, addr_, 1, I2C_Reload_Mode, I2C_Generate_Start_Write);
 
@@ -242,7 +244,7 @@ bool i2cWrite(uint8_t addr_, uint8_t reg, uint8_t data)
             return i2cTimeoutUserCallback(I2Cx);
         }
     }
-
+}
     /* Configure slave address, nbytes, reload, end mode and start or stop generation */
     I2C_TransferHandling(I2Cx, addr_, 1, I2C_AutoEnd_Mode, I2C_No_StartStop);
 
@@ -283,7 +285,7 @@ bool i2cRead(uint8_t addr_, uint8_t reg, uint8_t len, uint8_t* buf)
         }
     }
 
-	if(reg != 0xff)// for 328p 2016/9/8
+if(reg != 0xff)// for 328p 2016/9/8
 {
     /* Configure slave address, nbytes, reload, end mode and start or stop generation */
     I2C_TransferHandling(I2Cx, addr_, 1, I2C_SoftEnd_Mode, I2C_Generate_Start_Write);

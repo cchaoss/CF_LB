@@ -564,7 +564,6 @@ static void detectAndApplySignalLossBehaviour(void)
 #ifdef DEBUG_RX_SIGNAL_LOSS
     debug[3] = rcData[THROTTLE];
 #endif
-/***********************************************************************************************************************************************/
 
 }
 
@@ -594,7 +593,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	static uint8_t failsafe_flag = 0;
 	if(overturn)	
 	{
-		
+		if(batt < 20 && millis() > 3000)	led_beep_sleep();
 		if(!nrf_rx() || batt_low)
 		{
 			mspData.roll = 1500;
@@ -602,6 +601,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			mspData.pitch = 1500;
 			mspData.dir = 0x00;//empty the online data buf
 			failsafe_flag++;
+			//mspData.mspCmd &= ~ALTHOLD;// need to test
 			if(failsafe_flag > 120)//change throttle to 1000 and disarm
 			{
 				failsafe_flag = 120;
@@ -620,25 +620,45 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
-	/*uint8_t sta = 0;
-	i2cRead(0x08,0xff,1, &sta);
-	delayMicroseconds(10);
-	i2cWrite(0x08,0,sta+1);
-	*/
-	//328P
+#if 0
+	if(mspData.mspCmd & OFFLINE)
+	{
+		//uint8_t length = 8;
+		//	uint8_t data[8];
+
+		//for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, &data[i]);
+		//delayMicroseconds(10);
+		//for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0xff,data[i]);
+		//i2cRead(0x08,0xff,1, &sta);delayMicroseconds(10);
+		//i2cWrite(0x08,0xff,sta);
+/*
+		i2cRead(0x08,0xff,1, &sta);
+		if(sta == '$') 
+		{	i2cRead(0x08,0xff,1, &sta);
+			if(sta == '<') 
+			{
+				
+				i2cRead(0x08,0xff,1, &length);
+				for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, data[i]);
+				for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0,data[i]);
+
+			}
+		}
+*/	
+	}
+#endif
+
+#if 1
 	static uint8_t sta1 = 0,cmd_328p = 0,data_328p = 0;
 	if(mspData.mspCmd & OFFLINE)
 	{
-		//LED_A_ON;//
 		uint8_t sta = 0;
-		
 		i2cRead(0x08,0xff,1, &sta);
-		if(sta == '$'){sta1=1; cmd_328p  = 0;data_328p = 0;}
-		if((sta == '<') && (sta1 == 1))	{sta1 = 2;	cmd_328p = 0;data_328p = 0;}
+		if(sta == '$')	sta1=1;
+		if((sta == '<') && (sta1 == 1))	sta1 = 2;
 		if((sta1 == 2) && (sta != '<'))
 		{	
 			i2cWrite(0x08,0,'$');
-			
 			cmd_328p = sta;
 			if(cmd_328p < LEFT_P)
 			{
@@ -679,14 +699,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 					case BEEP_L:	mspData.beep = 5;break;
 					default:break;
 				}
-			}	
-			else	sta1++;
+			}else	sta1++;
 		}
 		else if(sta1 == 3)
 		{	
 			data_328p = sta;
-			//rcData[6] = data_328p;
-			
 			sta1 = 0;
 			switch(cmd_328p)
 			{
@@ -705,12 +722,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				case MOTOR3:	mspData.motor[3] = data_328p*2 + 1000;data_328p = 0;break;
 				default:break;
 			}
-			rcData[4] =  mspData.motor[0];
-			rcData[5] =  mspData.motor[1];
-			rcData[6] =  mspData.motor[2];
-			rcData[7] =  mspData.motor[3];
-			rcData[8] =  cmd_328p;
-			
 		}
 	}
 	else	
@@ -718,6 +729,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		i2cWrite(0x08,0,'<');
 		cmd_328p = 0;data_328p = 0;
 	}
+#endif
+
 	rx_data_process(rcData);
 	overturn = !overturn;
 #endif

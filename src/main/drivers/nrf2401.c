@@ -16,7 +16,7 @@
 #include "light_led.h"
 
 bool batt_low = false;
-uint16_t batt;
+uint16_t batt = 0;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 
@@ -100,14 +100,12 @@ void rx_data_process(int16_t *buf)
 	static bool arm_flag = false,roll_flag = false;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-		
-		if(batt < 20 && millis() > 5000)	led_beep_sleep();
 
 		if(mspData.mspCmd & ARM)
 		{
 			if(arm_flag && roll_flag) mwArm();
 				else  mwDisarm();
-			if(fabs(pitch1) > 800 || fabs(roll1) > 800)	{mwDisarm();roll_flag =false;}
+			if(fabs(pitch1) > 650 || fabs(roll1) > 650)	{mwDisarm();roll_flag =false;}
 		}		
 		else
 		{	
@@ -342,7 +340,7 @@ void led_beep_sleep(void)
 	gpio_config_t led0;	
 
 	led0.pin = Pin_11;
-	led0.mode = Mode_IN_FLOATING;
+	led0.mode = Mode_AIN;
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&led0);
@@ -350,7 +348,7 @@ void led_beep_sleep(void)
 	gpio_config_t beep;	
 
 	beep.pin = Pin_15;
-	beep.mode = Mode_IN_FLOATING;
+	beep.mode = Mode_AIN;
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
 	gpioInit(GPIOC,&beep);
