@@ -328,11 +328,12 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     vel += vel_acc;
 
 #ifdef DEBUG_ALT_HOLD
-    debug[1] = accSum[2] / accSumCount; // acceleration
-    debug[2] = vel;                     // velocity
+    //debug[1] = accSum[2] / accSumCount; // acceleration
+    //debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
-
+	height = accAlt;//
+	//debug[2] = height;
     imuResetAccelerationSum();
 
 #ifdef BARO

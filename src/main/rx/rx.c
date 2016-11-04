@@ -590,18 +590,26 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 #ifdef NRF
 	static bool overturn = true;
-	static uint8_t failsafe_flag = 0;
+	
+	//static uint8_t failsafe_flag = 0;
 	if(overturn)	
 	{
 		if(batt < 20 && millis() > 3000)	led_beep_sleep();
+
+
+/*
 		if(!nrf_rx() || batt_low)
 		{
-			mspData.roll = 1500;
-			mspData.yaw = 1500;
-			mspData.pitch = 1500;
+			//mspData.mspCmd &= ~ALTHOLD;
+			if(!batt_low)
+			{
+				mspData.roll = 1500;
+				mspData.yaw = 1500;
+				mspData.pitch = 1500;
+			}
 			mspData.dir = 0x00;//empty the online data buf
 			failsafe_flag++;
-			//mspData.mspCmd &= ~ALTHOLD;// need to test
+			
 			if(failsafe_flag > 120)//change throttle to 1000 and disarm
 			{
 				failsafe_flag = 120;
@@ -615,6 +623,32 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						else mspData.throttle = 1300;
 			}	
 		}else failsafe_flag = 0;	
+*/
+
+		static uint8_t b;
+		if(!nrf_rx() || batt_low)
+		{
+			if(!batt_low)
+			{
+				mspData.roll = 1500;
+				mspData.yaw = 1500;
+				mspData.pitch = 1500;
+			}
+			mspData.dir = 0x00;//empty the online data buf
+			
+			if(mspData.throttle >= 1650)mspData.throttle = 1560;
+				else if(mspData.throttle >= 1490)mspData.throttle = 1450;
+					else mspData.throttle = 130;
+
+			if(height < 150)
+			{	
+				b++;
+				if(b > 80)
+					{b = 80;mspData.throttle = 1000;mspData.mspCmd &= ~ARM;}
+				else mspData.throttle = 1340;
+			}
+		}
+
 
 		SetTX_Mode();
 	}
@@ -623,16 +657,15 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #if 0
 	if(mspData.mspCmd & OFFLINE)
 	{
-		//uint8_t length = 8;
-		//	uint8_t data[8];
+		uint8_t length = 8,data[8];
 
 		//for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, &data[i]);
 		//delayMicroseconds(10);
 		//for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0xff,data[i]);
 		//i2cRead(0x08,0xff,1, &sta);delayMicroseconds(10);
 		//i2cWrite(0x08,0xff,sta);
-/*
-		i2cRead(0x08,0xff,1, &sta);
+
+/*		i2cRead(0x08,0xff,1, &sta);
 		if(sta == '$') 
 		{	i2cRead(0x08,0xff,1, &sta);
 			if(sta == '<') 
@@ -640,11 +673,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				
 				i2cRead(0x08,0xff,1, &length);
 				for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, data[i]);
-				for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0,data[i]);
+				//for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0,data[i]);
 
 			}
 		}
-*/	
+*/
 	}
 #endif
 
@@ -734,6 +767,23 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	rx_data_process(rcData);
 	overturn = !overturn;
 #endif
+
+#if 1
+		static uint8_t a;
+		if(height > 250)
+		{	a++;
+			if(a > 7)
+			{
+				a = 7;
+				if(mspData.throttle >= 1650)mspData.throttle = 1600;
+					else if(mspData.throttle >= 1490)mspData.throttle = 1440;
+						else mspData.throttle = 1350;
+				mspData.mspCmd |= ALTHOLD;
+			}
+		}else a = 0;
+#endif
+	
+
 	
 }
 

@@ -105,6 +105,7 @@ typedef struct _dataPackage
 }dataPackage;
 
 extern bool batt_low;
+extern float height;
 extern uint16_t batt;
 extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;

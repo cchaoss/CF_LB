@@ -17,6 +17,7 @@
 
 bool batt_low = false;
 uint16_t batt = 0;
+float height = 0.0;
 int16_t  roll1,pitch1,yaw1;
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 
