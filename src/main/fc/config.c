@@ -154,10 +154,10 @@ static void activateConfig(void)
 
     resetAdjustmentStates();
 	// OPEN ANGLE MODE
-	modeActivationProfile()->modeActivationConditions[0].modeId = BOXANGLE;
-	modeActivationProfile()->modeActivationConditions[0].auxChannelIndex = 0;
-	modeActivationProfile()->modeActivationConditions[0].range.startStep = 0;
-	modeActivationProfile()->modeActivationConditions[0].range.endStep = 48;
+	modeActivationProfile()->modeActivationConditions[10].modeId = BOXANGLE;
+	modeActivationProfile()->modeActivationConditions[10].auxChannelIndex = 0;
+	modeActivationProfile()->modeActivationConditions[10].range.startStep = 0;
+	modeActivationProfile()->modeActivationConditions[10].range.endStep = 48;
 
     useRcControlsConfig(modeActivationProfile()->modeActivationConditions);
 

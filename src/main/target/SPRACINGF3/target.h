@@ -21,7 +21,7 @@
 
 #define NRF
 //#define USE_ALTHOLD
-#define DEBUG_ALT_HOLD
+//#define DEBUG_ALT_HOLD
 
 #ifndef NRF
 #define BLACKBOX

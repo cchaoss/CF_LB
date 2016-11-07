@@ -591,13 +591,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF
 	static bool overturn = true;
 	
-	//static uint8_t failsafe_flag = 0;
+	
 	if(overturn)	
 	{
 		if(batt < 20 && millis() > 3000)	led_beep_sleep();
 
-
-/*
+//低电压降落+失控保护——use time
+#if 0
+		static uint8_t failsafe_flag = 0;
 		if(!nrf_rx() || batt_low)
 		{
 			//mspData.mspCmd &= ~ALTHOLD;
@@ -623,11 +624,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 						else mspData.throttle = 1300;
 			}	
 		}else failsafe_flag = 0;	
-*/
+#endif 
 
+//低电压降落+失控保护——use height
+#if 1
 		static uint8_t b;
 		if(!nrf_rx() || batt_low)
 		{
+			//a++;
 			if(!batt_low)
 			{
 				mspData.roll = 1500;
@@ -638,17 +642,17 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			
 			if(mspData.throttle >= 1650)mspData.throttle = 1560;
 				else if(mspData.throttle >= 1490)mspData.throttle = 1450;
-					else mspData.throttle = 130;
-
-			if(height < 150)
+					else mspData.throttle = 1360;
+			//if(height < 200 || a > 500)
+			if(height <= 320)
 			{	
 				b++;
-				if(b > 80)
-					{b = 80;mspData.throttle = 1000;mspData.mspCmd &= ~ARM;}
+				if(b > 70)
+					{b = 70;mspData.throttle = 1100;mspData.mspCmd &= ~ARM;}
 				else mspData.throttle = 1340;
-			}
-		}
-
+			}else b =0;
+		}else b = 0;
+#endif 
 
 		SetTX_Mode();
 	}
@@ -681,6 +685,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 #endif
 
+//328p—old
 #if 1
 	static uint8_t sta1 = 0,cmd_328p = 0,data_328p = 0;
 	if(mspData.mspCmd & OFFLINE)
@@ -768,15 +773,16 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	overturn = !overturn;
 #endif
 
+//限制高度
 #if 1
 		static uint8_t a;
-		if(height > 250)
+		if(height > 600)
 		{	a++;
-			if(a > 7)
+			if(a > 20)
 			{
-				a = 7;
-				if(mspData.throttle >= 1650)mspData.throttle = 1600;
-					else if(mspData.throttle >= 1490)mspData.throttle = 1440;
+				a = 20;
+				if(mspData.throttle >= 1650)mspData.throttle = 1588;
+					else if(mspData.throttle >= 1490)mspData.throttle = 1438;
 						else mspData.throttle = 1350;
 				mspData.mspCmd |= ALTHOLD;
 			}

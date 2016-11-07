@@ -251,7 +251,12 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
 
     // D
     result -= constrain(pidProfile()->D8[PIDVEL] * (accZ_tmp + accZ_old) / 512, -150, 150);
-
+/*
+	static int32_t error_old;
+	debug[0] = 	(accZ_tmp + accZ_old)/512;//
+	debug[1] = -error + error_old;//test pid
+	error_old = error;//
+*/
     return result;
 }
 
@@ -328,12 +333,12 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     vel += vel_acc;
 
 #ifdef DEBUG_ALT_HOLD
-    //debug[1] = accSum[2] / accSumCount; // acceleration
-    //debug[2] = vel;                     // velocity
+    debug[1] = accSum[2] / accSumCount; // acceleration
+    debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
 	height = accAlt;//
-	//debug[2] = height;
+	debug[0] = height;
     imuResetAccelerationSum();
 
 #ifdef BARO
