@@ -658,31 +658,56 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
-#if 0
+
+#if 0	//test i2c read and write
+/*
+	static uint8_t sta;
+	static uint16_t j = 0,i=0,x=0;
 	if(mspData.mspCmd & OFFLINE)
 	{
-		uint8_t length = 8,data[8];
-
-		//for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, &data[i]);
-		//delayMicroseconds(10);
-		//for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0xff,data[i]);
-		//i2cRead(0x08,0xff,1, &sta);delayMicroseconds(10);
-		//i2cWrite(0x08,0xff,sta);
-
-/*		i2cRead(0x08,0xff,1, &sta);
-		if(sta == '$') 
-		{	i2cRead(0x08,0xff,1, &sta);
-			if(sta == '<') 
-			{
-				
-				i2cRead(0x08,0xff,1, &length);
-				for(uint8_t i = 0;i<length;i++) i2cRead(0x08,0xff,1, data[i]);
-				//for(uint8_t i = 0;i<length;i++) i2cWrite(0x08,0,data[i]);
-
-			}
+		for(char a = 0;a<8;a++)
+		{
+			i2cRead(0x08,0xff,1, &sta);
+			if(sta == j) {i++;}
+				else {j = sta;x++;}
+			j++;
+			if(j == 256) {i=0;j=0;}
 		}
-*/
+		for(uint16_t a =0;a<8;a++)
+		{
+			i2cWrite(0x08,0,a);
+			delayMicroseconds(25);
+		}
 	}
+	rcData[6] = sta;
+	rcData[7] = i;
+	rcData[8] = x;
+*/
+/*
+		static uint8_t sta,length,x;
+		if(mspData.mspCmd & OFFLINE)
+		{
+			i2cRead(0x08,0xff,1, &sta);
+			if(sta == 4) 
+			{	i2cRead(0x08,0xff,1, &sta);
+				if(sta == 5) 
+				{
+					i2cRead(0x08,0xff,1, &length);
+					for(uint8_t i = 0;i<length;i++) 
+					{
+						i2cRead(0x08,0xff,1, &sta);
+						if(sta == (i+7)) x++;				
+					}
+				}
+			}
+			for(uint16_t a =0;a<8;a++)
+			{
+				i2cWrite(0x08,0,a);
+				delayMicroseconds(25);
+			}
+		}else x =0;
+		rcData[8] = x;
+*/
 #endif
 
 //328p—old
