@@ -62,26 +62,14 @@
 #define VIOLET 	8
 
 //mspCmd
-#define RCDATA		1<<0
-#define ARM			1<<1
-#define FREEHEAD	1<<2
-#define MANUAL		1<<3
-#define ALTHOLD		1<<4
-#define POSHOLD		1<<5
-#define ONLINE		1<<6
-#define CALIBRATION	1<<7
-#define NEWADDRESS	1<<8
-#define OFFLINE		1<<9
-//dir
-#define	UP		    1
-#define	DOWN		2
-#define	LEFT		3
-#define	RIGHT		4
-#define	FORWARD		5
-#define	BACKWARD	6
-#define	CR			7
-#define	CCR			8
+#define ARM			1<<0
+#define FREEHEAD	1<<1
+#define ALTHOLD		1<<2
+#define CALIBRATION	1<<3
+#define NEWADDRESS	1<<4
+#define OFFLINE		1<<5
 
+//nrf2401 data
 typedef struct _dataPackage
 {
 	uint8_t checkCode[4];
@@ -96,67 +84,39 @@ typedef struct _dataPackage
 	//int16_t Z;
 	uint16_t motor[4];
 	uint8_t led;
-	uint8_t dir;
-	uint8_t dirdata;
-	char trim_pitch;
-	char trim_roll;
+	uint8_t led_rgp;
 	uint8_t beep;
-	
 }dataPackage;
+extern dataPackage mspData;
+
+//328 data
+typedef struct _328p
+{
+	uint8_t cmd;
+	uint8_t length;
+	uint8_t data[4];
+}data_328p;
+extern data_328p msp_328p;
+
+//328 cmd
+enum _CMD
+{
+	ARM_P = 1,
+	CAL_P,
+	ALT_P,
+	LED_P,
+	BEEP_P,
+	ROLL_P,
+	PITCH_P,
+	THRO_P,
+	YAW_P,
+	MOTOR_P,
+};
 
 extern bool batt_low;
 extern float height;
 extern uint16_t batt;
-extern dataPackage mspData;
 extern int16_t roll1,pitch1,yaw1;
-
-//328 data flag
-enum _CMD
-{
-	ARM_P = 1,
-	DISARM_P,
-	CALIBRAT_P,
-	ALTHOLD_P,
-	NALTHOLD_P,
-	LED_AON,
-	LED_AOFF,
-	LED_BON,
-	LED_BOFF,
-	LED_CON,
-	LED_COFF,
-	LED_DON,
-	LED_DOFF,
-	LED_AL_ON,
-	LED_AL_OFF,
-	RGBB_BLAC,
-	RGBB_WHIT,
-	RGBB_RED,
-	RGBB_GREE,
-	RGBB_BLUE,
-	RGBB_ORAN,
-	RGBB_YELL,
-	RGBB_PINK,
-	RGBB_VIOL,
-	BEEP_OPEN,
-	BEEP_STOP,
-	BEEP_S,
-	BEEP_M,
-	BEEP_L,
-
-	LEFT_P,
-	RIGHT_P,
-	FORWARD_p,
-	BACK_P,
-	UP_P,
-	CR_P,
-	CCR_P,
-	TRIM_ROLL,
-	TRIM_PITCH,
-	MOTOR0,
-	MOTOR1,
-	MOTOR2,
-	MOTOR3,
-};
 
 
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)

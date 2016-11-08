@@ -588,16 +588,13 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #endif	
 	rcSampleIndex++;
 
+
 #ifdef NRF
-	static bool overturn = true;
-	
-	
+	static bool overturn = true;	
 	if(overturn)	
 	{
 		if(batt < 20 && millis() > 3000)	led_beep_sleep();
-
-//低电压降落+失控保护——use time
-#if 0
+#if 0	//低电压降落+失控保护——use time
 		static uint8_t failsafe_flag = 0;
 		if(!nrf_rx() || batt_low)
 		{
@@ -626,8 +623,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		}else failsafe_flag = 0;	
 #endif 
 
-//低电压降落+失控保护——use height
-#if 1
+#if 1	//低电压降落+失控保护——use height
 		static uint8_t b;
 		if(!nrf_rx() || batt_low)
 		{
@@ -709,97 +705,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		rcData[8] = x;
 */
 #endif
-
-//328p—old
-#if 1
-	static uint8_t sta1 = 0,cmd_328p = 0,data_328p = 0;
-	if(mspData.mspCmd & OFFLINE)
-	{
-		uint8_t sta = 0;
-		i2cRead(0x08,0xff,1, &sta);
-		if(sta == '$')	sta1=1;
-		if((sta == '<') && (sta1 == 1))	sta1 = 2;
-		if((sta1 == 2) && (sta != '<'))
-		{	
-			i2cWrite(0x08,0,'$');
-			cmd_328p = sta;
-			if(cmd_328p < LEFT_P)
-			{
-				sta1 = 0;
-				switch(cmd_328p)
-				{
-					case ARM_P: 	mspData.mspCmd |= ARM;break;
-					case DISARM_P:	mspData.mspCmd &= ~ARM;break;
-					case CALIBRAT_P:mspData.mspCmd |= CALIBRATION;break;
-					case ALTHOLD_P:	mspData.mspCmd |= ALTHOLD;break;
-					case NALTHOLD_P:mspData.mspCmd &= ~ALTHOLD;break;
-
-					case LED_AON:	mspData.led |= 1 << 4;break;
-					case LED_AOFF:	mspData.led &= ~(1 << 4);break;
-					case LED_BON:	mspData.led |= 1 << 5;break;
-					case LED_BOFF:	mspData.led &= ~(1 << 5);break;
-					case LED_CON:	mspData.led |= 1 << 6;break;
-					case LED_COFF:	mspData.led &= ~(1 << 6);break;
-					case LED_DON:	mspData.led |= 1 << 7;break;
-					case LED_DOFF:	mspData.led &= ~(1 << 7);break;
-					case LED_AL_ON:	mspData.led |= 0xf0;break;
-					case LED_AL_OFF:mspData.led &= 0x0f;break;
-
-					case RGBB_BLAC:mspData.led &= 0xf0;break;
-					case RGBB_WHIT:mspData.led = (mspData.led&0xf0) + 0x01;break;
-					case RGBB_RED: mspData.led = (mspData.led&0xf0) + 0x02;break;
-					case RGBB_GREE:mspData.led = (mspData.led&0xf0) + 0x05;break;
-					case RGBB_BLUE:mspData.led = (mspData.led&0xf0) + 0x06;break;
-					case RGBB_ORAN:mspData.led = (mspData.led&0xf0) + 0x03;break;
-					case RGBB_YELL:mspData.led = (mspData.led&0xf0) + 0x04;break;					
-					case RGBB_PINK:mspData.led = (mspData.led&0xf0) + 0x06;break;
-					case RGBB_VIOL:mspData.led = (mspData.led&0xf0) + 0x07;break;
-
-					case BEEP_OPEN:	mspData.beep = 1;break;
-					case BEEP_STOP:	mspData.beep = 2;break;
-					case BEEP_S:	mspData.beep = 3;break;
-					case BEEP_M:	mspData.beep = 4;break;
-					case BEEP_L:	mspData.beep = 5;break;
-					default:break;
-				}
-			}else	sta1++;
-		}
-		else if(sta1 == 3)
-		{	
-			data_328p = sta;
-			sta1 = 0;
-			switch(cmd_328p)
-			{
-				case LEFT_P:	mspData.dir = LEFT;mspData.dirdata = data_328p;break;
-				case RIGHT_P:	mspData.dir = RIGHT;mspData.dirdata = data_328p;break;
-				case FORWARD_p:	mspData.dir = FORWARD;mspData.dirdata = data_328p;break;
-				case BACK_P:	mspData.dir = BACKWARD;mspData.dirdata = data_328p;break;
-				case UP_P:		mspData.dir = UP;mspData.dirdata = data_328p;break;
-				case CR_P:		mspData.dir = CR;mspData.dirdata = data_328p;break;
-				case CCR_P:		mspData.dir = CCR;mspData.dirdata = data_328p;break;
-				case TRIM_ROLL:	mspData.dir = UP;mspData.trim_roll = data_328p;break;
-				case TRIM_PITCH:mspData.dir = UP;mspData.trim_pitch = data_328p;break;
-				case MOTOR0:	mspData.motor[0] = data_328p*2 + 1000;data_328p = 0;break;
-				case MOTOR1:	mspData.motor[1] = data_328p*2 + 1000;data_328p = 0;break;
-				case MOTOR2:	mspData.motor[2] = data_328p*2 + 1000;data_328p = 0;break;
-				case MOTOR3:	mspData.motor[3] = data_328p*2 + 1000;data_328p = 0;break;
-				default:break;
-			}
-		}
-	}
-	else	
-	{	
-		i2cWrite(0x08,0,'<');
-		cmd_328p = 0;data_328p = 0;
-	}
-#endif
-
 	rx_data_process(rcData);
 	overturn = !overturn;
 #endif
 
-//限制高度
-#if 1
+#if 1	//限制高度
 		static uint8_t a;
 		if(height > 600)
 		{	a++;
@@ -813,9 +723,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			}
 		}else a = 0;
 #endif
-	
-
-	
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)

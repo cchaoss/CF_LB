@@ -15,6 +15,7 @@
 #include "sound_beeper.h"
 #include "light_led.h"
 
+data_328p msp_328p;
 bool batt_low = false;
 uint16_t batt = 0;
 float height = 0.0;
@@ -101,51 +102,73 @@ void rx_data_process(int16_t *buf)
 	static bool arm_flag = false,roll_flag = false;
 	if(!strcmp("$M<",(char *)mspData.checkCode))
 	{
-
 		if(mspData.mspCmd & ARM)
 		{
 			if(arm_flag && roll_flag) mwArm();
 				else  mwDisarm();
-			if(fabs(pitch1) > 650 || fabs(roll1) > 650)	{mwDisarm();roll_flag =false;}
+			if(fabs(pitch1) > 650 || fabs(roll1) > 650)	{mwDisarm();roll_flag = false;}
 		}		
 		else
 		{	
-			roll_flag = true;
 			mwDisarm();
+			roll_flag = true;
 			if(batt < 100) arm_flag = false;
 				else arm_flag = true;
-			mspData.dirdata = 0;
-			buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;
 		}
 		
 		if(mspData.mspCmd & CALIBRATION)	{accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;}
 
-		if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)	
+		if(mspData.mspCmd & OFFLINE)
+		{
+			LED_B_ON;
+			i2cRead(0x08,0xff,1, &msp_328p.cmd);rcData[6] = msp_328p.cmd;
+			i2cRead(0x08,0xff,1, &msp_328p.length);rcData[7] = msp_328p.length;
+			for(char i = 0;i<msp_328p.length;i++){
+				i2cRead(0x08,0xff,1, &msp_328p.data[i]);rcData[8+i] = msp_328p.data[i];}
+			switch(msp_328p.cmd)
+			{  
+				case ARM_P:
+					if(msp_328p.data[i])mspData.mspCmd |= ARM;
+						else mspData.mspCmd &= ~ARM;break;
+				case CAL_P:	break;
+				case ALT_P:	break;
+				case LED_P:	break;
+				case BEEP_P:break;
+				case ROLL_P:break;
+				case PITCH_P:break;
+				case THRO_P:mspData.dirdata = msp_328p.data[0];break;
+				case YAW_P:break;
+				case MOTOR_P:
+					mspData.motor[0] = 1000+4*msp_328p.data[0];
+					mspData.motor[1] = 1000+4*msp_328p.data[1];
+					mspData.motor[2] = 1000+4*msp_328p.data[2];
+					mspData.motor[3] = 1000+4*msp_328p.data[3];break;
+			}
+		}else LED_B_OFF;
+
+/*	if(mspData.mspCmd & OFFLINE)	
 		{	
-			if(mspData.dir)
-			{	
-				switch(mspData.dir)
-				{
-					case UP: 
-					case DOWN: 	
-								buf[0] = 1500 + (mspData.trim_roll > 127 ? mspData.trim_roll - 256 : mspData.trim_roll);
-								buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch - 256 : mspData.trim_pitch);
-								buf[3] = 1100 + mspData.dirdata *4 + 13*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
-					case LEFT: 	
-								buf[0] = 1500 - mspData.dirdata;break;
-					case RIGHT:
-								buf[0] = 1500 + mspData.dirdata;break;
-					case FORWARD:
-								buf[1] = 1500 + mspData.dirdata;break;
-					case BACKWARD:
-								buf[1] = 1500 - mspData.dirdata;break;
-					case CR:
-								buf[2] = 1500 + mspData.dirdata;break;
-					case CCR:
-								buf[2] = 1500 - mspData.dirdata;break;
-					default :	break;
-				}
-			}else	{buf[0] = 1500;buf[1] = 1500;buf[2] = 1500;buf[3] = 1000;}
+			switch(mspData.dir)
+			{
+				case UP: 
+				case DOWN: 	
+							buf[0] = 1500 + (mspData.trim_roll > 127 ? mspData.trim_roll - 256 : mspData.trim_roll);
+							buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch - 256 : mspData.trim_pitch);
+							buf[3] = 1100 + mspData.dirdata *4 + 13*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
+				case LEFT: 	
+							buf[0] = 1500 - mspData.dirdata;break;
+				case RIGHT:
+							buf[0] = 1500 + mspData.dirdata;break;
+				case FORWARD:
+							buf[1] = 1500 + mspData.dirdata;break;
+				case BACKWARD:
+							buf[1] = 1500 - mspData.dirdata;break;
+				case CR:
+							buf[2] = 1500 + mspData.dirdata;break;
+				case CCR:
+							buf[2] = 1500 - mspData.dirdata;break;
+				default :	break;
+			}
 
 			if(mspData.beep == 1)	BEEP_OFF;
 			if(mspData.beep == 2)
@@ -168,14 +191,8 @@ void rx_data_process(int16_t *buf)
 			}else x = 0;
 			if(mspData.beep == 5)BEEP_ON;
 		}
-		else
-		{	
-			buf[0] = mspData.roll;
-			buf[1] = mspData.pitch;
-			buf[2] = mspData.yaw;
-			buf[3] = mspData.throttle; 
-		}
-		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);	
+*/
+		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);
 	}
 }
 
