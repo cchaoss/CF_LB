@@ -337,7 +337,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
-	height = accAlt;//
+	flag.height = accAlt;//
 	//debug[0] = height;
     imuResetAccelerationSum();
 

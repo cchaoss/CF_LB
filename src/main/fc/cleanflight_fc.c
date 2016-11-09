@@ -761,37 +761,9 @@ void taskMainPidLoop(void)
     }
 
 #ifdef NRF 
-/*
-	static bool a;
-	static uint32_t b = 0,c = 0;
-	if(mspData.mspCmd & ALTHOLD)
-	{
-		
-		if(a) {b = millis();a = false;}
-		c = millis();
-		if(c - b < 500)
-		{
-			LED_A_ON;
-			LED_B_OFF;
-			pwmWriteMotor(0,1000);
-			pwmWriteMotor(1,1000);
-			pwmWriteMotor(2,1900);
-			pwmWriteMotor(3,1900);
-		}
-		else if(c - b < 700)
-		{
-			LED_A_OFF;
-			LED_B_ON;
-			pwmWriteMotor(0,1600);
-			pwmWriteMotor(1,1600);
-			pwmWriteMotor(2,1600);
-			pwmWriteMotor(3,1600);
-		}
-	}else  a = true;*/
-	/////////////////////////////
 	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)
 	{	
-		if(mspData.dir == 0 && !(mspData.mspCmd & ARM))//上锁状态
+		if(mspData.mspCmd & MOTOR && !(mspData.mspCmd & ARM))//上锁状态
 		{
 			pwmWriteMotor(0,bound(mspData.motor[0],1400,1000));
 			pwmWriteMotor(1,bound(mspData.motor[1],1400,1000));

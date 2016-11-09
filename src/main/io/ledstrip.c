@@ -986,17 +986,15 @@ void updateLedStrip(void)
     if (!(ledStripInitialised && isWS2811LedStripReady())) {
         return;
     }
-#ifdef NRF	
-	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)
-	{
-		
-		if(mspData.led & 1 << 4) LED_A_ON;else LED_A_OFF;
-		if(mspData.led & 1 << 5) LED_B_ON;else LED_B_OFF;
-		if(mspData.led & 1 << 6) LED_C_ON;else LED_C_OFF;
-		if(mspData.led & 1 << 7) LED_D_ON;else LED_D_OFF;
 
-		switch(mspData.led & 0X0F) 
-		{
+#ifdef NRF	
+	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE){	
+		LED_B_ON;
+		if(mspData.led & LEDA) LED_A_ON;else LED_A_OFF;
+		if(mspData.led & LEDB) LED_B_ON;else LED_B_OFF;
+		if(mspData.led & LEDC) LED_C_ON;else LED_C_OFF;
+		if(mspData.led & LEDD) LED_D_ON;else LED_D_OFF;
+		switch(mspData.led_rgb) {
 			case BLACK:setStripColor(&HSV(BLACK));break;
 			case WHITE:setStripColor(&HSV(WHITE));break;
 			case RED:setStripColor(&HSV(RED));break;
@@ -1007,13 +1005,7 @@ void updateLedStrip(void)
 			case PINK:setStripColor(&HSV(DEEP_PINK));break;
 			case VIOLET:setStripColor(&HSV(DARK_VIOLET));break;
 		}
-	}
-/*
-	if(mspData.pitch < 1300)	setStripColor(&HSV(BLUE));
-	else if(mspData.pitch < 1500)	setStripColor(&HSV(RED));
-		else if(mspData.pitch < 1700)	setStripColor(&HSV(DEEP_PINK));
-			else setStripColor(&HSV(CYAN));
-*/
+	}else LED_B_OFF;
 #else
     if (rcModeIsActive(BOXLEDLOW)) {
         if (ledStripEnabled) {

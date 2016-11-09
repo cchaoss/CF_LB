@@ -591,61 +591,29 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 #ifdef NRF
 	static bool overturn = true;	
-	if(overturn)	
-	{
-		if(batt < 20 && millis() > 3000)	led_beep_sleep();
-#if 0	//低电压降落+失控保护——use time
-		static uint8_t failsafe_flag = 0;
-		if(!nrf_rx() || batt_low)
-		{
-			//mspData.mspCmd &= ~ALTHOLD;
-			if(!batt_low)
-			{
-				mspData.roll = 1500;
-				mspData.yaw = 1500;
-				mspData.pitch = 1500;
-			}
-			mspData.dir = 0x00;//empty the online data buf
-			failsafe_flag++;
-			
-			if(failsafe_flag > 120)//change throttle to 1000 and disarm
-			{
-				failsafe_flag = 120;
-				mspData.throttle = 1000;
-				mspData.mspCmd &= ~ARM;
-			}
-			else	
-			{	
-				if(mspData.throttle >= 1650)mspData.throttle = 1550;
-					else if(mspData.throttle >= 1497)mspData.throttle = 1430;
-						else mspData.throttle = 1300;
-			}	
-		}else failsafe_flag = 0;	
-#endif 
-
+	if(overturn){
+		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();
 #if 1	//低电压降落+失控保护——use height
 		static uint8_t b;
-		if(!nrf_rx() || batt_low)
-		{
-			//a++;
-			if(!batt_low)
-			{
-				mspData.roll = 1500;
-				mspData.yaw = 1500;
-				mspData.pitch = 1500;
+		if(!nrf_rx() || flag.batt_low){
+			if(!flag.batt_low){
+				mspData.motor[PIT] = 1500;
+				mspData.motor[ROL] = 1500;
+				mspData.motor[YA ] = 1500;
 			}
-			mspData.dir = 0x00;//empty the online data buf
 			
-			if(mspData.throttle >= 1650)mspData.throttle = 1560;
-				else if(mspData.throttle >= 1490)mspData.throttle = 1450;
-					else mspData.throttle = 1360;
-			//if(height < 200 || a > 500)
-			if(height <= 320)
-			{	
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1560;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1450;
+					else mspData.motor[THR] = 1360;
+			
+			if(flag.height <= 320){	
 				b++;
-				if(b > 70)
-					{b = 70;mspData.throttle = 1100;mspData.mspCmd &= ~ARM;}
-				else mspData.throttle = 1340;
+				if(b > 70){
+					b = 70;
+					mspData.motor[THR] = 1100;
+					mspData.mspCmd &= ~ARM;
+				}
+				else mspData.motor[THR] = 1340;
 			}else b =0;
 		}else b = 0;
 #endif 
@@ -654,7 +622,19 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
-
+#if 1	//限制高度
+		static uint8_t a;
+		if(flag.height > 600){
+			a++;
+			if(a > 20){
+				a = 20;
+				if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1588;
+					else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
+						else mspData.motor[THR] = 1350;
+				mspData.mspCmd |= ALTHOLD;
+			}
+		}else a = 0;
+#endif
 #if 0	//test i2c read and write
 /*
 	static uint8_t sta;
@@ -707,22 +687,13 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #endif
 	rx_data_process(rcData);
 	overturn = !overturn;
+
+
+	rcData[6] = mspData.mspCmd;
+	rcData[7] = mspData.led;
 #endif
 
-#if 1	//限制高度
-		static uint8_t a;
-		if(height > 600)
-		{	a++;
-			if(a > 20)
-			{
-				a = 20;
-				if(mspData.throttle >= 1650)mspData.throttle = 1588;
-					else if(mspData.throttle >= 1490)mspData.throttle = 1438;
-						else mspData.throttle = 1350;
-				mspData.mspCmd |= ALTHOLD;
-			}
-		}else a = 0;
-#endif
+
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)

@@ -42,15 +42,23 @@
 #define RX_PW_P4        0x15  // 接收频道4接收数据长度
 #define RX_PW_P5        0x16  // 接收频道5接收数据长度
 #define FIFO_STATUS     0x17  // FIFO栈入栈出状态寄存器设置
-//************************************************************************
+
 #define RX_DR			6	  //中断标志
 #define TX_DS			5
 #define MAX_RT	  		4
 #define MAX_TX  		0x10  //达到最大发送次数中断
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
-
-
+//************************************************************************
+#define beep_off	1
+#define beep_s		2
+#define beep_m		3
+#define beep_l		4
+#define beep_on		5	
+#define LEDA	1<<0
+#define LEDB	1<<1
+#define LEDC	1<<2
+#define LEDD	1<<3
 #define	BLACK 	0
 #define WHITE 	1
 #define RED 	2
@@ -61,13 +69,38 @@
 #define PINK 	7
 #define VIOLET 	8
 
+#define ROL	0
+#define PIT	1
+#define YA	2
+#define THR	3
+
 //mspCmd
 #define ARM			1<<0
 #define FREEHEAD	1<<1
 #define ALTHOLD		1<<2
 #define CALIBRATION	1<<3
 #define NEWADDRESS	1<<4
-#define OFFLINE		1<<5
+#define ONLINE		1<<5
+#define OFFLINE  	1<<6
+#define MOTOR		1<<7
+
+
+
+//328 cmd
+enum _CMD{
+	ARM_P = 1,
+	ARM_OFF,
+	CAL_P,
+	ALT_P,
+	ALT_OFF,
+	LED_P,
+	BEEP_P,
+	ROLL_P,
+	PITC_P,
+	THRO_P,
+	YAW_P,
+	MOTOR_P,
+};
 
 //nrf2401 data
 typedef struct _dataPackage
@@ -75,17 +108,11 @@ typedef struct _dataPackage
 	uint8_t checkCode[4];
 	uint8_t length;
 	uint16_t mspCmd;
-	uint16_t pitch;
-	uint16_t roll;
-	uint16_t throttle;
-	uint16_t yaw;
-	//int16_t X;
-	//int16_t Y;
-	//int16_t Z;
 	uint16_t motor[4];
 	uint8_t led;
-	uint8_t led_rgp;
+	uint8_t led_rgb;
 	uint8_t beep;
+	uint8_t key;
 }dataPackage;
 extern dataPackage mspData;
 
@@ -95,29 +122,19 @@ typedef struct _328p
 	uint8_t cmd;
 	uint8_t length;
 	uint8_t data[4];
-}data_328p;
-extern data_328p msp_328p;
+}package_328p;
+extern package_328p msp_328p;
 
-//328 cmd
-enum _CMD
+typedef struct flag
 {
-	ARM_P = 1,
-	CAL_P,
-	ALT_P,
-	LED_P,
-	BEEP_P,
-	ROLL_P,
-	PITCH_P,
-	THRO_P,
-	YAW_P,
-	MOTOR_P,
-};
-
-extern bool batt_low;
-extern float height;
-extern uint16_t batt;
-extern int16_t roll1,pitch1,yaw1;
-
+	bool batt_low;
+	float height;
+	uint16_t batt;
+	int16_t roll1;
+	int16_t pitch1;
+	int16_t yaw1;
+}golbal_flag;
+extern golbal_flag flag;
 
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
 #define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)

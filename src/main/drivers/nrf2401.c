@@ -11,15 +11,14 @@
 #include "bus_i2c.h"
 #include "system.h"
 #include "gpio.h"
-#include "pwm_output.h"
 #include "sound_beeper.h"
-#include "light_led.h"
+#include "build/debug.h"
 
-data_328p msp_328p;
-bool batt_low = false;
-uint16_t batt = 0;
-float height = 0.0;
-int16_t  roll1,pitch1,yaw1;
+golbal_flag flag;
+package_328p msp_328p;
+dataPackage mspData;
+dataPackage t_mspData;
+
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 
 uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
@@ -66,133 +65,111 @@ bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 
 
 /****************NRF24L01_Receive*********************/
-dataPackage mspData;
-
 bool nrf_rx(void)
 {
     uint8_t sta;
     static uint8_t count;
-	dataPackage t_mspData;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
-    if(sta & (1<<RX_DR))
-    {
+    if(sta & (1<<RX_DR)){
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
-		if(!(t_mspData.mspCmd & OFFLINE))	mspData = t_mspData;
-			else if(!(mspData.mspCmd & OFFLINE))
-				 {
-					mspData.mspCmd |= OFFLINE;
-					mspData.throttle = 1000;
-				 }
+		if(!(t_mspData.mspCmd & OFFLINE))//offline模式下数据处理
+			mspData = t_mspData;
+		else if(!(mspData.mspCmd & OFFLINE)){
+				mspData.mspCmd |= OFFLINE;
+				mspData.motor[THR] = 1000;
+			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }else count++;
-
-	if(count > 28) 
-	{
+	if(count > 28){//判断2.4G数据是否丢失
 		count = 30;
 		return false;
 	}else return true;
 }
 
-
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
 	static bool arm_flag = false,roll_flag = false;
-	if(!strcmp("$M<",(char *)mspData.checkCode))
-	{
-		if(mspData.mspCmd & ARM)
-		{
+	if(!strcmp("$M<",(char *)mspData.checkCode)){
+		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 			if(arm_flag && roll_flag) mwArm();
 				else  mwDisarm();
-			if(fabs(pitch1) > 650 || fabs(roll1) > 650)	{mwDisarm();roll_flag = false;}
+			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
+				mwDisarm();roll_flag = false;
+			}
 		}		
-		else
-		{	
+		else{	
 			mwDisarm();
 			roll_flag = true;
-			if(batt < 100) arm_flag = false;
+			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}
-		
-		if(mspData.mspCmd & CALIBRATION)	{accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;}
+		if(mspData.mspCmd & CALIBRATION){
+			accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;
+		}
 
-		if(mspData.mspCmd & OFFLINE)
-		{
-			LED_B_ON;
-			i2cRead(0x08,0xff,1, &msp_328p.cmd);rcData[6] = msp_328p.cmd;
-			i2cRead(0x08,0xff,1, &msp_328p.length);rcData[7] = msp_328p.length;
-			for(char i = 0;i<msp_328p.length;i++){
-				i2cRead(0x08,0xff,1, &msp_328p.data[i]);rcData[8+i] = msp_328p.data[i];}
-			switch(msp_328p.cmd)
-			{  
-				case ARM_P:
-					if(msp_328p.data[i])mspData.mspCmd |= ARM;
-						else mspData.mspCmd &= ~ARM;break;
-				case CAL_P:	break;
-				case ALT_P:	break;
-				case LED_P:	break;
-				case BEEP_P:break;
-				case ROLL_P:break;
-				case PITCH_P:break;
-				case THRO_P:mspData.dirdata = msp_328p.data[0];break;
-				case YAW_P:break;
-				case MOTOR_P:
-					mspData.motor[0] = 1000+4*msp_328p.data[0];
-					mspData.motor[1] = 1000+4*msp_328p.data[1];
-					mspData.motor[2] = 1000+4*msp_328p.data[2];
-					mspData.motor[3] = 1000+4*msp_328p.data[3];break;
+		//offline process
+		static start = true;
+		if(mspData.mspCmd & OFFLINE){
+			LED_A_ON;
+			i2cRead(0x08,0xff,1, &msp_328p.cmd);debug[0] = msp_328p.cmd;
+			if(msp_328p.cmd == 255){
+				if(start){
+					start = false;
+					i2cWrite(0x08,0,mspData.key);
+				}
 			}
-		}else LED_B_OFF;
-
-/*	if(mspData.mspCmd & OFFLINE)	
-		{	
-			switch(mspData.dir)
-			{
-				case UP: 
-				case DOWN: 	
-							buf[0] = 1500 + (mspData.trim_roll > 127 ? mspData.trim_roll - 256 : mspData.trim_roll);
-							buf[1] = 1500 + (mspData.trim_pitch > 127 ? mspData.trim_pitch - 256 : mspData.trim_pitch);
-							buf[3] = 1100 + mspData.dirdata *4 + 13*(batt > 100 ? 124 - batt : 0);break;//Voltage compensation throttle
-				case LEFT: 	
-							buf[0] = 1500 - mspData.dirdata;break;
-				case RIGHT:
-							buf[0] = 1500 + mspData.dirdata;break;
-				case FORWARD:
-							buf[1] = 1500 + mspData.dirdata;break;
-				case BACKWARD:
-							buf[1] = 1500 - mspData.dirdata;break;
-				case CR:
-							buf[2] = 1500 + mspData.dirdata;break;
-				case CCR:
-							buf[2] = 1500 - mspData.dirdata;break;
-				default :	break;
+			else{
+				i2cRead(0x08,0xff,1, &msp_328p.length);	debug[1] = msp_328p.length;
+				for(uint8_t i = 0;i<msp_328p.length;i++){
+					i2cRead(0x08,0xff,1, &msp_328p.data[i]);debug[2+i] = msp_328p.data[i];
+				}
+				switch(msp_328p.cmd){  
+					case ARM_P:mspData.mspCmd |= ARM;break;
+					case ARM_OFF:mspData.mspCmd &= ~ARM;break;
+					case CAL_P:mspData.mspCmd |= CALIBRATION;break;
+					case ALT_P:mspData.mspCmd |= ALTHOLD;break;
+					case ALT_OFF:mspData.mspCmd &= ~ALTHOLD;break;
+					case LED_P:mspData.led = msp_328p.data[0];
+							mspData.led_rgb = msp_328p.data[1];break;
+					case BEEP_P:mspData.beep = msp_328p.data[0];break;
+					case ROLL_P:mspData.motor[ROL] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+					case PITC_P:mspData.motor[PIT] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+					case THRO_P:mspData.motor[THR] = 1100 + (flag.batt > 100 ? 124 - flag.batt : 0) * 12 + 4 * msp_328p.data[0] ;break;//Voltage compensation throttle
+					case YAW_P :mspData.motor[YA ] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+					case MOTOR_P:for(uint8_t i = 0;i < 4;i++)	mspData.motor[i] = 1000+4*msp_328p.data[i];break;
+					default:break;
+				}
 			}
+		}else {LED_A_OFF;start = true;}
 
-			if(mspData.beep == 1)	BEEP_OFF;
-			if(mspData.beep == 2)
-			{
+		//give and bound the rc_stick data
+		for(uint8_t i = 0;i<4;i++){
+			buf[i] = mspData.motor[i];
+			buf[i] = bound(buf[i],2000,1000);
+		}
+		//just for beeper
+		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){
+			if(mspData.beep == beep_off)BEEP_OFF;
+			if(mspData.beep == beep_s){
 				x++;
 				if(x < 10) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}
-			else if(mspData.beep == 3)
-			{
+			else if(mspData.beep == beep_m){
 				x++;
 				if(x < 40) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}
-			else if(mspData.beep == 4)
-			{
+			else if(mspData.beep == beep_l){
 				x++;
 				if(x < 70) BEEP_ON;
 				else if(x < 120) BEEP_OFF;else x = 0;
 			}else x = 0;
-			if(mspData.beep == 5)BEEP_ON;
+			if(mspData.beep == beep_on)BEEP_ON;
 		}
-*/
-		for(uint8_t i = 0;i<5;i++)	buf[i] = bound(buf[i],2000,1000);
 	}
 }
 
@@ -200,31 +177,28 @@ void rx_data_process(int16_t *buf)
 /****************NRF24L01_TX*********************/
 void nrf_tx(void)
 {
-	bool flag = true;
+	bool a = true;
 	uint8_t sta;
 
-	TXData[0] = roll1;
-	TXData[1] = roll1 >> 8;
-	TXData[2] = pitch1;
-	TXData[3] = pitch1 >> 8;
-	TXData[4] = yaw1;
-	TXData[5] = yaw1 >> 8;
+	TXData[0] = flag.roll1;
+	TXData[1] = flag.roll1 >> 8;
+	TXData[2] = flag.pitch1;
+	TXData[3] = flag.pitch1 >> 8;
+	TXData[4] = flag.yaw1;
+	TXData[5] = flag.yaw1 >> 8;
 	
 	SPI_CE_L();
 	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
-	yaw1 = 0;
-	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && flag)
-	{
+	flag.yaw1 = 0;
+	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && a){
 		delayMicroseconds(10);
-		yaw1++;
-		if(yaw1 > 450)	
-			flag = false;
+		flag.yaw1++;
+		if(flag.yaw1 > 450)a = false;
 	}
 	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
 	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
-	if(sta & MAX_TX)//达到最大重发次数
-	NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//清除TX FIFO寄存器
+	if(sta & MAX_TX)NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//达到最大重发次数，清除TX FIFO寄存器
 }
 
 
@@ -233,37 +207,32 @@ bool NRF24L01_INIT(void)
 {
 	uint8_t sta;
 	nrf24l01HardwareInit();
-	if(NRF24L01_Check())
-	{
+	if(NRF24L01_Check()){
 		SetRX_Mode();//default:0x11 ...
-		for(uint8_t i = 0;i<5;i++)
-		{
+		for(uint8_t i = 0;i<5;i++){
 			NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
 			delay(10);
 		}
-		if(sta & (1<<RX_DR))
-		{
+		if(sta & (1<<RX_DR)){
 	        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
 			memcpy(&mspData,RXDATA,sizeof(mspData));
 			NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
-			if(mspData.mspCmd & NEWADDRESS)
-			{
-				RX_ADDRESS[0] = mspData.motor[0];
-				RX_ADDRESS[1] = mspData.motor[0] >> 8;
-				RX_ADDRESS[2] = mspData.motor[1];
-				RX_ADDRESS[3] = mspData.motor[1] >> 8;
+			if(mspData.mspCmd & NEWADDRESS){
+				RX_ADDRESS[0] = mspData.motor[2];
+				RX_ADDRESS[1] = mspData.motor[2] >> 8;
+				RX_ADDRESS[2] = mspData.motor[3];
+				RX_ADDRESS[3] = mspData.motor[3] >> 8;
 				//save new_address to flash
 				FLASH_Unlock();
 				FLASH_ErasePage(0x0803E800);
-				FLASH_ProgramWord(0x0803E800, mspData.motor[0]);
-				FLASH_ProgramWord(0x0803E820, mspData.motor[1]);
+				FLASH_ProgramWord(0x0803E800, mspData.motor[2]);
+				FLASH_ProgramWord(0x0803E820, mspData.motor[3]);
 				FLASH_Lock();
 				SetRX_Mode();//use the new_address!
 				for(uint8_t i = 0; i<5;i++)		{LED_D_ON;delay(50);LED_D_OFF;delay(50);}
 			}
 		}
-		else
-		{	//load the address form flash!
+		else{	//load the address form flash!
 			RX_ADDRESS[0] = *(uint16_t *)0x0803E800;
 			RX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
 			RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
@@ -271,8 +240,7 @@ bool NRF24L01_INIT(void)
 			SetRX_Mode();//use the new_address!
 		}
 		return true;
-	}
-	else return false;
+	}else return false;
 }
 
 
@@ -285,9 +253,8 @@ bool NRF24L01_Check(void)
 	delay(2);
 	NRF_Read_Buf(TX_ADDR,&buf1,1); 
 
-	if(buf1 == 0x77)
-		return true;
-	else	return false;
+	if(buf1 == 0x77)return true;
+		else	return false;
 } 
 
 void SetRX_Mode(void)
@@ -324,7 +291,7 @@ void SetTX_Mode(void)
 
 void nrf24l01HardwareInit(void)
 {
-	gpio_config_t IRQPIN;	//nrf24l01 pins
+	gpio_config_t IRQPIN;//nrf24l01 pins
 
 	IRQPIN.pin = Pin_0;
 	IRQPIN.mode = Mode_IN_FLOATING;
@@ -333,7 +300,7 @@ void nrf24l01HardwareInit(void)
 	gpioInit(GPIOB,&IRQPIN);
 
 
-	gpio_config_t CE;	//nrf24l01 pins
+	gpio_config_t CE;//nrf24l01 pins
 
 	CE.pin = Pin_1;
 	CE.mode = Mode_Out_PP;
@@ -342,7 +309,7 @@ void nrf24l01HardwareInit(void)
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&CE);
 
-	gpio_config_t LED;	//init led pins
+	gpio_config_t LED;//init led pins
 
 	LED.pin = Pin_3 | Pin_4 | Pin_5 | Pin_2;
 	LED.mode = Mode_Out_PP;
@@ -350,7 +317,6 @@ void nrf24l01HardwareInit(void)
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&LED);
-
 }
 
 void led_beep_sleep(void)

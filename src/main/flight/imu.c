@@ -378,9 +378,9 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void)
     }
 
 #ifdef NRF	
-	roll1 = attitude.values.roll;
-	pitch1= attitude.values.pitch;
-	yaw1  = attitude.values.yaw;
+	flag.roll1 = attitude.values.roll;
+	flag.pitch1= attitude.values.pitch;
+	flag.yaw1  = attitude.values.yaw;
 #endif
 }
 

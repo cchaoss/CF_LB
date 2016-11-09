@@ -171,8 +171,8 @@ void updateBattery(void)
     }
 
 #ifdef NRF
-	batt = vbat;
-	if(batt < 10)	beeperSilence();
+	flag.batt = vbat;
+	if(flag.batt < 10)	beeperSilence();
 	static bool a;
 	static uint32_t b,c;
 	if(batteryState == BATTERY_WARNING || batteryState == BATTERY_CRITICAL)
@@ -183,7 +183,7 @@ void updateBattery(void)
 		if(c-b > 8000)	
 		{
 			beeper(BEEPER_BAT_CRIT_LOW);
-			batt_low = true;
+			flag.batt_low = true;
 		}
 		else if(c-b > 3500)	beeper(BEEPER_BAT_LOW);
 	}else a = true;
