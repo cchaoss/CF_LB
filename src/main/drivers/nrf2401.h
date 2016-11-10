@@ -94,11 +94,12 @@ enum _CMD{
 	ALT_P,
 	ALT_OFF,
 	LED_P,
+	LED_RGB,
 	BEEP_P,
-	ROLL_P,
-	PITC_P,
+	ROLL_P = 9,
+	PITC_P = 10,
+	YAW_P = 11,
 	THRO_P,
-	YAW_P,
 	MOTOR_P,
 };
 

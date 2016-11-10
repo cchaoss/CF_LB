@@ -73,10 +73,13 @@ bool nrf_rx(void)
     if(sta & (1<<RX_DR)){
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
-		if(!(t_mspData.mspCmd & OFFLINE))//offline模式下数据处理
+		if(!(t_mspData.mspCmd & OFFLINE))
 			mspData = t_mspData;
 		else if(!(mspData.mspCmd & OFFLINE)){
 				mspData.mspCmd |= OFFLINE;
+				mspData.motor[ROL] = 1500;
+				mspData.motor[PIT] = 1500;
+				mspData.motor[YA ] = 1500;
 				mspData.motor[THR] = 1000;
 			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
@@ -110,46 +113,50 @@ void rx_data_process(int16_t *buf)
 			accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;
 		}
 
+#if 0
 		//offline process
-		static start = true;
 		if(mspData.mspCmd & OFFLINE){
 			LED_A_ON;
 			i2cRead(0x08,0xff,1, &msp_328p.cmd);debug[0] = msp_328p.cmd;
-			if(msp_328p.cmd == 255){
-				if(start){
-					start = false;
-					i2cWrite(0x08,0,mspData.key);
-				}
+			i2cRead(0x08,0xff,1, &msp_328p.length);	debug[1] = msp_328p.length;
+			for(uint8_t i = 0;i < msp_328p.length;i++)	
+				i2cRead(0x08,0xff,1, &msp_328p.data[i]);
+			debug[2] = msp_328p.data[0];
+
+			if(msp_328p.cmd == 255 && t_mspData.key != 0)
+					i2cWrite(0x08,0,t_mspData.key);
+		
+			switch(msp_328p.cmd){  
+				case ARM_P:mspData.mspCmd |= ARM;break;
+				case ARM_OFF:mspData.mspCmd &= ~ARM;break;
+				case CAL_P:mspData.mspCmd |= CALIBRATION;break;
+				case ALT_P:mspData.mspCmd |= ALTHOLD;break;
+				case ALT_OFF:mspData.mspCmd &= ~ALTHOLD;break;
+				case LED_P:mspData.led = msp_328p.data[0];break;
+				case LED_RGB:mspData.led_rgb = msp_328p.data[0];break;
+				case BEEP_P:mspData.beep = msp_328p.data[0];break;
+				case ROLL_P:mspData.motor[ROL] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+				case PITC_P:mspData.motor[PIT] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+				case YAW_P :mspData.motor[YA ] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
+				case THRO_P:mspData.motor[THR] = 1100 + (flag.batt > 100 ? 124 - flag.batt : 0) * 12 + 4 * msp_328p.data[0];break;//Voltage compensation throttle
+				case MOTOR_P:for(uint8_t i = 0;i < 4;i++)	mspData.motor[i] = 1000+4*msp_328p.data[i];break;
+				default:break;
 			}
-			else{
-				i2cRead(0x08,0xff,1, &msp_328p.length);	debug[1] = msp_328p.length;
-				for(uint8_t i = 0;i<msp_328p.length;i++){
-					i2cRead(0x08,0xff,1, &msp_328p.data[i]);debug[2+i] = msp_328p.data[i];
-				}
-				switch(msp_328p.cmd){  
-					case ARM_P:mspData.mspCmd |= ARM;break;
-					case ARM_OFF:mspData.mspCmd &= ~ARM;break;
-					case CAL_P:mspData.mspCmd |= CALIBRATION;break;
-					case ALT_P:mspData.mspCmd |= ALTHOLD;break;
-					case ALT_OFF:mspData.mspCmd &= ~ALTHOLD;break;
-					case LED_P:mspData.led = msp_328p.data[0];
-							mspData.led_rgb = msp_328p.data[1];break;
-					case BEEP_P:mspData.beep = msp_328p.data[0];break;
-					case ROLL_P:mspData.motor[ROL] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-					case PITC_P:mspData.motor[PIT] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-					case THRO_P:mspData.motor[THR] = 1100 + (flag.batt > 100 ? 124 - flag.batt : 0) * 12 + 4 * msp_328p.data[0] ;break;//Voltage compensation throttle
-					case YAW_P :mspData.motor[YA ] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-					case MOTOR_P:for(uint8_t i = 0;i < 4;i++)	mspData.motor[i] = 1000+4*msp_328p.data[i];break;
-					default:break;
-				}
-			}
-		}else {LED_A_OFF;start = true;}
+		}
+		else{
+			LED_A_OFF;
+			msp_328p.cmd = 255;
+		}
+		
+		debug[3] = t_mspData.key;
+#endif
 
 		//give and bound the rc_stick data
-		for(uint8_t i = 0;i<4;i++){
-			buf[i] = mspData.motor[i];
-			buf[i] = bound(buf[i],2000,1000);
-		}
+		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
+			for(uint8_t i = 0;i<4;i++){
+				buf[i] = mspData.motor[i];
+				buf[i] = bound(buf[i],2000,1000);
+			}
 		//just for beeper
 		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){
 			if(mspData.beep == beep_off)BEEP_OFF;

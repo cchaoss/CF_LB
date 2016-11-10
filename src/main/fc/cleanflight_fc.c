@@ -761,15 +761,19 @@ void taskMainPidLoop(void)
     }
 
 #ifdef NRF 
-	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE)
+	if(mspData.mspCmd & ONLINE)
 	{	
 		if(mspData.mspCmd & MOTOR && !(mspData.mspCmd & ARM))//上锁状态
 		{
-			pwmWriteMotor(0,bound(mspData.motor[0],1400,1000));
-			pwmWriteMotor(1,bound(mspData.motor[1],1400,1000));
-			pwmWriteMotor(2,bound(mspData.motor[2],1400,1000));
-			pwmWriteMotor(3,bound(mspData.motor[3],1400,1000));
+			for(uint8_t i = 0;i<4;i++)
+				pwmWriteMotor(i,bound(mspData.motor[i],1400,1000));
 		}
+	}
+	if(mspData.mspCmd & OFFLINE)
+	{
+		if(msp_328p.cmd == MOTOR_P && !(mspData.mspCmd & ARM))
+			for(uint8_t i = 0;i<4;i++)
+				pwmWriteMotor(i,bound(mspData.motor[i],1400,1000));
 	}
 #endif 
 
