@@ -1160,6 +1160,19 @@ void ledStripEnable(void)
     ws2811LedStripInit();
 	setStripColor(&HSV(BLACK));
 	ws2811UpdateStrip();
+	setStripColor(&HSV(RED));
+	ws2811UpdateStrip();
+	delay(120);
+	setStripColor(&HSV(GREEN));
+	ws2811UpdateStrip();
+	delay(120);
+	setStripColor(&HSV(BLUE));
+	ws2811UpdateStrip();
+	delay(280);
+	setStripColor(&HSV(BLACK));
+	ws2811UpdateStrip();
+
+
 }
 
 static void ledStripDisable(void)

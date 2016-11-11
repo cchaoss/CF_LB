@@ -113,7 +113,7 @@ void rx_data_process(int16_t *buf)
 			accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;
 		}
 
-#if 0
+#if 1
 		//offline process
 		if(mspData.mspCmd & OFFLINE){
 			LED_A_ON;
@@ -324,6 +324,11 @@ void nrf24l01HardwareInit(void)
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&LED);
+	
+	LED_A_ON;delay(80);LED_A_OFF;
+	LED_B_ON;delay(80);LED_B_OFF;
+	LED_C_ON;delay(80);LED_C_OFF;
+	LED_D_ON;delay(80);LED_D_OFF;
 }
 
 void led_beep_sleep(void)
