@@ -608,8 +608,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			
 			if(flag.height <= 320){	
 				b++;
-				if(b > 70){
-					b = 70;
+				if(b > 80){
+					b = 80;
 					mspData.motor[THR] = 1100;
 					mspData.mspCmd &= ~ARM;
 				}
@@ -622,9 +622,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
-#if 1	//限制高度
+#if 1	//限制高度6m 左右
 		static uint8_t a;
-		if(flag.height > 600){
+		if(flag.height > 800){
 			a++;
 			if(a > 20){
 				a = 20;
