@@ -55,10 +55,10 @@
 #define beep_m		3
 #define beep_l		4
 #define beep_on		5	
-#define LEDA	1<<0
-#define LEDB	1<<1
-#define LEDC	1<<2
-#define LEDD	1<<3
+#define LEDA	(1<<0)
+#define LEDB	(1<<1)
+#define LEDC	(1<<2)
+#define LEDD	(1<<3)
 #define	BLACK 	0
 #define WHITE 	1
 #define RED 	2
@@ -75,14 +75,14 @@
 #define THR	3
 
 //mspCmd
-#define ARM			1<<0
-#define FREEHEAD	1<<1
-#define ALTHOLD		1<<2
-#define CALIBRATION	1<<3
-#define NEWADDRESS	1<<4
-#define ONLINE		1<<5
-#define OFFLINE  	1<<6
-#define MOTOR		1<<7
+#define ARM			(1<<0)
+#define FREEHEAD	(1<<1)
+#define ALTHOLD		(1<<2)
+#define CALIBRATION	(1<<3)
+#define NEWADDRESS	(1<<4)
+#define ONLINE		(1<<5)
+#define OFFLINE  	(1<<6)
+#define MOTOR		(1<<7)
 
 
 
@@ -128,14 +128,18 @@ extern package_328p msp_328p;
 
 typedef struct flag
 {
-	bool batt_low;
-	float height;
+	uint8_t checkCode[4];
+	uint16_t cmd;
+	uint8_t key;
 	uint16_t batt;
 	int16_t roll1;
 	int16_t pitch1;
 	int16_t yaw1;
+	bool batt_low;
+	float height;
 }golbal_flag;
 extern golbal_flag flag;
+
 
 #define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
 #define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)

@@ -14,7 +14,7 @@
 #include "sound_beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag;
+golbal_flag flag = {"$$$",0,0,0,0,0,0,0,0};
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
@@ -110,18 +110,18 @@ void rx_data_process(int16_t *buf)
 				else arm_flag = true;
 		}
 		if(mspData.mspCmd & CALIBRATION){
-			accSetCalibrationCycles(400);mspData.mspCmd &= ~CALIBRATION;
+			accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
 		}
 
 #if 1
 		//offline process
 		if(mspData.mspCmd & OFFLINE){
 			LED_A_ON;
-			i2cRead(0x08,0xff,1, &msp_328p.cmd);debug[0] = msp_328p.cmd;
-			i2cRead(0x08,0xff,1, &msp_328p.length);	debug[1] = msp_328p.length;
+			i2cRead(0x08,0xff,1, &msp_328p.cmd);//debug[0] = msp_328p.cmd;
+			i2cRead(0x08,0xff,1, &msp_328p.length);//debug[1] = msp_328p.length;
 			for(uint8_t i = 0;i < msp_328p.length;i++)	
 				i2cRead(0x08,0xff,1, &msp_328p.data[i]);
-			debug[2] = msp_328p.data[0];
+			//debug[2] = msp_328p.data[0];
 
 			if(msp_328p.cmd == 255 && t_mspData.key != 0)
 					i2cWrite(0x08,0,t_mspData.key);
@@ -186,12 +186,9 @@ void nrf_tx(void)
 	bool a = true;
 	uint8_t sta;
 
-	TXData[0] = flag.roll1;
-	TXData[1] = flag.roll1 >> 8;
-	TXData[2] = flag.pitch1;
-	TXData[3] = flag.pitch1 >> 8;
-	TXData[4] = flag.yaw1;
-	TXData[5] = flag.yaw1 >> 8;
+	flag.cmd = mspData.mspCmd;
+	flag.key = mspData.key;
+	memcpy(TXData,&flag,sizeof(flag));
 	
 	SPI_CE_L();
 	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节

@@ -596,27 +596,32 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #if 1	//低电压降落+失控保护——use height
 		static uint8_t b;
 		if(!nrf_rx() || flag.batt_low){
-			mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
+			if(mspData.mspCmd & ONLINE)	
+				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
+	
 			if(!flag.batt_low){
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-			
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1560;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1450;
+
+			mspData.mspCmd |= ALTHOLD;//开定高
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1550;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1433;
 					else mspData.motor[THR] = 1360;
 			
+			
 			if(flag.height <= 300){	
+				mspData.mspCmd &= ~ALTHOLD;//关定高
 				b++;
 				if(b > 80){
 					b = 80;
 					mspData.motor[THR] = 1100;
 					mspData.mspCmd &= ~ARM;
 				}
-				else mspData.motor[THR] = 1340;
+				else mspData.motor[THR] = 1360;
 			}else b =0;
-		}else b = 0;
+		}
 #endif 
 
 		SetTX_Mode();
@@ -624,6 +629,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	else	{nrf_tx();	SetRX_Mode();}
 
 #if 1	//限制高度6m 左右
+		debug[0] = flag.height;
 		static uint8_t a;
 		if(flag.height > 800){
 			a++;

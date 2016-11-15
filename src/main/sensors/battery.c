@@ -172,7 +172,7 @@ void updateBattery(void)
 
 #ifdef NRF
 	flag.batt = vbat;
-	if(flag.batt < 10)	beeperSilence();
+	//if(flag.batt < 10)	beeperSilence();
 	static bool a;
 	static uint32_t b,c;
 	if(batteryState == BATTERY_WARNING || batteryState == BATTERY_CRITICAL)
