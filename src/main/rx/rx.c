@@ -590,6 +590,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 
 #ifdef NRF
+
 	static bool overturn = true;	
 	if(overturn){
 		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//下个版本不需要
@@ -635,13 +636,22 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			a++;
 			if(a > 20){
 				a = 20;
-				if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1588;
+				if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
 					else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
 						else mspData.motor[THR] = 1350;
 				mspData.mspCmd |= ALTHOLD;
 			}
 		}else a = 0;
 #endif
+	rx_data_process(rcData);
+	overturn = !overturn;
+
+	rcData[5] = mspData.mspCmd;
+	rcData[6] = mspData.motor[0];
+	rcData[7] = mspData.motor[1];
+	rcData[8] = mspData.motor[2];
+	rcData[9] = mspData.motor[3];
+
 #if 0	//test i2c read and write
 /*
 	static uint8_t sta;
@@ -692,15 +702,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		rcData[8] = x;
 */
 #endif
-	rx_data_process(rcData);
-	overturn = !overturn;
-
-
-	rcData[5] = mspData.mspCmd;
-	rcData[6] = mspData.motor[0];
-	rcData[7] = mspData.motor[1];
-	rcData[8] = mspData.motor[2];
-	rcData[9] = mspData.motor[3];
 #endif
 
 

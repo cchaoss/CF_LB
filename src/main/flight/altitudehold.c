@@ -337,8 +337,10 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
+#ifdef NRF
 	flag.height = accAlt;//
 	//debug[0] = height;
+#endif
     imuResetAccelerationSum();
 
 #ifdef BARO

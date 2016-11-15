@@ -533,7 +533,7 @@ void processRx(void)
 
     bool canUseHorizonMode = true;
 
-
+	//if(true)
 	if((rcModeIsActive(BOXANGLE) || (feature(FEATURE_FAILSAFE) && failsafeIsActive())) && (sensors(SENSOR_ACC))) 
 	{
         // bumpless transfer to Level mode
