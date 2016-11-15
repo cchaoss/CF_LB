@@ -592,10 +592,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF
 	static bool overturn = true;	
 	if(overturn){
-		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();
+		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//下个版本不需要
 #if 1	//低电压降落+失控保护——use height
 		static uint8_t b;
 		if(!nrf_rx() || flag.batt_low){
+			mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
 			if(!flag.batt_low){
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
@@ -606,7 +607,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1450;
 					else mspData.motor[THR] = 1360;
 			
-			if(flag.height <= 320){	
+			if(flag.height <= 300){	
 				b++;
 				if(b > 80){
 					b = 80;
@@ -689,8 +690,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	overturn = !overturn;
 
 
-	rcData[6] = mspData.mspCmd;
-	rcData[7] = mspData.led;
+	rcData[5] = mspData.mspCmd;
+	rcData[6] = mspData.motor[0];
+	rcData[7] = mspData.motor[1];
+	rcData[8] = mspData.motor[2];
+	rcData[9] = mspData.motor[3];
 #endif
 
 

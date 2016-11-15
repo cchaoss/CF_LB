@@ -115,7 +115,7 @@ static void applyMultirotorAltHold(void)
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
     }
-	rcData[6] = rcCommand[THROTTLE];
+	rcData[11] = rcCommand[THROTTLE];
 	
 }
 
@@ -159,7 +159,7 @@ void updateAltHoldState(void)
 				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/6 + rcCommand[THROTTLE];
 		}
 	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1050,1850);
-	rcData[5] = rcCommand[THROTTLE];	//just for display
+	//rcData[11] = rcCommand[THROTTLE];	//just for display
 #endif
 
 #ifdef NRF
