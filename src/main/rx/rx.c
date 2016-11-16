@@ -609,7 +609,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		mspData.mspCmd |= ALTHOLD;//2米以上开定高
 		if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1550;
 			else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1433;
-				else mspData.motor[THR] = 1360;
+				else mspData.motor[THR] = 1370;
 		
 		if(flag.height <= 300){	
 			mspData.mspCmd &= ~ALTHOLD;//2米以下关定高
@@ -619,7 +619,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				mspData.motor[THR] = 1100;
 				mspData.mspCmd &= ~ARM;
 			}
-			else mspData.motor[THR] = 1360;
+			else mspData.motor[THR] = 1400;
 		}else b =0;
 	}
 

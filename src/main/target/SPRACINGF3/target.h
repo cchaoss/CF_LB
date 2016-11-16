@@ -62,7 +62,7 @@
 
 #define MAG
 #define USE_MAG_AK8975
-//#define USE_MAG_HMC5883
+#define USE_MAG_HMC5883
 //#define MAG_HMC5883_ALIGN CW270_DEG
 
 
