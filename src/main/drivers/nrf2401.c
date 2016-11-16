@@ -116,7 +116,7 @@ void rx_data_process(int16_t *buf)
 #if 1
 		//offline process
 		if(mspData.mspCmd & OFFLINE){
-			LED_A_ON;
+			//LED_A_ON;
 			i2cRead(0x08,0xff,1, &msp_328p.cmd);//debug[0] = msp_328p.cmd;
 			i2cRead(0x08,0xff,1, &msp_328p.length);//debug[1] = msp_328p.length;
 			for(uint8_t i = 0;i < msp_328p.length;i++)	
@@ -144,7 +144,7 @@ void rx_data_process(int16_t *buf)
 			}
 		}
 		else{
-			LED_A_OFF;
+			//LED_A_OFF;
 			msp_328p.cmd = 255;
 		}
 		

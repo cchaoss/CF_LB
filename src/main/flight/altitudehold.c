@@ -339,7 +339,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #endif
 #ifdef NRF
 	flag.height = accAlt;//
-	//debug[0] = height;
+	debug[0] = accAlt;
 #endif
     imuResetAccelerationSum();
 

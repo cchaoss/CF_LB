@@ -794,17 +794,12 @@ int main(void) {
 		else GPIO_ResetBits(GPIOB, GPIO_Pin_5);
 	}
 */
-
-
 	configureScheduler();
 
     while (true) 
 	{
-
         scheduler();
         processLoopback();
-
-	
     }
 
 }

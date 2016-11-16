@@ -583,9 +583,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-#ifndef NRF
-    detectAndApplySignalLossBehaviour();
-#endif	
+
+    //detectAndApplySignalLossBehaviour();
+
 	rcSampleIndex++;
 
 
@@ -593,64 +593,64 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 	static bool overturn = true;	
 	if(overturn){
-		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//下个版本不需要
-#if 1	//低电压降落+失控保护——use height
-		static uint8_t b;
-		if(!nrf_rx() || flag.batt_low){
-			if(mspData.mspCmd & ONLINE)	
-				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
-	
-			if(!flag.batt_low){
-				mspData.motor[PIT] = 1500;
-				mspData.motor[ROL] = 1500;
-				mspData.motor[YA ] = 1500;
-			}
-
-			mspData.mspCmd |= ALTHOLD;//开定高
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1550;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1433;
-					else mspData.motor[THR] = 1360;
-			
-			
-			if(flag.height <= 300){	
-				mspData.mspCmd &= ~ALTHOLD;//关定高
-				b++;
-				if(b > 80){
-					b = 80;
-					mspData.motor[THR] = 1100;
-					mspData.mspCmd &= ~ARM;
-				}
-				else mspData.motor[THR] = 1360;
-			}else b =0;
+	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//下个版本不需要
+	//低电压降落+失控保护——use height
+	static uint8_t b;
+	if(!nrf_rx() || flag.batt_low){
+		if(mspData.mspCmd & ONLINE)	
+			mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
+		//低电压降落，姿态可手控
+		if(!flag.batt_low){
+			mspData.motor[PIT] = 1500;
+			mspData.motor[ROL] = 1500;
+			mspData.motor[YA ] = 1500;
 		}
-#endif 
 
-		SetTX_Mode();
+		mspData.mspCmd |= ALTHOLD;//2米以上开定高
+		if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1550;
+			else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1433;
+				else mspData.motor[THR] = 1360;
+		
+		if(flag.height <= 300){	
+			mspData.mspCmd &= ~ALTHOLD;//2米以下关定高
+			b++;
+			if(b > 80){
+				b = 80;
+				mspData.motor[THR] = 1100;
+				mspData.mspCmd &= ~ARM;
+			}
+			else mspData.motor[THR] = 1360;
+		}else b =0;
+	}
+
+	SetTX_Mode();
 	}
 	else	{nrf_tx();	SetRX_Mode();}
 
-#if 1	//限制高度6m 左右
-		debug[0] = flag.height;
-		static uint8_t a;
-		if(flag.height > 800){
-			a++;
-			if(a > 20){
-				a = 20;
-				if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
-					else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
-						else mspData.motor[THR] = 1350;
-				mspData.mspCmd |= ALTHOLD;
-			}
-		}else a = 0;
-#endif
+	//限制高度6m 左右
+	debug[0] = flag.height;
+	static uint8_t a;
+	if(flag.height > 800){
+		a++;
+		if(a > 20){
+			a = 20;
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
+					else mspData.motor[THR] = 1350;
+			mspData.mspCmd |= ALTHOLD;
+		}
+	}else a = 0;
+
 	rx_data_process(rcData);
 	overturn = !overturn;
 
+	//for debug display
 	rcData[5] = mspData.mspCmd;
 	rcData[6] = mspData.motor[0];
 	rcData[7] = mspData.motor[1];
 	rcData[8] = mspData.motor[2];
 	rcData[9] = mspData.motor[3];
+#endif
 
 #if 0	//test i2c read and write
 /*
@@ -702,9 +702,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		rcData[8] = x;
 */
 #endif
-#endif
-
-
 }
 
 void parseRcChannels(const char *input, rxConfig_t *rxConfig)

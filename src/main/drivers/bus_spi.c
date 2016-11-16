@@ -279,7 +279,7 @@ void initSpi2(void)
     spi.SPI_NSS = SPI_NSS_Soft;
     spi.SPI_FirstBit = SPI_FirstBit_MSB;
     spi.SPI_CRCPolynomial = 7;
-    spi.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;//
+    spi.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;//4.5MHz
 
 #ifdef USE_SDCARD_SPI2
     spi.SPI_CPOL = SPI_CPOL_Low;
