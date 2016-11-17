@@ -764,7 +764,11 @@ int main(void) {
     init();
 
 #ifdef NRF
-	NRF24L01_INIT();
+	if(NRF24L01_INIT()) 
+		for(char i = 0;i<10;i++)
+		{	LED_A_ON;delay(100);
+			LED_A_OFF;delay(100);
+		}	
 	
 #endif
 /*
