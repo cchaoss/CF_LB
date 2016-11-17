@@ -26,8 +26,7 @@
 #ifndef NRF
 #define BLACKBOX
 #define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
-
-#define USE_FLASHFS
+#define USE_FLASHFS//spi2 to 18MHz
 #define USE_FLASH_M25P16
 #endif
 

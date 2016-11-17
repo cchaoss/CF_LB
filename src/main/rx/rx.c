@@ -592,6 +592,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF
 
 	static bool overturn = true;	
+	static uint8_t tx_flag = 0;
+	tx_flag++;
 	if(overturn){
 		//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//下个版本不需要
 #if 1	//低电压降落+失控保护——use height
@@ -627,7 +629,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 		SetTX_Mode();
 	}
-	else	{nrf_tx();	SetRX_Mode();}
+	else if(tx_flag > 8){
+			nrf_tx();
+			SetRX_Mode();
+			tx_flag = 0;
+		}
 
 #if 1	//限制高度6m 左右
 		debug[0] = flag.height;

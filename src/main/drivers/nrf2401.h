@@ -129,6 +129,7 @@ extern package_328p msp_328p;
 typedef struct flag
 {
 	uint8_t checkCode[4];
+	uint8_t version;
 	uint16_t cmd;
 	uint8_t key;
 	uint16_t batt;

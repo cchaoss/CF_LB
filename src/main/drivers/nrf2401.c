@@ -14,12 +14,13 @@
 #include "sound_beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",0,0,0,0,0,0,0,0};
+golbal_flag flag = {"EMT",100,0,0,0,0,0,0,0,0};
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
 
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
+uint8_t  TX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//tx_address
 
 uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
@@ -71,6 +72,7 @@ bool nrf_rx(void)
     static uint8_t count;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR)){
+		LED_C_ON;//
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
 		if(!(t_mspData.mspCmd & OFFLINE))
@@ -84,7 +86,7 @@ bool nrf_rx(void)
 			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
-     }else count++;
+     }else {count++;LED_C_OFF;}
 	if(count > 28){//判断2.4G数据是否丢失
 		count = 30;
 		return false;
@@ -225,6 +227,12 @@ bool NRF24L01_INIT(void)
 				RX_ADDRESS[1] = mspData.motor[2] >> 8;
 				RX_ADDRESS[2] = mspData.motor[3];
 				RX_ADDRESS[3] = mspData.motor[3] >> 8;
+
+				TX_ADDRESS[0] = mspData.motor[2] + 1;
+				TX_ADDRESS[1] = mspData.motor[2] >> 8;
+				TX_ADDRESS[2] = mspData.motor[3];
+				TX_ADDRESS[3] = mspData.motor[3] >> 8;
+
 				//save new_address to flash
 				FLASH_Unlock();
 				FLASH_ErasePage(0x0803E800);
@@ -240,6 +248,12 @@ bool NRF24L01_INIT(void)
 			RX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
 			RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
 			RX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
+
+			TX_ADDRESS[0] = *(uint16_t *)0x0803E800 + 1;
+			TX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
+			TX_ADDRESS[2] = *(uint16_t *)0x0803E820;
+			TX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
+
 			SetRX_Mode();//use the new_address!
 		}
 		return true;
@@ -280,12 +294,12 @@ void SetTX_Mode(void)
 {
 	SPI_CE_L();
 	NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器
-	NRF_Write_Buf(TX_ADDR,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);	//写TX节点地址 
-  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
+	NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);	//写TX节点地址 
+  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
   	NRF_Write_Reg(EN_AA,0x01);     //使能通道0的自动应答    
   	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
   	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
-  	NRF_Write_Reg(RF_CH,40);       //设置RF通道为40
+  	NRF_Write_Reg(RF_CH,40);       
   	NRF_Write_Reg(RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
   	NRF_Write_Reg(CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
 	SPI_CE_H();
