@@ -74,17 +74,18 @@
 #define YA	2
 #define THR	3
 
-//mspCmd
-#define ARM			(1<<0)
-#define FREEHEAD	(1<<1)
-#define ALTHOLD		(1<<2)
-#define CALIBRATION	(1<<3)
-#define NEWADDRESS	(1<<4)
-#define ONLINE		(1<<5)
-#define OFFLINE  	(1<<6)
-#define MOTOR		(1<<7)
 
-
+//msp cmd
+enum MSP_CMD{
+	ARM	= 1<<0,
+	FREEHEAD = 1<<1,
+	ALTHOLD = 1<<2,
+	CALIBRATION = 1<<3,
+	NEWADDRESS = 1<<4,
+	ONLINE = 1<<5,
+	OFFLINE = 1<<6,
+	MOTOR = 1<<7,
+};
 
 //328 cmd
 enum _CMD{

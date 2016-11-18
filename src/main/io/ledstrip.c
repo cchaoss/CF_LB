@@ -989,7 +989,6 @@ void updateLedStrip(void)
 
 #ifdef NRF	
 	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE){	
-		LED_B_ON;
 		if(mspData.led & LEDA) LED_A_ON;else LED_A_OFF;
 		if(mspData.led & LEDB) LED_B_ON;else LED_B_OFF;
 		if(mspData.led & LEDC) LED_C_ON;else LED_C_OFF;
@@ -1005,7 +1004,7 @@ void updateLedStrip(void)
 			case PINK:setStripColor(&HSV(DEEP_PINK));break;
 			case VIOLET:setStripColor(&HSV(DARK_VIOLET));break;
 		}
-	}else LED_B_OFF;
+	}
 #else
     if (rcModeIsActive(BOXLEDLOW)) {
         if (ledStripEnabled) {

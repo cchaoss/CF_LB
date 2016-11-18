@@ -72,7 +72,7 @@ bool nrf_rx(void)
     static uint8_t count;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR)){
-		LED_C_ON;//
+		//LED_C_ON;//
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
 		if(!(t_mspData.mspCmd & OFFLINE))
@@ -86,9 +86,13 @@ bool nrf_rx(void)
 			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
-     }else {count++;LED_C_OFF;}
+     }
+	else {
+		count++;
+		//LED_C_OFF;//
+	}
 	if(count > 28){//判断2.4G数据是否丢失
-		count = 30;
+		count = 28;
 		return false;
 	}else return true;
 }
@@ -196,11 +200,14 @@ void nrf_tx(void)
 	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
  	SPI_CE_H();//启动发送
 	flag.yaw1 = 0;
+	//while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0));
+
 	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && a){
 		delayMicroseconds(10);
 		flag.yaw1++;
-		if(flag.yaw1 > 450)a = false;
+		if(flag.yaw1 > 700)a = false;
 	}
+
 	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
 	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
 	if(sta & MAX_TX)NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//达到最大重发次数，清除TX FIFO寄存器

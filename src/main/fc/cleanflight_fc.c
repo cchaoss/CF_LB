@@ -766,14 +766,14 @@ void taskMainPidLoop(void)
 		if(mspData.mspCmd & MOTOR && !(mspData.mspCmd & ARM))//上锁状态
 		{
 			for(uint8_t i = 0;i<4;i++)
-				pwmWriteMotor(i,bound(mspData.motor[i],1400,1000));
+				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 		}
 	}
 	if(mspData.mspCmd & OFFLINE)
 	{
 		if(msp_328p.cmd == MOTOR_P && !(mspData.mspCmd & ARM))
 			for(uint8_t i = 0;i<4;i++)
-				pwmWriteMotor(i,bound(mspData.motor[i],1400,1000));
+				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 	}
 #endif 
 
