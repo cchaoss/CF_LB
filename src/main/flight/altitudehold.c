@@ -162,7 +162,7 @@ void updateAltHoldState(void)
 	//rcData[11] = rcCommand[THROTTLE];	//just for display
 #endif
 
-#ifdef NRF
+#ifndef NRF
 	if(mspData.mspCmd & ALTHOLD)
 	{	
 

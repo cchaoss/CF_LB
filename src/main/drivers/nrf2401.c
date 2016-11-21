@@ -105,9 +105,9 @@ void rx_data_process(int16_t *buf)
 		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 			if(arm_flag && roll_flag)	mwArm();
 				else  mwDisarm();
-			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
+			/*if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
 				mwDisarm();roll_flag = false;
-			}
+			}*/
 		}		
 		else{	
 			mwDisarm();
