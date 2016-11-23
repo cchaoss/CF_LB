@@ -780,6 +780,7 @@ void taskMainPidLoop(void)
 	// test turn over 
 	static bool over_flag = true,begin = true,a = true;
 	static int16_t start_roll;
+	//static uint8_t b;
 	if(mspData.mspCmd & ALTHOLD){
 /*
 		if(over_flag){
@@ -830,21 +831,23 @@ void taskMainPidLoop(void)
 
 				if(a)	{start_roll = attitude.values.roll;a = false;}		
 	
-				if(fabs(attitude.values.roll - start_roll) < 250)
+				if(fabs(attitude.values.roll - start_roll) < 100)
 				{	debug[1] = 1;
-					pwmWriteMotor(0,1900);
-					pwmWriteMotor(1,1900);
+					pwmWriteMotor(0,1950);
+					pwmWriteMotor(1,1950);
 					pwmWriteMotor(2,1000);
 					pwmWriteMotor(3,1000);
 				}else begin = false;
 			}
-			else if((attitude.values.roll < 20) && (attitude.values.roll > -170)) 
+			else if((attitude.values.roll < 785) && (attitude.values.roll > -20)) 
 					{
-						over_flag = false;
-						pwmWriteMotor(0,1600);
-						pwmWriteMotor(1,1600);
-						pwmWriteMotor(2,1600);
-						pwmWriteMotor(3,1600);
+						if(attitude.values.roll > 50)
+						{
+							pwmWriteMotor(0,1000);
+							pwmWriteMotor(1,1000);
+							pwmWriteMotor(2,1950);
+							pwmWriteMotor(3,1950);
+						}else over_flag = false;
 					}
 				else {
 						pwmWriteMotor(0,1000);
