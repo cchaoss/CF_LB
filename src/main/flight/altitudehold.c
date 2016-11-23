@@ -105,7 +105,7 @@ static void applyMultirotorAltHold(void)
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             // set velocity proportional to stick movement +100 throttle gives ~ +50 cm/s
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 2;
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 10;//3(raw)
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -114,8 +114,9 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
+		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1650,1300);//bound for slow down.
     }
-	rcData[11] = rcCommand[THROTTLE];
+	rcData[11] = rcCommand[THROTTLE];//just for display.
 	
 }
 
@@ -141,7 +142,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 #ifdef USE_ALTHOLD
-	if(rcData[3] > 1470 && rcData[3] < 1530)
+	if(rcData[3] > 1460 && rcData[3] < 1540)
 	{
 		if (!FLIGHT_MODE(BARO_MODE))
 		{
@@ -153,16 +154,19 @@ void updateAltHoldState(void)
 			altHoldThrottleAdjustment = 0;
 		}
 	}
+
 	else{ 	
 			DISABLE_FLIGHT_MODE(BARO_MODE);
-			if(rcData[3] > 1500)	rcCommand[THROTTLE] = (rcData[3] - 1500)/2 + rcCommand[THROTTLE];
-				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/6 + rcCommand[THROTTLE];
+			if(rcData[3] > 1500)	rcCommand[THROTTLE] = (rcData[3] - 1500)/3 + rcCommand[THROTTLE];
+				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/8 + rcCommand[THROTTLE];
 		}
+
 	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1050,1850);
 	//rcData[11] = rcCommand[THROTTLE];	//just for display
 #endif
 
 #ifdef NRF
+
 	if(mspData.mspCmd & ALTHOLD)
 	{	
 

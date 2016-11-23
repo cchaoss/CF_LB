@@ -79,7 +79,7 @@ PG_RESET_TEMPLATE(rcControlsConfig_t, rcControlsConfig,
     .deadband = 5,
     .yaw_deadband = 20,
     .alt_hold_deadband = 30, // 40
-    .alt_hold_fast_change = 0,// 1
+    .alt_hold_fast_change = 1,//速率模式
     .yaw_control_direction = 1,
     .deadband3d_throttle = 50,
 );
