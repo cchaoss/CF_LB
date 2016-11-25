@@ -142,6 +142,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 #ifdef NRF
+#if 0
 	static bool  alt_on = false,x = true;
 	static uint32_t a,b;
 	if(mspData.mspCmd & ARM)
@@ -166,6 +167,23 @@ void updateAltHoldState(void)
 		    altHoldThrottleAdjustment = 0;
 		}
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
+
+#if 0
+	if(mspData.mspCmd & ALTHOLD)
+	{	
+
+		if (!FLIGHT_MODE(BARO_MODE)) 
+		{
+		    ENABLE_FLIGHT_MODE(BARO_MODE);
+		    AltHold = EstAlt;
+		    initialRawThrottleHold = rcData[THROTTLE];
+		    initialThrottleHold = rcCommand[THROTTLE];
+		    errorVelocityI = 0;
+		    altHoldThrottleAdjustment = 0;
+		}
+	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
 
 #else
 

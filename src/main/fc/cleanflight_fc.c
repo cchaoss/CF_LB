@@ -793,12 +793,12 @@ void taskMainPidLoop(void)
 					pwmWriteMotor(3,1000);
 				}else begin = false;
 			}
-			else if((attitude.values.roll < 800) && (attitude.values.roll > 0)) 
+			else if((attitude.values.roll < 900) && (attitude.values.roll > 0)) 
 			{
-				if(attitude.values.roll > 80)
+				if(attitude.values.roll > 50)
 				{
-					pwmWriteMotor(0,1450);
-					pwmWriteMotor(1,1450);
+					pwmWriteMotor(0,1100);
+					pwmWriteMotor(1,1100);
 					pwmWriteMotor(2,1950);
 					pwmWriteMotor(3,1950);
 				}else over_flag = false;
