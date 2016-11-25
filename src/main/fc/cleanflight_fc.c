@@ -776,59 +776,13 @@ void taskMainPidLoop(void)
 				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 	}
 
-
 	// test turn over 
 	static bool over_flag = true,begin = true,a = true;
 	static int16_t start_roll;
-	//static uint8_t b;
-	if(mspData.mspCmd & ALTHOLD){
-/*
+	if(mspData.mspCmd & ALTHOLD){		
 		if(over_flag){
-
-			if(begin){
-
-				if(a){start_roll = attitude.values.roll;a = false;}		
-	
-				if(fabs(attitude.values.roll - start_roll) <= 600)
-				{	debug[1] = 1;
-					pwmWriteMotor(0,1900);
-					pwmWriteMotor(1,1900);
-					pwmWriteMotor(2,1000);
-					pwmWriteMotor(3,1000);
-				}else begin = false;
-			}
-			else if((attitude.values.roll > 1750) || (attitude.values.roll < -200))
-			{	debug[1] = 2;
-				pwmWriteMotor(0,1900);
-				pwmWriteMotor(1,1900);
-				pwmWriteMotor(2,1000);
-				pwmWriteMotor(3,1000);
-			}
-			else if(fabs(attitude.values.roll) >= 150)
-				{	debug[1] = 3;
-					pwmWriteMotor(0,1000);
-					pwmWriteMotor(1,1000);
-					pwmWriteMotor(2,1900);
-					pwmWriteMotor(3,1900);
-				}
-				else
-				{
-					over_flag = false;
-					pwmWriteMotor(0,1600);
-					pwmWriteMotor(1,1600);
-					pwmWriteMotor(2,1700);
-					pwmWriteMotor(3,1700);
-				}
-		}else debug[1] = 4;
-	
-*/
-		
-		if(over_flag)
-		{
-
 			if(begin)
 			{
-
 				if(a)	{start_roll = attitude.values.roll;a = false;}		
 	
 				if(fabs(attitude.values.roll - start_roll) < 100)
@@ -839,57 +793,25 @@ void taskMainPidLoop(void)
 					pwmWriteMotor(3,1000);
 				}else begin = false;
 			}
-			else if((attitude.values.roll < 785) && (attitude.values.roll > -20)) 
-					{
-						if(attitude.values.roll > 50)
-						{
-							pwmWriteMotor(0,1000);
-							pwmWriteMotor(1,1000);
-							pwmWriteMotor(2,1950);
-							pwmWriteMotor(3,1950);
-						}else over_flag = false;
-					}
-				else {
-						pwmWriteMotor(0,1000);
-						pwmWriteMotor(1,1000);
-						pwmWriteMotor(2,1000);
-						pwmWriteMotor(3,1000);
-					}
-		}
-/*
-			else if((attitude.values.roll >= -500) && (attitude.values.roll <= -230))
+			else if((attitude.values.roll < 800) && (attitude.values.roll > 0)) 
 			{
-				pwmWriteMotor(0,1900);
-				pwmWriteMotor(1,1900);
-				pwmWriteMotor(2,1000);
-				pwmWriteMotor(3,1000);
-			}
-			else if((attitude.values.roll < 450) && (attitude.values.roll > -100))
-			{	
-				debug[1] = 2;
-				if(attitude.values.roll > 50)
+				if(attitude.values.roll > 80)
 				{
-					pwmWriteMotor(0,1650);
-					pwmWriteMotor(1,1650);
-					pwmWriteMotor(2,1200);
-					pwmWriteMotor(3,1200);
+					pwmWriteMotor(0,1450);
+					pwmWriteMotor(1,1450);
+					pwmWriteMotor(2,1950);
+					pwmWriteMotor(3,1950);
 				}else over_flag = false;
 			}
-			else 
+			else
 			{
 				pwmWriteMotor(0,1000);
 				pwmWriteMotor(1,1000);
 				pwmWriteMotor(2,1000);
 				pwmWriteMotor(3,1000);
 			}
-	
-		}else debug[1] = 4;
-*/
-
+		}
 	}else {over_flag = true;begin = true;a = true;}
-	
-	
-
 
 #endif 
 

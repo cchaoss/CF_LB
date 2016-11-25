@@ -592,7 +592,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF	
 	static uint8_t tx_flag = 0;
 	tx_flag++;
-	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠，下个版本不需要
+	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠->V0.1
 	if(tx_flag <= 4){
 		//低电压降落+失控保护——use height
 		static uint8_t b;
@@ -605,28 +605,30 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-			/*		
-			mspData.mspCmd |= ALTHOLD;//开定高
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 10;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;
-					else mspData.motor[THR] = 1300;
-			*/
-			mspData.motor[THR] = 1100;//定高
+			mspData.motor[THR] = 1100;//定高模式下
 			if(flag.height <= 200){	
 				flag.alt = false;//关定高
 				b++;
-				if(b > 80){
-					b = 80;
-					mspData.motor[THR] = 1040;
+				if(b > 90){
+					b = 90;
+					mspData.motor[THR] = 950;
 					mspData.mspCmd &= ~ARM;
 				}else mspData.motor[THR] = 1400;
-			}else {b =0;flag.alt = true;}
+			}
+			else{
+				b =0;
+				flag.alt = true;
+			}
 		}
 
-	if(tx_flag == 4)SetTX_Mode();
+		if(tx_flag == 4)SetTX_Mode();
 	}
 
-	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
+	if(tx_flag > 4){
+		nrf_tx();
+		SetRX_Mode();
+		tx_flag = 0;
+	}
 	
 	//限制高度6m 左右
 	//debug[0] = flag.height;
