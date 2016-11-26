@@ -637,10 +637,10 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		a++;
 		if(a > 20){
 			a = 20;
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
-					else mspData.motor[THR] = 1350;
-			mspData.mspCmd |= ALTHOLD;
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1300;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1200;
+					else mspData.motor[THR] = 1100;
+			//mspData.mspCmd |= ALTHOLD;
 		}
 	}else a = 0;
 

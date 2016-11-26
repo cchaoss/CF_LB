@@ -732,6 +732,28 @@ void taskMainPidLoop(void)
         rcCommand[THROTTLE] += calculateThrottleAngleCorrection(throttleCorrectionConfig()->throttle_correction_value);
     }
 
+#ifdef NRF
+		static bool flag_inertance = true,a1= true;
+		static int32_t b1,b2;
+		if(mspData.mspCmd & ALTHOLD){	
+				//翻滚之前需要一定大小向上的惯性，使飞行器翻滚发生在抛物线顶点附近(速度为零)，这样效果最好！	
+				if(flag_inertance){
+					if(a1) {b1 = millis();a1 = false;}
+					b2 = millis();
+					if((b2 - b1) < 400)
+						rcCommand[THROTTLE] = 1900;
+					else {flag_inertance = false;a1 = true;}
+				}
+				//翻滚之后给一个大推力顶住下坠的趋势
+				else if(!flag.turnover){
+						if(a1) {b1 = millis();a1 = false;}
+						b2 = millis();
+						if((b2 - b1) < 1700)
+							rcCommand[THROTTLE] = 1900;
+				}
+		}else {flag_inertance = true;a1 = true;}
+#endif
+
 #ifdef GPS
     if (sensors(SENSOR_GPS)) {
         if ((FLIGHT_MODE(GPS_HOME_MODE) || FLIGHT_MODE(GPS_HOLD_MODE)) && STATE(GPS_FIX_HOME)) {
@@ -776,43 +798,44 @@ void taskMainPidLoop(void)
 				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 	}
 
-	// test turn over 
-	static bool over_flag = true,begin = true,a = true;
-	static int16_t start_roll;
-	if(mspData.mspCmd & ALTHOLD){		
-		if(over_flag){
-			if(begin)
-			{
-				if(a)	{start_roll = attitude.values.roll;a = false;}		
-	
-				if(fabs(attitude.values.roll - start_roll) < 100)
-				{	debug[1] = 1;
-					pwmWriteMotor(0,1950);
-					pwmWriteMotor(1,1950);
+	//turn over process 
+	if(mspData.mspCmd & ARM){
+		static bool begin = true,a2 = true;
+		static int16_t start_roll;
+		if(mspData.mspCmd & ALTHOLD){		
+			if(flag.turnover){
+				if(flag_inertance);
+				else if(begin)
+				{
+					if(a2)	{start_roll = attitude.values.roll;a2 = false;}		
+					if(fabs(attitude.values.roll - start_roll) < 80)
+					{	
+						pwmWriteMotor(0,1950);
+						pwmWriteMotor(1,1950);
+						pwmWriteMotor(2,1000);
+						pwmWriteMotor(3,1000);
+					}else begin = false;
+				}
+				else if((attitude.values.roll < 1200) && (attitude.values.roll > 0)) 
+				{
+					if(attitude.values.roll > 60)
+					{
+						pwmWriteMotor(0,1550);
+						pwmWriteMotor(1,1550);
+						pwmWriteMotor(2,1950);
+						pwmWriteMotor(3,1950);
+					}else flag.turnover = false;
+				}
+				else
+				{
+					pwmWriteMotor(0,1000);
+					pwmWriteMotor(1,1000);
 					pwmWriteMotor(2,1000);
 					pwmWriteMotor(3,1000);
-				}else begin = false;
+				}
 			}
-			else if((attitude.values.roll < 900) && (attitude.values.roll > 0)) 
-			{
-				if(attitude.values.roll > 50)
-				{
-					pwmWriteMotor(0,1100);
-					pwmWriteMotor(1,1100);
-					pwmWriteMotor(2,1950);
-					pwmWriteMotor(3,1950);
-				}else over_flag = false;
-			}
-			else
-			{
-				pwmWriteMotor(0,1000);
-				pwmWriteMotor(1,1000);
-				pwmWriteMotor(2,1000);
-				pwmWriteMotor(3,1000);
-			}
-		}
-	}else {over_flag = true;begin = true;a = true;}
-
+		}else {flag.turnover = true;begin = true;a2 = true;}
+	}
 #endif 
 
 
