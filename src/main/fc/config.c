@@ -159,7 +159,6 @@ static void activateConfig(void)
 	modeActivationProfile()->modeActivationConditions[19].auxChannelIndex = 0;
 	modeActivationProfile()->modeActivationConditions[19].range.startStep = 0;
 	modeActivationProfile()->modeActivationConditions[19].range.endStep = 48;
-
 /*
 	// OPEN FREEHEAD MODE
 	modeActivationProfile()->modeActivationConditions[17].modeId = BOXHEADFREE;

@@ -88,7 +88,7 @@ static void applyMultirotorAltHold(void)
 {
     static uint8_t isAltHoldChanged = 0;
     // multirotor alt hold
-    if (rcControlsConfig()->alt_hold_fast_change) {
+    if (rcControlsConfig()->alt_hold_fast_change && false) {
         // rapid alt changes
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             errorVelocityI = 0;
@@ -114,7 +114,7 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1000);//bound for slow down.
+		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1150);//bound for slow down.
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
 	
@@ -141,31 +141,8 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
-#ifdef USE_ALTHOLD	//it's not so good
-	if(rcData[3] > 1460 && rcData[3] < 1540)
-	{
-		if (!FLIGHT_MODE(BARO_MODE))
-		{
-			ENABLE_FLIGHT_MODE(BARO_MODE);
-			AltHold = EstAlt;
-			initialRawThrottleHold = rcData[THROTTLE];
-			initialThrottleHold = rcCommand[THROTTLE];
-			errorVelocityI = 0;
-			altHoldThrottleAdjustment = 0;
-		}
-	}
-
-	else{ 	
-			DISABLE_FLIGHT_MODE(BARO_MODE);
-			if(rcData[3] > 1500)	rcCommand[THROTTLE] = (rcData[3] - 1500)/3 + rcCommand[THROTTLE];
-				else	rcCommand[THROTTLE] = (rcData[3] - 1500)/8 + rcCommand[THROTTLE];
-		}
-
-	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1050,1850);
-	//rcData[11] = rcCommand[THROTTLE];	//just for display
-#endif
-
 #ifdef NRF
+#if 0
 	static bool  alt_on = false,x = true;
 	static uint32_t a,b;
 	if(mspData.mspCmd & ARM)
@@ -173,24 +150,40 @@ void updateAltHoldState(void)
 		if(rcData[3] > 1550){
 			if(x) {a = millis();x = false;}
 			b = millis();
-			if((b - a) > 1000)
+			if((b - a) > 500)
 				alt_on = true;
 		}else x = true;
 	}else {alt_on = false;flag.alt = true;}
 	
 	if(alt_on && flag.alt)
 	{	
+		if (!FLIGHT_MODE(BARO_MODE)) 
+		{
+		    ENABLE_FLIGHT_MODE(BARO_MODE);
+		    AltHold = EstAlt;
+		    initialRawThrottleHold = 1500;//offset
+		    initialThrottleHold = 1500;//rcCommand[THROTTLE];
+		    errorVelocityI = 0;
+		    altHoldThrottleAdjustment = 0;
+		}
+	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
+
+#if 0
+	if(mspData.mspCmd & ALTHOLD)
+	{	
 
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1510;//
-		    initialThrottleHold = 1510;//rcCommand[THROTTLE];
+		    initialRawThrottleHold = rcData[THROTTLE];
+		    initialThrottleHold = rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
 
 #else
 
