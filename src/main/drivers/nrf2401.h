@@ -137,8 +137,9 @@ typedef struct flag
 	int16_t roll1;
 	int16_t pitch1;
 	int16_t yaw1;
-	bool batt_low;
 	float height;
+	bool batt_low;//default -> false
+	bool alt;//default -> true
 }golbal_flag;
 extern golbal_flag flag;
 

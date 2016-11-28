@@ -35,7 +35,7 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro.h"
 #include "drivers/sonar_hcsr04.h"
-
+#include "drivers/system.h"
 
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
@@ -104,8 +104,8 @@ static void applyMultirotorAltHold(void)
     } else {
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
-            // set velocity proportional to stick movement +100 throttle gives ~ +50 cm/s
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 10;//3(raw)
+            // set velocity proportional to stick movement +100 throttle gives ~ +10 cm/s
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 10;//raw->2.
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -114,7 +114,7 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1650,1300);//bound for slow down.
+		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1000);//bound for slow down.
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
 	
@@ -141,7 +141,7 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
-#ifdef USE_ALTHOLD
+#ifdef USE_ALTHOLD	//it's not so good
 	if(rcData[3] > 1460 && rcData[3] < 1540)
 	{
 		if (!FLIGHT_MODE(BARO_MODE))
@@ -166,16 +166,27 @@ void updateAltHoldState(void)
 #endif
 
 #ifdef NRF
-
-	if(mspData.mspCmd & ALTHOLD)
+	static bool  alt_on = false,x = true;
+	static uint32_t a,b;
+	if(mspData.mspCmd & ARM)
+	{
+		if(rcData[3] > 1550){
+			if(x) {a = millis();x = false;}
+			b = millis();
+			if((b - a) > 1000)
+				alt_on = true;
+		}else x = true;
+	}else {alt_on = false;flag.alt = true;}
+	
+	if(alt_on && flag.alt)
 	{	
 
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = rcData[THROTTLE];
-		    initialThrottleHold = rcCommand[THROTTLE];
+		    initialRawThrottleHold = 1510;//
+		    initialThrottleHold = 1510;//rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
