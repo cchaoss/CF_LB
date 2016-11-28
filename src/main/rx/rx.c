@@ -598,19 +598,13 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		static uint8_t b;
 		if(!nrf_rx() || flag.batt_low){
 			if(mspData.mspCmd & ONLINE)	
-				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
+				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制
 
 			if(!flag.batt_low){
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-			/*		
-			mspData.mspCmd |= ALTHOLD;//开定高
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 10;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;
-					else mspData.motor[THR] = 1300;
-			*/
 			mspData.motor[THR] = 1100;//定高
 			if(flag.height <= 200){	
 				flag.alt = false;//关定高
