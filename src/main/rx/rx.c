@@ -605,15 +605,15 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-			mspData.motor[THR] = 1100;//定高
-			if(flag.height <= 200){	
+			mspData.motor[THR] = 1000;//定高模式下
+			if(flag.height <= 150){	
 				flag.alt = false;//关定高
 				b++;
-				if(b > 80){
-					b = 80;
-					mspData.motor[THR] = 1040;
+				if(b > 90){
+					b = 90;
+					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
-				}else mspData.motor[THR] = 1400;
+				}else mspData.motor[THR] = 1500;
 			}else {b =0;flag.alt = true;}
 		}
 
@@ -629,10 +629,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		a++;
 		if(a > 20){
 			a = 20;
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1438;
-					else mspData.motor[THR] = 1350;
-			mspData.mspCmd |= ALTHOLD;
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1300;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1250;
+					else mspData.motor[THR] = 1200;
 		}
 	}else a = 0;
 

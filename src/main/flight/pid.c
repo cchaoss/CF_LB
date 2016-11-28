@@ -97,7 +97,7 @@ PG_RESET_TEMPLATE(pidProfile_t, pidProfile,
     .P8[PIDNAVR] = 25,  // NAV_P * 10
     .I8[PIDNAVR] = 33,  // NAV_I * 100
     .D8[PIDNAVR] = 83,  // NAV_D * 1000
-    .P8[PIDLEVEL] = 10, //test
+    .P8[PIDLEVEL] = 10, 
     .I8[PIDLEVEL] = 10,
     .D8[PIDLEVEL] = 100,
     .P8[PIDMAG] = 40,
