@@ -158,7 +158,7 @@ void rx_data_process(int16_t *buf)
 #endif
 
 		//give and bound the rc_stick data
-		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1050);
+		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1000);
 		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
 			for(uint8_t i = 0;i<4;i++)	buf[i] = mspData.motor[i];
 
