@@ -142,7 +142,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 #ifdef NRF
-#if 0
+#if 1
 	static bool  alt_on = false,x = true;
 	static uint8_t i;
 	static uint32_t a,b;
@@ -175,8 +175,8 @@ void updateAltHoldState(void)
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1500;//offset
-		    initialThrottleHold = 1500;//rcCommand[THROTTLE];
+		    initialRawThrottleHold = 1510;//offset
+		    initialThrottleHold = 1460;//rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}

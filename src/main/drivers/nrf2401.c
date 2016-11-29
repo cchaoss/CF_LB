@@ -14,7 +14,7 @@
 #include "sound_beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true};
+golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true,true};
 
 package_328p msp_328p;
 dataPackage mspData;

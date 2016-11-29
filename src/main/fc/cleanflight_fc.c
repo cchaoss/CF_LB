@@ -748,7 +748,7 @@ void taskMainPidLoop(void)
 				else if(!flag.turnover){
 						if(a1) {b1 = millis();a1 = false;}
 						b2 = millis();
-						if((b2 - b1) < 1700)
+						if((b2 - b1) < 1500)
 							rcCommand[THROTTLE] = 1900;
 				}
 		}else {flag_inertance = true;a1 = true;}
@@ -797,6 +797,7 @@ void taskMainPidLoop(void)
 			for(uint8_t i = 0;i<4;i++)
 				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 	}
+#endif
 
 #ifdef TURNOVER
 	//turn over process 
