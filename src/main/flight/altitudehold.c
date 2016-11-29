@@ -104,8 +104,8 @@ static void applyMultirotorAltHold(void)
     } else {
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
-            // set velocity proportional to stick movement +100 throttle gives ~ +10 cm/s
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 10;//raw->2.
+            // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;//raw->2.
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -114,7 +114,7 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1150);//bound for slow down.
+		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
 	
@@ -144,17 +144,31 @@ void updateAltHoldState(void)
 #ifdef NRF
 #if 0
 	static bool  alt_on = false,x = true;
+	static uint8_t i;
 	static uint32_t a,b;
 	if(mspData.mspCmd & ARM)
 	{
-		if(rcData[3] > 1550){
+		//手动降落贴地面不上下抖动不降落
+		if(rcData[3] < 1150){
+			i++;
+			if((i > 150) && (flag.height < -30)){
+				i = 150;
+				flag.alt = false;
+			}
+		}else i = 0;
+
+		if(rcData[3] > 1500){
 			if(x) {a = millis();x = false;}
 			b = millis();
-			if((b - a) > 500)
+
+			if((b - a) > 550){
 				alt_on = true;
+				flag.alt = true;
+			}
 		}else x = true;
 	}else {alt_on = false;flag.alt = true;}
 	
+	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
 	if(alt_on && flag.alt)
 	{	
 		if (!FLIGHT_MODE(BARO_MODE)) 
@@ -177,8 +191,8 @@ void updateAltHoldState(void)
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = rcData[THROTTLE];
-		    initialThrottleHold = rcCommand[THROTTLE];
+		    initialRawThrottleHold = 1520;//
+		    initialThrottleHold = 1450;//rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
@@ -347,7 +361,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #endif
 #ifdef NRF
 	flag.height = accAlt;//
-	//debug[0] = height;
+	debug[0] = accAlt;
 #endif
     imuResetAccelerationSum();
 

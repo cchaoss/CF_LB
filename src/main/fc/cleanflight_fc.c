@@ -732,7 +732,7 @@ void taskMainPidLoop(void)
         rcCommand[THROTTLE] += calculateThrottleAngleCorrection(throttleCorrectionConfig()->throttle_correction_value);
     }
 
-#ifdef NRF
+#ifdef TURNOVER
 		static bool flag_inertance = true,a1= true;
 		static int32_t b1,b2;
 		if(mspData.mspCmd & ALTHOLD){	
@@ -798,6 +798,7 @@ void taskMainPidLoop(void)
 				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
 	}
 
+#ifdef TURNOVER
 	//turn over process 
 	if(mspData.mspCmd & ARM){
 		static bool begin = true,a2 = true;

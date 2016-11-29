@@ -598,27 +598,24 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		static uint8_t b;
 		if(!nrf_rx() || flag.batt_low){
 			if(mspData.mspCmd & ONLINE)	
-				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制-->11/14
+				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制
 
 			if(!flag.batt_low){
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-			mspData.motor[THR] = 1100;//定高模式下
-			if(flag.height <= 200){	
+			mspData.motor[THR] = 1000;//定高模式下
+			if(flag.height <= 150){	
 				flag.alt = false;//关定高
 				b++;
 				if(b > 90){
 					b = 90;
-					mspData.motor[THR] = 950;
+					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
-				}else mspData.motor[THR] = 1400;
-			}
-			else{
-				b =0;
-				flag.alt = true;
-			}
+				}else mspData.motor[THR] = 1500;
+			}else {b =0;flag.alt = true;}
+
 		}
 
 		if(tx_flag == 4)SetTX_Mode();
@@ -638,9 +635,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		if(a > 20){
 			a = 20;
 			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1300;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1200;
-					else mspData.motor[THR] = 1100;
-			//mspData.mspCmd |= ALTHOLD;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1250;
+					else mspData.motor[THR] = 1200;
 		}
 	}else a = 0;
 
