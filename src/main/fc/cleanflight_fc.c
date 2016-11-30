@@ -736,19 +736,22 @@ void taskMainPidLoop(void)
 		static bool flag_inertance = true,a1= true;
 		static int32_t b1,b2;
 		if(mspData.mspCmd & ALTHOLD){	
+				/*  1.电压小于一定值不可以作翻滚动作？
+					2.如果在定高模式下翻完之后高度下落，会自动调整会之前高度？
+				*/
 				//翻滚之前需要一定大小向上的惯性，使飞行器翻滚发生在抛物线顶点附近(速度为零)，这样效果最好！	
 				if(flag_inertance){
 					if(a1) {b1 = millis();a1 = false;}
 					b2 = millis();
-					if((b2 - b1) < 400)
-						rcCommand[THROTTLE] = 1900;
+					if((b2 - b1) < 600)
+						rcCommand[THROTTLE] = 1950;
 					else {flag_inertance = false;a1 = true;}
 				}
 				//翻滚之后给一个大推力顶住下坠的趋势
 				else if(!flag.turnover){
 						if(a1) {b1 = millis();a1 = false;}
 						b2 = millis();
-						if((b2 - b1) < 1500)
+						if((b2 - b1) < 800)
 							rcCommand[THROTTLE] = 1900;
 				}
 		}else {flag_inertance = true;a1 = true;}
@@ -810,7 +813,7 @@ void taskMainPidLoop(void)
 				else if(begin)
 				{
 					if(a2)	{start_roll = attitude.values.roll;a2 = false;}		
-					if(fabs(attitude.values.roll - start_roll) < 80)
+					if(fabs(attitude.values.roll - start_roll) < 85)
 					{	
 						pwmWriteMotor(0,1950);
 						pwmWriteMotor(1,1950);
@@ -822,8 +825,8 @@ void taskMainPidLoop(void)
 				{
 					if(attitude.values.roll > 60)
 					{
-						pwmWriteMotor(0,1550);
-						pwmWriteMotor(1,1550);
+						pwmWriteMotor(0,1480);
+						pwmWriteMotor(1,1480);
 						pwmWriteMotor(2,1950);
 						pwmWriteMotor(3,1950);
 					}else flag.turnover = false;

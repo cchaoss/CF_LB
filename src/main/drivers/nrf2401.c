@@ -88,10 +88,7 @@ bool nrf_rx(void)
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
      }
-	else {
-		count++;
-		//LED_C_OFF;//
-	}
+	else count++;
 	if(count > 28){//判断2.4G数据是否丢失
 		count = 28;
 		return false;
