@@ -85,14 +85,15 @@ bool nrf_rx(void)
 				mspData.motor[THR] = 1000;
 			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
+		//NRF_Write_Reg(FLUSH_RX - 0X20,0xff);//
 		count = 0;
      }
 	else {
 		count++;
 		//LED_C_OFF;//
 	}
-	if(count > 28){//判断2.4G数据是否丢失
-		count = 28;
+	if(count > 45){//判断2.4G数据是否丢失
+		count = 45;
 		return false;
 	}else return true;
 }
