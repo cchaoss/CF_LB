@@ -142,7 +142,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 #ifdef NRF
-#if 0
+#if 1
 	static bool  alt_on = false,x = true;
 	static uint8_t i;
 	static uint32_t a,b;

@@ -751,8 +751,8 @@ void taskMainPidLoop(void)
 				else if(!flag.turnover){
 						if(a1) {b1 = millis();a1 = false;}
 						b2 = millis();
-						if((b2 - b1) < 800)
-							rcCommand[THROTTLE] = 1900;
+						if((b2 - b1) < 500)
+							rcCommand[THROTTLE] = 1850;
 				}
 		}else {flag_inertance = true;a1 = true;}
 #endif
