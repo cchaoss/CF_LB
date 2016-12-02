@@ -68,8 +68,8 @@ void setControlRateProfile(uint8_t profileIndex)
     }
     currentControlRateProfileIndex = profileIndex;
     currentControlRateProfile = controlRateProfiles(profileIndex);
-	//currentControlRateProfile->rates[0] = 80;
-	//currentControlRateProfile->rates[1] = 80;
+	//currentControlRateProfile.rates[0] = 80;
+	//(*currentControlRateProfile).rates[1] = 80;
 
 }
 
