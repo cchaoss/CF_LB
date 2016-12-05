@@ -18,12 +18,13 @@ golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true};
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
+dataPackage rc2  = {"123",0,0,1500,1500,1500,1500};
 
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 uint8_t  TX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//tx_address
 
 uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
-uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
+uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x13,0xff,0xff,0xff,0xff};//rx_address
 
 
 void send_328p_buf(uint8_t len, uint8_t *buf)
@@ -75,15 +76,13 @@ bool nrf_rx(void)
 		//LED_C_ON;//
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
-		if(!(t_mspData.mspCmd & OFFLINE))
+		
+			
+		if(!strcmp("RC2",(char *)t_mspData.checkCode))
+			rc2 = t_mspData;
+		else
 			mspData = t_mspData;
-		else if(!(mspData.mspCmd & OFFLINE)){
-				mspData.mspCmd |= OFFLINE;
-				mspData.motor[ROL] = 1500;
-				mspData.motor[PIT] = 1500;
-				mspData.motor[YA ] = 1500;
-				mspData.motor[THR] = 1000;
-			 }
+		
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		//NRF_Write_Reg(FLUSH_RX - 0X20,0xff);//
 		count = 0;
@@ -98,10 +97,12 @@ bool nrf_rx(void)
 	}else return true;
 }
 
+
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
 	static bool arm_flag = false,roll_flag = false;
+
 	if(!strcmp("$M<",(char *)mspData.checkCode)){
 		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 			if(arm_flag && roll_flag)	mwArm();
@@ -157,11 +158,16 @@ void rx_data_process(int16_t *buf)
 		
 		debug[3] = t_mspData.key;
 #endif
-
+	
 		//give and bound the rc_stick data
 		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1000);
-		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
-			for(uint8_t i = 0;i<4;i++)	buf[i] = mspData.motor[i];
+		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P))){//当要控制电机的时候，不把motor[]的值传给rcData
+				for(uint8_t i = 0;i<4;i++){
+					buf[i] = mspData.motor[i] + (rc2.motor[i]-1500);
+					buf[i] = bound(buf[i],1950,1000);
+				}
+		
+		}
 
 		//just for beeper
 		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){
@@ -184,8 +190,8 @@ void rx_data_process(int16_t *buf)
 			if(mspData.beep == beep_on)BEEP_ON;
 		}
 	}
-}
 
+}
 
 /****************NRF24L01_TX*********************/
 void nrf_tx(void)
@@ -222,6 +228,7 @@ bool NRF24L01_INIT(void)
 	nrf24l01HardwareInit();
 	if(NRF24L01_Check()){
 		SetRX_Mode();//default:0x11 ...
+/*
 		for(uint8_t i = 0;i<5;i++){
 			NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
 			delay(10);
@@ -264,6 +271,7 @@ bool NRF24L01_INIT(void)
 
 			SetRX_Mode();//use the new_address!
 		}
+*/
 		return true;
 	}else return false;
 }

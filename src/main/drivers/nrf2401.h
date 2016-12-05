@@ -117,6 +117,7 @@ typedef struct _dataPackage
 	uint8_t key;
 }dataPackage;
 extern dataPackage mspData;
+extern dataPackage rc2;
 
 //328 data
 typedef struct _328p

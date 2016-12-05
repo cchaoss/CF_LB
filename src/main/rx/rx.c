@@ -637,14 +637,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 	//rx_process
 	rx_data_process(rcData); 
-/*
+
 	//debug display
-	rcData[5] = mspData.mspCmd;
-	rcData[6] = mspData.motor[0];
-	rcData[7] = mspData.motor[1];
-	rcData[8] = mspData.motor[2];
-	rcData[9] = mspData.motor[3];
-*/
+	//rcData[5] = mspData.mspCmd;
+	rcData[6] = rc2.motor[0];
+	rcData[7] = rc2.motor[1];
+	rcData[8] = rc2.motor[2];
+	rcData[9] = rc2.motor[3];
+
 #endif
 #if 0	//test i2c read and write
 /*
