@@ -141,6 +141,7 @@ typedef struct flag
 	float height;
 	bool batt_low;//default -> false
 	bool alt;//default -> true
+	bool turnover;//default -> true
 }golbal_flag;
 extern golbal_flag flag;
 
@@ -182,7 +183,6 @@ void SetRX_Mode(void);
 void nrf_scheduler(int16_t *buf);
 void nrf_tx(void);
 void SetTX_Mode(void);
-
 
 #endif
 

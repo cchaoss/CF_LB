@@ -14,7 +14,8 @@
 #include "sound_beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true};
+golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true,true};
+
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
@@ -93,6 +94,7 @@ bool nrf_rx(void)
 	}
 	if(count > 45){//判断2.4G数据是否丢失
 		count = 45;
+
 		return false;
 	}else return true;
 }
@@ -104,12 +106,12 @@ void rx_data_process(int16_t *buf)
 	static bool arm_flag = false,roll_flag = false;
 
 	if(!strcmp("$M<",(char *)mspData.checkCode)){
-		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+		if(mspData.mspCmd & ARM)//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+		{
 			if(arm_flag && roll_flag)	mwArm();
 				else  mwDisarm();
-			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
-				mwDisarm();roll_flag = false;
-			}
+			if(!((mspData.mspCmd & ALTHOLD)&&flag.turnover))//执行翻转任务时关闭侧翻保护
+				if(fabs(flag.pitch1) > 800 || fabs(flag.roll1) > 800)	{mwDisarm();roll_flag = false;}
 		}		
 		else{	
 			mwDisarm();
@@ -117,19 +119,16 @@ void rx_data_process(int16_t *buf)
 			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}
-		if(mspData.mspCmd & CALIBRATION){
-			accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
-		}
+		if(mspData.mspCmd & CALIBRATION)	accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
 
 #if 1
 		//offline process
 		if(mspData.mspCmd & OFFLINE){
-			LED_A_ON;
+			//LED_A_ON;
 			i2cRead(0x08,0xff,1, &msp_328p.cmd);//debug[0] = msp_328p.cmd;
 			i2cRead(0x08,0xff,1, &msp_328p.length);//debug[1] = msp_328p.length;
 			for(uint8_t i = 0;i < msp_328p.length;i++)	
-				i2cRead(0x08,0xff,1, &msp_328p.data[i]);
-			//debug[2] = msp_328p.data[0];
+				i2cRead(0x08,0xff,1, &msp_328p.data[i]);//debug[2] = msp_328p.data[0];
 
 			if(msp_328p.cmd == 255 && t_mspData.key != 0)
 					i2cWrite(0x08,0,t_mspData.key);
@@ -150,13 +149,8 @@ void rx_data_process(int16_t *buf)
 				case MOTOR_P:for(uint8_t i = 0;i < 4;i++)	mspData.motor[i] = 1000+4*msp_328p.data[i];break;
 				default:break;
 			}
-		}
-		else{
-			LED_A_OFF;
-			msp_328p.cmd = 255;
-		}
-		
-		debug[3] = t_mspData.key;
+		}else msp_328p.cmd = 255;
+		//debug[3] = t_mspData.key;
 #endif
 	
 		//give and bound the rc_stick data

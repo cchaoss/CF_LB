@@ -142,6 +142,7 @@ void applyAltHold(void)
 void updateAltHoldState(void)
 {
 #ifdef NRF
+#if 1
 	static bool  alt_on = false,x = true;
 	static uint8_t i;
 	static uint32_t a,b;
@@ -159,6 +160,7 @@ void updateAltHoldState(void)
 		if(rcData[3] > 1500){
 			if(x) {a = millis();x = false;}
 			b = millis();
+
 			if((b - a) > 550){
 				alt_on = true;
 				flag.alt = true;
@@ -168,6 +170,21 @@ void updateAltHoldState(void)
 	
 	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
 	if(alt_on && flag.alt)
+	{	
+		if (!FLIGHT_MODE(BARO_MODE)) 
+		{
+		    ENABLE_FLIGHT_MODE(BARO_MODE);
+		    AltHold = EstAlt;
+		    initialRawThrottleHold = 1510;//offset
+		    initialThrottleHold = 1460;//rcCommand[THROTTLE];
+		    errorVelocityI = 0;
+		    altHoldThrottleAdjustment = 0;
+		}
+	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
+
+#if 0
+	if(mspData.mspCmd & ALTHOLD)
 	{	
 
 		if (!FLIGHT_MODE(BARO_MODE)) 
@@ -180,6 +197,7 @@ void updateAltHoldState(void)
 		    altHoldThrottleAdjustment = 0;
 		}
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
+#endif
 
 #else
 

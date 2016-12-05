@@ -592,7 +592,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF	
 	static uint8_t tx_flag = 0;
 	tx_flag++;
-	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠，下个版本不需要
+	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠->V0.1
 	if(tx_flag <= 4){
 		//低电压降落+失控保护——use height
 		static uint8_t b;
@@ -615,12 +615,17 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 					mspData.mspCmd &= ~ARM;
 				}else mspData.motor[THR] = 1500;
 			}else {b =0;flag.alt = true;}
+
 		}
 
-	if(tx_flag == 4)SetTX_Mode();
+		if(tx_flag == 4)SetTX_Mode();
 	}
 
-	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
+	if(tx_flag > 4){
+		nrf_tx();
+		SetRX_Mode();
+		tx_flag = 0;
+	}
 	
 	//限制高度6m 左右
 	//debug[0] = flag.height;

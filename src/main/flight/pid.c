@@ -76,16 +76,16 @@ PG_REGISTER_PROFILE_WITH_RESET_TEMPLATE(pidProfile_t, pidProfile, PG_PID_PROFILE
 
 PG_RESET_TEMPLATE(pidProfile_t, pidProfile,
     .pidController = PID_CONTROLLER_MWREWRITE,
-    .P8[PIDROLL] = 112,//11.11
-    .I8[PIDROLL] = 64,
-    .D8[PIDROLL] = 38,
-    .P8[PIDPITCH] = 118,
-    .I8[PIDPITCH] = 68,
-    .D8[PIDPITCH] = 42,
+    .P8[PIDROLL] = 160,
+    .I8[PIDROLL] = 35,
+    .D8[PIDROLL] = 58,
+    .P8[PIDPITCH] = 160,
+    .I8[PIDPITCH] = 35,
+    .D8[PIDPITCH] = 58,
     .P8[PIDYAW] = 85,
     .I8[PIDYAW] = 45,
     .D8[PIDYAW] = 0,
-    .P8[PIDALT] = 30,//11/16
+    .P8[PIDALT] = 30,
     .I8[PIDALT] = 0,
     .D8[PIDALT] = 0,
     .P8[PIDPOS] = 15,   // POSHOLD_P * 100
