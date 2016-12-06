@@ -180,12 +180,12 @@ void updateBattery(void)
 		if(a)	{b = millis();	a = false;}
 		c = millis();
 	
-		if(c-b > 8000)	
+		if(c-b > 9000)	
 		{
 			beeper(BEEPER_BAT_CRIT_LOW);
 			flag.batt_low = true;
 		}
-		else if(c-b > 3500)	beeper(BEEPER_BAT_LOW);
+		else if(c-b > 6000)	beeper(BEEPER_BAT_LOW);
 	}else a = true;
 #endif 
 
