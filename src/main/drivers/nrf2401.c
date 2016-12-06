@@ -12,6 +12,7 @@
 #include "system.h"
 #include "gpio.h"
 #include "sound_beeper.h"
+#include "io/beeper.h"
 #include "build/debug.h"
 
 golbal_flag flag = {"EMT",101,0,0,0,0,0,0,0,0,true};
@@ -94,6 +95,7 @@ bool nrf_rx(void)
 	}
 	if(count > 45){//判断2.4G数据是否丢失
 		count = 45;
+		beeper(3);//rc_lost_beep
 		return false;
 	}else return true;
 }
