@@ -66,6 +66,7 @@
 
 #ifdef NRF
 #include "drivers/nrf2401.h"
+#include "drivers/optflow.h"
 #endif
 
 #include "rx/rx.h"
@@ -765,7 +766,7 @@ int main(void) {
 
 #ifdef NRF
 	NRF24L01_INIT();
-	
+	flow_init();
 #endif
 /*
 	delay(100);
