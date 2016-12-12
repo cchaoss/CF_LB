@@ -56,8 +56,12 @@ typedef enum {
     TASK_TRANSPONDER,
 #endif
 
+#ifdef PX4FLOW 
+	TASK_OPTFLOW,
+#endif
     /* Count of real tasks */
     TASK_COUNT
+
 } cfTaskId_e;
 
 void taskMainPidLoopChecker(void);
@@ -77,3 +81,7 @@ void taskTelemetry(void);
 void taskLedStrip(void);
 void taskTransponder(void);
 void taskSystem(void);
+
+#ifdef PX4FLOW
+void taskOptflow(void);
+#endif

@@ -88,7 +88,12 @@ static void applyMultirotorAltHold(void)
 {
     static uint8_t isAltHoldChanged = 0;
     // multirotor alt hold
-    if (rcControlsConfig()->alt_hold_fast_change && false) {
+#ifdef NRF
+    if (rcControlsConfig()->alt_hold_fast_change && false) 
+#else 
+	if (rcControlsConfig()->alt_hold_fast_change)
+#endif
+	{
         // rapid alt changes
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             errorVelocityI = 0;
@@ -105,7 +110,11 @@ static void applyMultirotorAltHold(void)
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
+#ifdef NRF
             setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;//raw->2.
+#else		
+			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 2;
+#endif
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -114,9 +123,12 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
+		
     }
+#ifdef NRF
+	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
 	rcData[11] = rcCommand[THROTTLE];//just for display.
+#endif
 	
 }
 

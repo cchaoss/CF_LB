@@ -19,9 +19,9 @@
 
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
-#define NRF
-//#define USE_ALTHOLD
-//#define DEBUG_ALT_HOLD
+//#define NRF
+//#define BRUSHED_MOTORS
+#define PX4FLOW
 
 #ifndef NRF
 #define BLACKBOX
@@ -30,10 +30,22 @@
 #define USE_FLASH_M25P16
 #endif
 
+#ifdef NRF
+#define LED0
 #define LED0_GPIO   GPIOB
 #define LED0_PIN    Pin_11
 #define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
+#endif
 
+#ifndef NRF
+#define LED0
+#define LED0_GPIO   GPIOB
+#define LED0_PIN    Pin_3
+#define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
+#endif
+
+
+#define BEEPER
 #define BEEP_GPIO   GPIOC
 #define BEEP_PIN    Pin_15
 #define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
@@ -64,12 +76,6 @@
 #define USE_MAG_AK8975
 #define USE_MAG_HMC5883
 //#define MAG_HMC5883_ALIGN CW270_DEG
-
-
-
-#define LED0
-#define BEEPER
-
 
 
 #define USE_UART1
@@ -165,12 +171,12 @@
 #define DEFAULT_RX_FEATURE FEATURE_RX_PPM
 
 
-#define DISPLAY
+//#define DISPLAY
 #define GPS
-#define GTUNE
+//#define GTUNE
 #define SERIAL_RX
 #define TELEMETRY
-#define USE_SERVOS
+//#define USE_SERVOS
 #define USE_CLI
 #define USE_EXTI
 

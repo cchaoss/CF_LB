@@ -168,4 +168,13 @@ cfTask_t cfTasks[] = {
         .staticPriority = TASK_PRIORITY_IDLE,
     },
 #endif
+
+#ifdef PX4FLOW
+	[TASK_OPTFLOW] = {
+		.taskName = "OPTFLOW",
+		.taskFunc = taskOptflow,
+		.desiredPeriod = 1000000 / 10,         
+		.staticPriority = TASK_PRIORITY_MEDIUM,
+	},
+#endif 
 };

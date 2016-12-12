@@ -66,8 +66,11 @@
 
 #ifdef NRF
 #include "drivers/nrf2401.h"
+#endif
+#ifdef PX4FLOW
 #include "drivers/optflow.h"
 #endif
+
 
 #include "rx/rx.h"
 #include "rx/spektrum.h"
@@ -759,6 +762,10 @@ void configureScheduler(void)
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));
 #endif
+
+#ifdef PX4FLOW
+	setTaskEnabled(TASK_OPTFLOW, true);
+#endif
 }
 
 int main(void) {
@@ -766,6 +773,8 @@ int main(void) {
 
 #ifdef NRF
 	NRF24L01_INIT();
+#endif
+#ifdef PX4FLOW
 	flow_init();
 #endif
 /*

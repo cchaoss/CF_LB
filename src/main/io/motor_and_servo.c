@@ -39,9 +39,11 @@
 #define DEFAULT_PWM_RATE BRUSHLESS_MOTORS_PWM_RATE
 #endif
 
+/*
 #ifdef NRF
 #define DEFAULT_PWM_RATE 16000
 #endif
+*/
 
 PG_REGISTER_WITH_RESET_TEMPLATE(motorAndServoConfig_t, motorAndServoConfig, PG_MOTOR_AND_SERVO_CONFIG, 0);
 
