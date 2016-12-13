@@ -173,7 +173,7 @@ cfTask_t cfTasks[] = {
 	[TASK_OPTFLOW] = {
 		.taskName = "OPTFLOW",
 		.taskFunc = taskOptflow,
-		.desiredPeriod = 1000000 / 10,         
+		.desiredPeriod = 1000000 / 80,         
 		.staticPriority = TASK_PRIORITY_MEDIUM,
 	},
 #endif 

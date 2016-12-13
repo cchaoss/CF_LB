@@ -59,6 +59,10 @@
 #include "drivers/nrf2401.h"
 #endif
 
+#ifdef PX4FLOW
+#include "drivers/optflow.h"
+#endif
+
 int32_t setVelocity = 0;
 uint8_t velocityControl = 0;
 int32_t errorVelocityI = 0;
@@ -88,11 +92,7 @@ static void applyMultirotorAltHold(void)
 {
     static uint8_t isAltHoldChanged = 0;
     // multirotor alt hold
-#ifdef NRF
-    if (rcControlsConfig()->alt_hold_fast_change && false) 
-#else 
-	if (rcControlsConfig()->alt_hold_fast_change)
-#endif
+    if (rcControlsConfig()->alt_hold_fast_change && false)//
 	{
         // rapid alt changes
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
@@ -110,11 +110,7 @@ static void applyMultirotorAltHold(void)
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
-#ifdef NRF
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;//raw->2.
-#else		
-			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 2;
-#endif
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 6;//raw->2
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -123,11 +119,11 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		
     }
+	rcData[11] = rcCommand[THROTTLE];//just for display.
 #ifdef NRF
 	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
-	rcData[11] = rcCommand[THROTTLE];//just for display.
+	//rcData[11] = rcCommand[THROTTLE];//just for display.
 #endif
 	
 }
@@ -276,6 +272,12 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
     return result;
 }
 
+#ifdef PX4FLOW
+#define SONAR
+int16_t sonarCfAltCm = 150;
+int16_t sonarMaxAltWithTiltCm = 270;
+#endif
+
 void calculateEstimatedAltitude(uint32_t currentTime)
 {
     static uint32_t previousTime;
@@ -315,8 +317,12 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #endif
 
 #ifdef SONAR
+#ifdef PX4FLOW
+	sonarAlt = flow.height;
+#else
     sonarAlt = sonarRead();
     sonarAlt = sonarCalculateAltitude(sonarAlt, getCosTiltAngle());
+#endif
 
     if (sonarAlt > 0 && sonarAlt < sonarCfAltCm) {
         // just use the SONAR
@@ -353,9 +359,9 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
+
 #ifdef NRF
-	flag.height = accAlt;//
-	//debug[0] = accAlt;//for display
+	flag.height = accAlt;
 #endif
     imuResetAccelerationSum();
 
@@ -394,6 +400,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
+	//debug[0] = EstAlt;//display
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)

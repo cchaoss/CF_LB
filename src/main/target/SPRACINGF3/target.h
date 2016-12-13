@@ -172,7 +172,7 @@
 
 
 //#define DISPLAY
-#define GPS
+//#define GPS
 //#define GTUNE
 #define SERIAL_RX
 #define TELEMETRY

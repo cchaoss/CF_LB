@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "common/maths.h"
 #include <platform.h>
 #include "build/debug.h"
 #include "fc/fc_tasks.h"
@@ -12,6 +13,7 @@
 #include "io/serial.h"
 #include "common/crc.h"
 #include "optflow.h"
+#include "rx/rx.h"
 #ifdef NRF
 #include "nrf2401.h"
 #endif
@@ -23,6 +25,10 @@ static void flowDataReceive(uint16_t data);
 void flow_init(void)
 {
 	openSerialPort(SERIAL_PORT_UART2,FUNCTION_TELEMETRY_MAVLINK, flowDataReceive, 115200, MODE_RX, SERIAL_NOT_INVERTED);//SERIAL_STOPBITS_1
+	stab.cmd[0] = 0;
+	stab.cmd[1] = 0;
+	stab.error_vx_int = 0;
+	stab.error_vy_int = 0;
 }
 
 uint8_t flow_buf[30],flow_state[4];
@@ -84,21 +90,76 @@ void flowDataReceive(uint16_t data)
 		temp[2] = flow_buf[18];
 		temp[3] = flow_buf[19];
 		flow.height = 100 * (*p);
-		flow.vx = (int16_t)(flow_buf[20] + (flow_buf[21] << 8));
+		flow.vx = (int16_t)(flow_buf[20] + (flow_buf[21] << 8));//20 50 80
 		flow.vy = (int16_t)(flow_buf[22] + (flow_buf[23] << 8));
 	}
 
-	debug[0] = flow.height;
-	debug[1] = flow.comp_x;
-	debug[2] = flow.comp_y;
-	debug[3] = flow.vx;
+	//debug[0] = flow.height;
+	//debug[1] = flow.vx;
+	//debug[2] = flow.vy;
+	//debug[1] = flow.comp_x;
+	//debug[2] = flow.comp_y;
 
 }
 
+
 #ifdef PX4FLOW
+struct flow_stab stab;
+uint8_t PID_Roll[3] = {80,50,10};//X
+uint8_t PID_Pitch[3] = {60,50,10};//Y
+
 void taskOptflow(void)
 {	
-	//LED_A_ON;delay(200);LED_A_OFF;//
+	if(rcData[5] > 1800)//AUX-2
+	{
+		if((rcData[0] > 1400) && (rcData[0] < 1600) && (rcData[1] > 1400) && (rcData[1] < 1600))
+		{
+			static float old_error_vx,old_error_vy;
+			float error_vx = -flow.vx * flow.height / 100;
+			float error_vy = -flow.vy * flow.height / 100;
+			stab.error_vx_int += error_vx / 80;
+			stab.error_vy_int += error_vy / 80;
+			/*
+			debug[0] = error_vx;//100
+			debug[1] = error_vy;
+			debug[2] = stab.error_vx_int;//10
+			debug[3] = stab.error_vy_int;
+			*/
+			//bound for integrater
+			stab.error_vx_int = constrainf(stab.error_vx_int,-30,30);
+			stab.error_vy_int = constrainf(stab.error_vy_int,-30,30);
+			//PI
+			stab.cmd[0] = PID_Roll[0] * error_vx +
+							PID_Roll[1] * stab.error_vx_int +
+							PID_Roll[2] * (error_vx - old_error_vx);
+			debug[0] = error_vx - old_error_vx;//
+			stab.cmd[1] = PID_Pitch[0] * error_vy +
+							PID_Pitch[1] * stab.error_vy_int +
+							PID_Pitch[2] * (error_vy - old_error_vy);
+			debug[1] = error_vy - old_error_vy;//
+			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
+			stab.cmd[1] = constrainf((stab.cmd[1] / 100),-150,150);
+			old_error_vx = error_vx;
+			old_error_vy = error_vy;
+		}
+		else 
+		{
+		stab.cmd[0] = 0;
+		stab.cmd[1] = 0;
+		stab.error_vx_int = 0;
+		stab.error_vy_int = 0;
+		}
+	}
+	else 
+	{
+		stab.cmd[0] = 0;
+		stab.cmd[1] = 0;
+		stab.error_vx_int = 0;
+		stab.error_vy_int = 0;
+	}
+
+	debug[1] = stab.cmd[0];
+	debug[2] = stab.cmd[1];
 }
 #endif
 

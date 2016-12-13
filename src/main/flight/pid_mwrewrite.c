@@ -36,6 +36,10 @@
 #include "drivers/accgyro.h"
 #include "drivers/gyro_sync.h"
 
+#ifdef PX4FLOW
+#include "drivers/optflow.h"
+#endif
+
 #include "sensors/sensors.h"
 #include "sensors/gyro.h"
 #include "sensors/acceleration.h"
@@ -180,8 +184,13 @@ void pidMultiWiiRewrite(const pidProfile_t *pidProfile, const controlRateConfig_
                 const int32_t errorAngle = constrain(2 * rcCommand[axis] + GPS_angle[axis], -((int)max_angle_inclination), max_angle_inclination)
                         - attitude.raw[axis] + angleTrim->raw[axis];
 #else
-                const int32_t errorAngle = constrain(2 * rcCommand[axis], -((int)max_angle_inclination), max_angle_inclination)
+#ifdef PX4FLOW
+                const int32_t errorAngle = constrain(2 * rcCommand[axis] + stab.cmd[axis], -((int)max_angle_inclination), max_angle_inclination)
                         - attitude.raw[axis] + angleTrim->raw[axis];
+#else 
+				const int32_t errorAngle = constrain(2 * rcCommand[axis], -((int)max_angle_inclination), max_angle_inclination)
+                        - attitude.raw[axis] + angleTrim->raw[axis];
+#endif
 #endif
                 if (FLIGHT_MODE(ANGLE_MODE)) {
                     // ANGLE mode
