@@ -158,8 +158,8 @@ void taskOptflow(void)
 		stab.error_vy_int = 0;
 	}
 
-	debug[1] = stab.cmd[0];
-	debug[2] = stab.cmd[1];
+	//debug[1] = stab.cmd[0];
+	//debug[2] = stab.cmd[1];
 }
 #endif
 
