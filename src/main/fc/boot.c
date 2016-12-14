@@ -68,6 +68,10 @@
 #include "drivers/nrf2401.h"
 #endif
 
+#ifdef FBM320
+#include "drivers/fbm320.h"
+#endif
+
 #include "rx/rx.h"
 #include "rx/spektrum.h"
 
@@ -758,6 +762,10 @@ void configureScheduler(void)
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));
 #endif
+
+#ifdef FBM320
+	setTaskEnabled(TASK_FBM320, true);
+#endif
 }
 
 int main(void) {
@@ -765,8 +773,11 @@ int main(void) {
 
 #ifdef NRF
 	NRF24L01_INIT();
-	
 #endif
+#ifdef FBM320
+	fbm320_init();
+#endif
+
 /*
 	delay(100);
 	for(char i = 0;i<5;i++)	{

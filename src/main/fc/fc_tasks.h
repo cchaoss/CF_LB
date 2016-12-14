@@ -56,6 +56,10 @@ typedef enum {
     TASK_TRANSPONDER,
 #endif
 
+#ifdef FBM320
+	TASK_FBM320,
+#endif
+
     /* Count of real tasks */
     TASK_COUNT
 } cfTaskId_e;
@@ -77,3 +81,7 @@ void taskTelemetry(void);
 void taskLedStrip(void);
 void taskTransponder(void);
 void taskSystem(void);
+
+#ifdef FBM320
+void taskFbm320(void);
+#endif

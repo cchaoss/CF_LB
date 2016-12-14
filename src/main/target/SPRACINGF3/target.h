@@ -20,6 +20,7 @@
 #define TARGET_BOARD_IDENTIFIER "SRF3"
 
 #define NRF
+#define FBM320
 //#define USE_ALTHOLD
 //#define DEBUG_ALT_HOLD
 
