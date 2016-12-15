@@ -747,7 +747,8 @@ void configureScheduler(void)
     setTaskEnabled(TASK_SONAR, sensors(SENSOR_SONAR));
 #endif
 #if defined(BARO) || defined(SONAR)
-    setTaskEnabled(TASK_ALTITUDE, sensors(SENSOR_BARO) || sensors(SENSOR_SONAR));
+    //setTaskEnabled(TASK_ALTITUDE, sensors(SENSOR_BARO) || sensors(SENSOR_SONAR));
+	setTaskEnabled(TASK_ALTITUDE, true);
 #endif
 #ifdef DISPLAY
     setTaskEnabled(TASK_DISPLAY, feature(FEATURE_DISPLAY));
@@ -756,8 +757,8 @@ void configureScheduler(void)
     setTaskEnabled(TASK_TELEMETRY, feature(FEATURE_TELEMETRY));
 #endif
 #ifdef LED_STRIP
-    //setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
-	setTaskEnabled(TASK_LEDSTRIP, true);
+    setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
+	//setTaskEnabled(TASK_LEDSTRIP, true);
 #endif
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));

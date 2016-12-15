@@ -59,6 +59,11 @@
 #include "drivers/nrf2401.h"
 #endif
 
+#ifdef FBM320
+#include "drivers/fbm320.h"
+#endif
+
+
 int32_t setVelocity = 0;
 uint8_t velocityControl = 0;
 int32_t errorVelocityI = 0;
@@ -105,7 +110,7 @@ static void applyMultirotorAltHold(void)
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;//raw->2.
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 6;//raw->2.
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -114,7 +119,7 @@ static void applyMultirotorAltHold(void)
             isAltHoldChanged = 0;
         }
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
-		rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
+		//rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
 	
@@ -141,41 +146,16 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
+
 #ifdef NRF
-	static bool  alt_on = false,x = true;
-	static uint8_t i;
-	static uint32_t a,b;
-	if(mspData.mspCmd & ARM)
-	{
-		//手动降落贴地面不上下抖动不降落
-		if(rcData[3] < 1150){
-			i++;
-			if((i > 150) && (flag.height < -30)){
-				i = 150;
-				flag.alt = false;
-			}
-		}else i = 0;
-
-		if(rcData[3] > 1500){
-			if(x) {a = millis();x = false;}
-			b = millis();
-			if((b - a) > 550){
-				alt_on = true;
-				flag.alt = true;
-			}
-		}else x = true;
-	}else {alt_on = false;flag.alt = true;}
-	
-	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
-	if(alt_on && flag.alt)
+	if(mspData.mspCmd & ALTHOLD)
 	{	
-
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1520;//
-		    initialThrottleHold = 1450;//rcCommand[THROTTLE];
+		    initialRawThrottleHold = rcData[THROTTLE];
+		    initialThrottleHold = rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
@@ -291,6 +271,16 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     previousTime = currentTime;
 
 #ifdef BARO
+#ifdef FBM320
+	if(!FB.calibrate_finished)
+	{
+		fbm320_init();
+		vel = 0;
+        accAlt = 0;	
+	}
+	BaroAlt = FB.Altitude;
+	debug[0] = BaroAlt;
+#else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
         vel = 0;
@@ -298,9 +288,12 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     }
 
     BaroAlt = baroCalculateAltitude();
+#endif
+
 #else
     BaroAlt = 0;
 #endif
+
 
 #ifdef SONAR
     sonarAlt = sonarRead();
@@ -333,7 +326,6 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     // Integrator - Altitude in cm
     accAlt += (vel_acc * 0.5f) * dt + vel * dt;                                                            // integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * barometerConfig()->baro_cf_alt + (float)BaroAlt * (1.0f - barometerConfig()->baro_cf_alt);    // complementary filter for altitude estimation (baro & acc)
-
     vel += vel_acc;
 
 #ifdef DEBUG_ALT_HOLD
@@ -341,16 +333,22 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
+
 #ifdef NRF
-	flag.height = accAlt;//
-	debug[0] = accAlt;
+	flag.height = accAlt;
+	debug[1] = accAlt;//
 #endif
     imuResetAccelerationSum();
 
 #ifdef BARO
-    if (!isBaroCalibrationComplete()) {
+#ifdef FBM320
+	if(!FB.calibrate_finished)
+		return;
+#else
+    if(!isBaroCalibrationComplete()) {
         return;
     }
+#endif
 #endif
 
 #ifdef SONAR
@@ -382,6 +380,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
+
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)
