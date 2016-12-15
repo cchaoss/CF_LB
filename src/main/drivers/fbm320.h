@@ -1,7 +1,7 @@
 #ifndef _FBM320_H
 #define _FBM320_H
 
-#define SDO_Level	1
+#define SDO_Level	0
 
 #if 	SDO_Level == 0
 #define SDO_Addr	0x00

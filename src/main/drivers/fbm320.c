@@ -39,19 +39,9 @@ static int32_t MedianFilter(int32_t data)
 
 void fbm320_init(void)
 {
-	int32_t sum;
+	int32_t sum = 0;
 	//delay(15);
 	read_offset();
-
-		start_temperature();				 
-		delay(3);																					
-		FB.UT = Read_data();
-		start_pressure();					 
-		delay(10);																				
-		FB.UP = Read_data();															
-		calculate_real_pressure(FB.UP, FB.UT);
-		debug[2] = FB.RP;
-
 	for(char i = 0;i < 8;i++)
 	{
 		start_temperature();				 
@@ -64,7 +54,7 @@ void fbm320_init(void)
 		sum += FB.RP;
 	}
 	FB.Reff_P = sum/8;
-	debug[3] =FB.Reff_P;
+	//debug[3] =FB.Reff_P;
 	FB.calibrate_finished = true;
 }
 

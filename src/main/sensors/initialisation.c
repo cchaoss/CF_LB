@@ -541,11 +541,7 @@ static void detectBaro(baroSensor_e baroHardwareToUse)
             }
 #endif
             ; // fallthrough
-
-#ifdef FBM320
-			baroHardware = BARO_FBM320;
-#endif
-			;
+		
         case BARO_NONE:
             baroHardware = BARO_NONE;
             break;
