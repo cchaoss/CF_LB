@@ -105,42 +105,47 @@ void flowDataReceive(uint16_t data)
 
 #ifdef PX4FLOW
 struct flow_stab stab;
-uint8_t PID_Roll[3] = {80,50,10};//X
-uint8_t PID_Pitch[3] = {60,50,10};//Y
+uint8_t PID_Roll[3] = {80,40,30};//X
+uint8_t PID_Pitch[3] = {80,40,30};//Y
 
 void taskOptflow(void)
 {	
 	if(rcData[5] > 1800)//AUX-2
 	{
-		if((rcData[0] > 1400) && (rcData[0] < 1600) && (rcData[1] > 1400) && (rcData[1] < 1600))
+		if((rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550))
 		{
 			static float old_error_vx,old_error_vy;
 			float error_vx = -flow.vx * flow.height / 100;
-			float error_vy = -flow.vy * flow.height / 100;
+			float error_vy = flow.vy * flow.height / 100;
+			//debug[0] = error_vx;//+-100
+			error_vx = constrainf(error_vx,-120,120);
+			error_vy = constrainf(error_vy,-120,120);
+
 			stab.error_vx_int += error_vx / 80;
 			stab.error_vy_int += error_vy / 80;
-			/*
-			debug[0] = error_vx;//100
-			debug[1] = error_vy;
-			debug[2] = stab.error_vx_int;//10
-			debug[3] = stab.error_vy_int;
-			*/
-			//bound for integrater
-			stab.error_vx_int = constrainf(stab.error_vx_int,-30,30);
-			stab.error_vy_int = constrainf(stab.error_vy_int,-30,30);
-			//PI
+			
+			stab.error_vx_int = constrainf(stab.error_vx_int,-50,50);
+			stab.error_vy_int = constrainf(stab.error_vy_int,-50,50);
+			//debug[1] = stab.error_vx_int;//+-50
+
+			//PID
 			stab.cmd[0] = PID_Roll[0] * error_vx +
 							PID_Roll[1] * stab.error_vx_int +
-							PID_Roll[2] * (error_vx - old_error_vx);
-			debug[0] = error_vx - old_error_vx;//
+							PID_Roll[2] * constrainf((error_vx - old_error_vx),-100,100);
+			//debug[2] = error_vx - old_error_vx;//+-100
+
 			stab.cmd[1] = PID_Pitch[0] * error_vy +
 							PID_Pitch[1] * stab.error_vy_int +
-							PID_Pitch[2] * (error_vy - old_error_vy);
-			debug[1] = error_vy - old_error_vy;//
-			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
-			stab.cmd[1] = constrainf((stab.cmd[1] / 100),-150,150);
+							PID_Pitch[2] * constrainf((error_vy - old_error_vy),-100,100);
+			//debug[0] = error_vy - old_error_vy;//
+			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-120,120);
+			stab.cmd[1] = constrainf((stab.cmd[1] / 100),-120,120);
 			old_error_vx = error_vx;
 			old_error_vy = error_vy;
+
+			
+			debug[0] = stab.cmd[0];//roll
+			debug[1] = stab.cmd[1];//pitch
 		}
 		else 
 		{
@@ -158,8 +163,6 @@ void taskOptflow(void)
 		stab.error_vy_int = 0;
 	}
 
-	//debug[1] = stab.cmd[0];
-	//debug[2] = stab.cmd[1];
 }
 #endif
 

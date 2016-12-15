@@ -255,15 +255,14 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
     // P
     error = setVel - vel_tmp;
     result = constrain((pidProfile()->P8[PIDVEL] * error / 32), -300, +300);
-debug[0] = result;
+
     // I
     errorVelocityI += (pidProfile()->I8[PIDVEL] * error);
     errorVelocityI = constrain(errorVelocityI, -(8192 * 200), (8192 * 200));
     result += errorVelocityI / 8192;     // I in range +/-200
-debug[1] = errorVelocityI / 8192;
+
     // D
     result -= constrain(pidProfile()->D8[PIDVEL] * (accZ_tmp + accZ_old) / 512, -150, 150);
-debug[2] = -constrain(pidProfile()->D8[PIDVEL] * (accZ_tmp + accZ_old) / 512, -150, 150);
 /*
 	static int32_t error_old;
 	debug[0] = 	(accZ_tmp + accZ_old)/512;//
