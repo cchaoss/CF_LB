@@ -103,12 +103,12 @@ void flowDataReceive(uint16_t data)
 
 #ifdef PX4FLOW
 struct flow_stab stab;
-uint8_t PID_Roll[3] = {160,50,80};//X
-uint8_t PID_Pitch[3] = {160,50,80};//Y
+uint8_t PID_Roll[3] = {200,80,80};//X
+uint8_t PID_Pitch[3] = {200,80,80};//Y
 
 void taskOptflow(void)
 {	
-	if(rcData[5] > 1800)//AUX-2
+	if(rcData[4] > 1800)//AUX-1
 	{
 		if((rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550))
 		{	/*
@@ -150,13 +150,13 @@ void taskOptflow(void)
 			//debug[1] = stab.error_vx_int;//+-50
 
 			//PID
-			stab.cmd[0] = constrainf((PID_Roll[0] * error_vx),-9000,9000) +
-							constrainf((PID_Roll[1] * stab.error_vx_int),-3000,3000) +
+			stab.cmd[0] = constrainf((PID_Roll[0] * error_vx),-10000,10000) +
+							constrainf((PID_Roll[1] * stab.error_vx_int),-3500,3500) +
 							constrainf((PID_Roll[2] * (error_vx - old_error_vx)),-2500,2500);
 			//debug[2] = error_vx - old_error_vx;//+-30
 
-			stab.cmd[1] = constrainf((PID_Pitch[0] * error_vy),-9000,9000) +
-							constrainf((PID_Pitch[1] * stab.error_vy_int),-3000,3000) +
+			stab.cmd[1] = constrainf((PID_Pitch[0] * error_vy),-10000,10000) +
+							constrainf((PID_Pitch[1] * stab.error_vy_int),-3500,3500) +
 							constrainf((PID_Pitch[2] * (error_vy - old_error_vy)),-2500,2500);
 
 			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
