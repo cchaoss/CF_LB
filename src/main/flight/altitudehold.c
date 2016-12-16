@@ -318,7 +318,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 
 #ifdef SONAR
 #ifdef PX4FLOW
-	sonarAlt = flow.height;
+	sonarAlt = flow.height * 100;
 #else
     sonarAlt = sonarRead();
     sonarAlt = sonarCalculateAltitude(sonarAlt, getCosTiltAngle());
@@ -400,7 +400,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
-	//debug[0] = EstAlt;//display
+	debug[3] = EstAlt;//display
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)

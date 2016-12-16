@@ -3,8 +3,8 @@
 
 
 struct flow_data{
-short vx;
-short vy;
+short x;
+short y;
 float comp_x;
 float comp_y;
 float height;
