@@ -103,8 +103,8 @@ void flowDataReceive(uint16_t data)
 
 #ifdef PX4FLOW
 struct flow_stab stab;
-uint8_t PID_Roll[3] = {160,60,80};//X
-uint8_t PID_Pitch[3] = {160,60,80};//Y
+uint8_t PID_Roll[3] = {160,50,80};//X
+uint8_t PID_Pitch[3] = {160,50,80};//Y
 
 void taskOptflow(void)
 {	
@@ -151,12 +151,12 @@ void taskOptflow(void)
 
 			//PID
 			stab.cmd[0] = constrainf((PID_Roll[0] * error_vx),-9000,9000) +
-							constrainf((PID_Roll[1] * stab.error_vx_int),-4000,4000) +
+							constrainf((PID_Roll[1] * stab.error_vx_int),-3000,3000) +
 							constrainf((PID_Roll[2] * (error_vx - old_error_vx)),-2500,2500);
 			//debug[2] = error_vx - old_error_vx;//+-30
 
 			stab.cmd[1] = constrainf((PID_Pitch[0] * error_vy),-9000,9000) +
-							constrainf((PID_Pitch[1] * stab.error_vy_int),-4000,4000) +
+							constrainf((PID_Pitch[1] * stab.error_vy_int),-3000,3000) +
 							constrainf((PID_Pitch[2] * (error_vy - old_error_vy)),-2500,2500);
 
 			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
