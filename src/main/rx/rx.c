@@ -605,6 +605,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
+/*
 			mspData.motor[THR] = 1000;//定高模式下
 			if(flag.height <= 150){	
 				flag.alt = false;//关定高
@@ -616,6 +617,25 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				}else mspData.motor[THR] = 1500;
 			}else {b =0;flag.alt = true;}
 		}
+*/
+			mspData.mspCmd |= ALTHOLD;//开定高
+			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1550;
+				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1430;
+					else mspData.motor[THR] = 1360;
+		
+		
+			if(flag.height <= 230){	
+				mspData.mspCmd &= ~ALTHOLD;//关定高
+				b++;
+				if(b > 70){
+					b = 70;
+					mspData.motor[THR] = 1100;
+					mspData.mspCmd &= ~ARM;
+				}
+				else mspData.motor[THR] = 1450;
+			}else b =0;
+		}else b = 0;
+
 
 	if(tx_flag == 4)SetTX_Mode();
 	}
