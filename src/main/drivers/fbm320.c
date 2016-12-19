@@ -15,8 +15,8 @@
 
 struct Sensor FB;
 
-#define sample_count 5
-static int32_t MedianFilter(int32_t data)
+#define sample_count 3
+int32_t MedianFilter(int32_t data)
 {
     static int32_t FilterSamples[sample_count];
     static int i = 0;
@@ -32,10 +32,37 @@ static int32_t MedianFilter(int32_t data)
     i = j;
    
     if (medianFilterReady)
-        return quickMedianFilter5(FilterSamples);
+        return quickMedianFilter3(FilterSamples);
     else
         return data;
 }
+
+#define SAMPLE_COUNT_MAX 21
+static uint32_t recalculateBarometerTotal(uint8_t baroSampleCount, uint32_t pressureTotal, int32_t newPressureReading)
+{
+    static int32_t barometerSamples[SAMPLE_COUNT_MAX];
+    static int currentSampleIndex = 0;
+    int nextSampleIndex;
+
+    // store current pressure in barometerSamples
+    nextSampleIndex = (currentSampleIndex + 1);
+    if (nextSampleIndex == baroSampleCount) {
+        nextSampleIndex = 0;
+        //baroReady = true;
+    }
+    barometerSamples[currentSampleIndex] = MedianFilter(newPressureReading);
+
+    // recalculate pressure total
+    // Note, the pressure total is made up of baroSampleCount - 1 samples - See PRESSURE_SAMPLE_COUNT
+    pressureTotal += barometerSamples[currentSampleIndex];
+    pressureTotal -= barometerSamples[nextSampleIndex];
+
+    currentSampleIndex = nextSampleIndex;
+
+    return pressureTotal;
+}
+
+
 
 void fbm320_init(void)
 {
@@ -58,9 +85,10 @@ void fbm320_init(void)
 	FB.calibrate_finished = true;
 }
 
-
+uint32_t baroPressureSum;
 void taskFbm320(void)
 {
+	static float alt;
 	static char state = 0;
 	switch(state)
 	{
@@ -71,8 +99,10 @@ void taskFbm320(void)
 		case 1: FB.UT = Read_data();
 				start_pressure();
 				calculate_real_pressure(FB.UP, FB.UT);
-				FB.RP = MedianFilter(FB.RP);
-				FB.Altitude = Rel_Altitude(FB.RP,FB.Reff_P) * 100;//unit:cm
+				baroPressureSum = recalculateBarometerTotal(SAMPLE_COUNT_MAX, baroPressureSum, FB.RP);
+				alt = Rel_Altitude(baroPressureSum/(SAMPLE_COUNT_MAX-1),FB.Reff_P) * 100 -800;//unit:cm
+				FB.Altitude = (0.6*FB.Altitude + 0.4*alt);
+				debug[3] = alt;
 				state = 0;
 				break;
 		default:break;
@@ -167,7 +197,7 @@ void calculate_real_pressure(int32_t UP, int32_t UT)
 /*
 uint32_t fbm_median_filter(uint8_t baroSampleCount, uint32_t pressureTotal, int32_t data)
 {
-    static int32_t barometerSamples[baro_sample_count_max];
+    static int32_t barometerSamples[SAMPLE_COUNT_MAX];
     static int currentSampleIndex = 0;
     int j;
 
