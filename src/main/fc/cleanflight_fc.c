@@ -703,7 +703,8 @@ void taskMainPidLoop(void)
 #endif
 
 #if defined(BARO) || defined(SONAR)
-        if (sensors(SENSOR_BARO) || sensors(SENSOR_SONAR)) {
+        //if (sensors(SENSOR_BARO) || sensors(SENSOR_SONAR)) 	
+		{
             if (FLIGHT_MODE(BARO_MODE) || FLIGHT_MODE(SONAR_MODE)) {
                 applyAltHold();
             }
@@ -882,7 +883,8 @@ void taskUpdateRxMain(void)
 #ifdef BARO
     // updateRcCommands() sets rcCommand[], updateAltHoldState depends on valid rcCommand[] data.
     if (haveUpdatedRcCommandsOnce) {
-        if (sensors(SENSOR_BARO)) {
+        //if (sensors(SENSOR_BARO)) 
+		{
             updateAltHoldState();
         }
     }
@@ -946,16 +948,23 @@ void taskUpdateSonar(void)
 #if defined(BARO) || defined(SONAR)
 void taskCalculateAltitude(void)
 {
+/*
     if (false
 #if defined(BARO)
-        || (sensors(SENSOR_BARO) && isBaroReady())
+        || (sensors(SENSOR_BARO))//&& isBaroReady())
 #endif
 #if defined(SONAR)
         || sensors(SENSOR_SONAR)
 #endif
         ) {
         calculateEstimatedAltitude(currentTime);
-    }}
+    }
+*/
+
+	calculateEstimatedAltitude(currentTime);
+
+	//debug[2] = 7;
+}
 #endif
 
 #ifdef DISPLAY

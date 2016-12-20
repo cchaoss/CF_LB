@@ -541,7 +541,7 @@ static void detectBaro(baroSensor_e baroHardwareToUse)
             }
 #endif
             ; // fallthrough
-
+		
         case BARO_NONE:
             baroHardware = BARO_NONE;
             break;

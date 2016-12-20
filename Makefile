@@ -257,6 +257,7 @@ SYSTEM_SRC = \
 		   msp/msp.c \
 		   msp/msp_serial.c \
 			drivers/nrf2401.c \
+			drivers/fbm320.c \
 		   $(TARGET_SRC) \
 		   $(CMSIS_SRC) \
 		   $(DEVICE_STDPERIPH_SRC)

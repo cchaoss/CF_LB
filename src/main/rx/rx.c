@@ -642,6 +642,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
 	
+/*
 	//限制高度6m 左右
 	//debug[0] = flag.height;
 	static uint8_t a;
@@ -654,7 +655,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 					else mspData.motor[THR] = 1200;
 		}
 	}else a = 0;
-
+*/
 	//rx_process
 	rx_data_process(rcData); 
 /*

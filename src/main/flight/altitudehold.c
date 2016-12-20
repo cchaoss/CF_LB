@@ -59,6 +59,11 @@
 #include "drivers/nrf2401.h"
 #endif
 
+#ifdef FBM320
+#include "drivers/fbm320.h"
+#endif
+
+
 int32_t setVelocity = 0;
 uint8_t velocityControl = 0;
 int32_t errorVelocityI = 0;
@@ -141,11 +146,10 @@ void applyAltHold(void)
 
 void updateAltHoldState(void)
 {
-#ifdef NRF
 
+#ifdef NRF
 	if(mspData.mspCmd & ALTHOLD)
 	{	
-
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
@@ -184,13 +188,12 @@ void updateAltHoldState(void)
 	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
 	if(alt_on && flag.alt)
 	{	
-
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1520;//
-		    initialThrottleHold = 1450;//rcCommand[THROTTLE];
+		    initialRawThrottleHold = rcData[THROTTLE];
+		    initialThrottleHold = rcCommand[THROTTLE];
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
@@ -306,6 +309,15 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     previousTime = currentTime;
 
 #ifdef BARO
+#ifdef FBM320
+	if(!FB.calibrate_finished)
+	{
+		//fbm320_init();
+		vel = 0;
+        accAlt = 0;	
+	}
+	BaroAlt = FB.Altitude;
+#else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
         vel = 0;
@@ -313,9 +325,12 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     }
 
     BaroAlt = baroCalculateAltitude();
+#endif
+
 #else
     BaroAlt = 0;
 #endif
+
 
 #ifdef SONAR
     sonarAlt = sonarRead();
@@ -348,7 +363,6 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     // Integrator - Altitude in cm
     accAlt += (vel_acc * 0.5f) * dt + vel * dt;                                                            // integrate velocity to get distance (x= a/2 * t^2)
     accAlt = accAlt * barometerConfig()->baro_cf_alt + (float)BaroAlt * (1.0f - barometerConfig()->baro_cf_alt);    // complementary filter for altitude estimation (baro & acc)
-
     vel += vel_acc;
 
 #ifdef DEBUG_ALT_HOLD
@@ -356,16 +370,22 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     debug[2] = vel;                     // velocity
     debug[3] = accAlt;                  // height
 #endif
+
 #ifdef NRF
-	flag.height = accAlt;//
-	debug[0] = accAlt;
+	flag.height = accAlt;
+	debug[1] = accAlt;//
 #endif
     imuResetAccelerationSum();
 
 #ifdef BARO
-    if (!isBaroCalibrationComplete()) {
+#ifdef FBM320
+	if(!FB.calibrate_finished)
+		return;
+#else
+    if(!isBaroCalibrationComplete()) {
         return;
     }
+#endif
 #endif
 
 #ifdef SONAR
@@ -397,6 +417,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
+
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)
