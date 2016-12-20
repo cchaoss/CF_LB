@@ -15,16 +15,16 @@
 
 struct Sensor FB;
 
+
 #define sample_count 3
-int32_t MedianFilter(int32_t data)
+static int32_t MedianFilter(int32_t data)
 {
     static int32_t FilterSamples[sample_count];
-    static int i = 0;
+    static uint8_t i = 0;
     static bool medianFilterReady = false;
     int j;
     j = (i + 1);
-    if (j == sample_count) 
-	{
+    if (j == sample_count) {
         j = 0;
         medianFilterReady = true;
     }
@@ -41,36 +41,28 @@ int32_t MedianFilter(int32_t data)
 static uint32_t recalculateBarometerTotal(uint8_t baroSampleCount, uint32_t pressureTotal, int32_t newPressureReading)
 {
     static int32_t barometerSamples[SAMPLE_COUNT_MAX];
-    static int currentSampleIndex = 0;
+    static uint8_t currentSampleIndex = 0;
     int nextSampleIndex;
 
-    // store current pressure in barometerSamples
     nextSampleIndex = (currentSampleIndex + 1);
-    if (nextSampleIndex == baroSampleCount) {
+    if (nextSampleIndex == baroSampleCount)
         nextSampleIndex = 0;
-        //baroReady = true;
-    }
     barometerSamples[currentSampleIndex] = MedianFilter(newPressureReading);
 
-    // recalculate pressure total
-    // Note, the pressure total is made up of baroSampleCount - 1 samples - See PRESSURE_SAMPLE_COUNT
     pressureTotal += barometerSamples[currentSampleIndex];
     pressureTotal -= barometerSamples[nextSampleIndex];
 
     currentSampleIndex = nextSampleIndex;
-
     return pressureTotal;
 }
 
-
-
-void fbm320_init(void)
+bool fbm320_init(void)
 {
-	int32_t sum = 0;
-	//delay(15);
-	read_offset();
-	for(char i = 0;i < 8;i++)
-	{
+	uint8_t whoami = 0x00;
+	i2cRead(FMTISensorAdd_I2C,0x6b,1,&whoami);
+	if(whoami == 0x42) {
+		read_offset();
+
 		start_temperature();				 
 		delay(3);																					
 		FB.UT = Read_data();
@@ -78,20 +70,23 @@ void fbm320_init(void)
 		delay(10);																				
 		FB.UP = Read_data();															
 		calculate_real_pressure(FB.UP, FB.UT);
-		sum += FB.RP;
+		FB.Reff_P = FB.RP;
+		FB.calibrate_finished = true;
+		return true;
 	}
-	FB.Reff_P = sum/8;
-	//debug[3] =FB.Reff_P;
-	FB.calibrate_finished = true;
+	else {
+		FB.calibrate_finished = false;
+		return false;
+	}
 }
 
+#define SCALE 0.4
 uint32_t baroPressureSum;
 void taskFbm320(void)
 {
 	static float alt;
 	static char state = 0;
-	switch(state)
-	{
+	switch(state) {
 		case 0:	FB.UP = Read_data();
 				start_temperature();
 				state = 1;
@@ -100,16 +95,14 @@ void taskFbm320(void)
 				start_pressure();
 				calculate_real_pressure(FB.UP, FB.UT);
 				baroPressureSum = recalculateBarometerTotal(SAMPLE_COUNT_MAX, baroPressureSum, FB.RP);
-				alt = Rel_Altitude(baroPressureSum/(SAMPLE_COUNT_MAX-1),FB.Reff_P) * 100 -800;//unit:cm
-				FB.Altitude = (0.6*FB.Altitude + 0.4*alt);
-				debug[3] = alt;
+				alt = Rel_Altitude(baroPressureSum/(SAMPLE_COUNT_MAX-1),FB.Reff_P) * 100;//unit:cm
+				FB.Altitude = SCALE*alt + (1-SCALE)*FB.Altitude;
+				debug[3] = (int16_t)alt;
 				state = 0;
 				break;
 		default:break;
 	}
 }
-
-/***************************************************************************************/
 
 void start_temperature(void)
 {
@@ -134,8 +127,7 @@ void read_offset(void)
 {
 	uint8_t buf[2];
 	uint16_t R[10]={0};
-	for(uint8_t i = 0;i < 9;i++)
-	{
+	for(uint8_t i = 0;i < 9;i++) {
 		i2cRead(FMTISensorAdd_I2C,(0xaa+i*2),1,&buf[0]);
 		i2cRead(FMTISensorAdd_I2C,(0xab+i*2),1,&buf[1]);
 		R[i] = ((uint8_t) buf[0] << 8) | buf[1];
@@ -194,32 +186,6 @@ void calculate_real_pressure(int32_t UP, int32_t UT)
 	X32	=	(((((CF * FB.C11) >> 15) * PP4) >> 18) * PP4);
 	FB.RP =	((X31 + X32) >> 15) + PP4 + 99880;
 }
-/*
-uint32_t fbm_median_filter(uint8_t baroSampleCount, uint32_t pressureTotal, int32_t data)
-{
-    static int32_t barometerSamples[SAMPLE_COUNT_MAX];
-    static int currentSampleIndex = 0;
-    int j;
-
-    // store current pressure in barometerSamples
-    j = (currentSampleIndex + 1);
-    if (j == baroSampleCount) {
-        j = 0;
-        baroReady = true;
-    }
-    barometerSamples[currentSampleIndex] = applyBarometerMedianFilter(data);
-
-    // recalculate pressure total
-    // Note, the pressure total is made up of baroSampleCount - 1 samples - See PRESSURE_SAMPLE_COUNT
-    pressureTotal += barometerSamples[currentSampleIndex];
-    pressureTotal -= barometerSamples[j];
-
-    currentSampleIndex = j;
-
-    return pressureTotal;
-}
-*/
-
 
 //Calculate relative altitude unit :m
 float Rel_Altitude(int32_t Press, int32_t Ref_P)										

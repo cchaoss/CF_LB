@@ -779,35 +779,6 @@ int main(void) {
 	fbm320_init();
 #endif
 
-/*
-	delay(100);
-	for(char i = 0;i<5;i++)	{
-    		NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
-		delay(50);
-	}
-	if(sta & (1<<RX_DR));else{
-		FLASH_Unlock();
-		FLASH_ErasePage(0x0803E800);
-		FLASH_ProgramWord(0x0803E800, 0x0011);
-		FLASH_Lock();
-	}
-	while(1)
-	{
-		delay(1000);
-		data = 0;
-		data = *(uint16_t *)0x0803E800;
-		if(data == 0x0011){
-					for(char i = 0;i<5;i++)
-					{	LED_A_ON;delay(100);
-						LED_A_OFF;delay(100);
-					}				
-				
-				}
-		else GPIO_ResetBits(GPIOB, GPIO_Pin_5);
-	}
-*/
-
-
 	configureScheduler();
 
     while (true) 

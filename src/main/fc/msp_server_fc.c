@@ -107,6 +107,10 @@
 #include "io/serial_4way.h"
 #endif
 
+#ifdef FBM320
+#include "drivers/fbm320.h"
+#endif
+
 extern uint16_t cycleTime; // FIXME dependency on mw.c
 extern uint16_t rssi; // FIXME dependency on mw.c
 extern void resetPidProfile(pidProfile_t *pidProfile);
@@ -536,7 +540,7 @@ int mspServerCommandHandler(mspPacket_t *cmd, mspPacket_t *reply)
 #else
             sbufWriteU16(dst, 0);
 #endif
-            sbufWriteU16(dst, sensors(SENSOR_ACC) | sensors(SENSOR_BARO) << 1 | sensors(SENSOR_MAG) << 2 | sensors(SENSOR_GPS) << 3 | sensors(SENSOR_SONAR) << 4);
+            sbufWriteU16(dst, sensors(SENSOR_ACC) | FB.calibrate_finished << 1 | sensors(SENSOR_MAG) << 2 | sensors(SENSOR_GPS) << 3 | sensors(SENSOR_SONAR) << 4);
             sbufWriteU32(dst, packFlightModeFlags());
             sbufWriteU8(dst, getCurrentProfile());
             if(cmd->cmd == MSP_STATUS_EX) {

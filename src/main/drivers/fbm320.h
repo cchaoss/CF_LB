@@ -27,7 +27,7 @@ struct Sensor
 };
 extern struct Sensor FB;
 
-void fbm320_init(void);
+bool fbm320_init(void);
 void start_temperature(void);
 void start_pressure(void);
 uint32_t Read_data(void);

@@ -274,12 +274,11 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #ifdef FBM320
 	if(!FB.calibrate_finished)
 	{
-		fbm320_init();
+		//fbm320_init();
 		vel = 0;
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
-	debug[0] = BaroAlt;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
