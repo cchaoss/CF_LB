@@ -13,11 +13,12 @@ extern struct flow_data flow;
 
 struct flow_stab{
 int16_t cmd[2];
+float error_x;
+float error_y;
 float error_vx_int;
 float error_vy_int;
 };
 extern struct flow_stab stab;
-
 
 void flow_init(void);
 

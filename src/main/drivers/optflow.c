@@ -103,18 +103,18 @@ void flowDataReceive(uint16_t data)
 
 #ifdef PX4FLOW
 struct flow_stab stab;
-uint8_t PID_Roll[3] = {200,80,80};//X
-uint8_t PID_Pitch[3] = {200,80,80};//Y
+uint8_t PID_Roll[3] = {200,100,80};//X
+uint8_t PID_Pitch[3] = {200,100,80};//Y
 
 void taskOptflow(void)
 {	
-	if(rcData[4] > 1800)//AUX-1
-	{
-		if((rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550))
-		{	/*
+	//AUX1
+	if(rcData[4] > 1800){
+		if((rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550)){
+			/*
 			static float old_error_x,old_error_y;
 
-			stab.error_x += flow.comp_x / 50;//uint:cm/s
+			stab.error_x -= flow.comp_x / 50;//uint:cm/s
 			stab.error_y += flow.comp_y / 50;			
 
 			debug[0] = stab.error_x;
@@ -143,6 +143,9 @@ void taskOptflow(void)
 			static float old_error_vx,old_error_vy;
 			float error_vx = -flow.comp_x;//cm/s
 			float error_vy = flow.comp_y;
+
+			//float error_vx = -flow.x * flow.height/2;//cm/s
+			//float error_vy = flow.y * flow.height/2;
 			//debug[0] = error_vx;//+-60
 
 			stab.error_vx_int += error_vx / 50;
@@ -151,12 +154,12 @@ void taskOptflow(void)
 
 			//PID
 			stab.cmd[0] = constrainf((PID_Roll[0] * error_vx),-10000,10000) +
-							constrainf((PID_Roll[1] * stab.error_vx_int),-3500,3500) +
+							constrainf((PID_Roll[1] * stab.error_vx_int),-4000,4000) +
 							constrainf((PID_Roll[2] * (error_vx - old_error_vx)),-2500,2500);
 			//debug[2] = error_vx - old_error_vx;//+-30
 
 			stab.cmd[1] = constrainf((PID_Pitch[0] * error_vy),-10000,10000) +
-							constrainf((PID_Pitch[1] * stab.error_vy_int),-3500,3500) +
+							constrainf((PID_Pitch[1] * stab.error_vy_int),-4000,4000) +
 							constrainf((PID_Pitch[2] * (error_vy - old_error_vy)),-2500,2500);
 
 			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
@@ -167,22 +170,25 @@ void taskOptflow(void)
 			debug[0] = stab.cmd[0];//roll
 			debug[1] = stab.cmd[1];//pitch
 		}
-		else 
-		{
-		stab.cmd[0] = 0;
-		stab.cmd[1] = 0;
-		stab.error_vx_int = 0;
-		stab.error_vy_int = 0;
+		else{
+			stab.cmd[0] = 0;
+			stab.cmd[1] = 0;
+			stab.error_vx_int = 0;
+			stab.error_vy_int = 0;
+
+			stab.error_x = 0;
+			stab.error_y = 0;
 		}
 	}
-	else 
-	{
+	else{
 		stab.cmd[0] = 0;
 		stab.cmd[1] = 0;
 		stab.error_vx_int = 0;
 		stab.error_vy_int = 0;
+		
+		stab.error_x = 0;
+		stab.error_y = 0;
 	}
-
 }
 #endif
 
