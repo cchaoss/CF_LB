@@ -317,6 +317,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
+	debug[0] = FB.Altitude;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();

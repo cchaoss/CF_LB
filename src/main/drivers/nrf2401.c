@@ -15,7 +15,7 @@
 #include "io/beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",103,0,0,0,0,0,0,0,0,true};
+golbal_flag flag = {"EMT",110,0,0,0,0,0,0,0,0,true};
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
@@ -95,7 +95,7 @@ bool nrf_rx(void)
 	}
 	if(count > 45){//判断2.4G数据是否丢失
 		count = 45;
-		//beeper(3);//rc_lost_beep
+		beeper(3);//rc_lost_beep
 		return false;
 	}else return true;
 }
