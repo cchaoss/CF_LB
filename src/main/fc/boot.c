@@ -757,8 +757,7 @@ void configureScheduler(void)
     setTaskEnabled(TASK_TELEMETRY, feature(FEATURE_TELEMETRY));
 #endif
 #ifdef LED_STRIP
-    setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
-	//setTaskEnabled(TASK_LEDSTRIP, true);
+	setTaskEnabled(TASK_LEDSTRIP, true);
 #endif
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));

@@ -61,9 +61,9 @@
 #define BARO
 //#define USE_BARO_MS5611
 
-#define MAG
-#define USE_MAG_AK8975
-#define USE_MAG_HMC5883
+//#define MAG
+//#define USE_MAG_AK8975
+//#define USE_MAG_HMC5883
 //#define MAG_HMC5883_ALIGN CW270_DEG
 
 
@@ -166,12 +166,12 @@
 #define DEFAULT_RX_FEATURE FEATURE_RX_PPM
 
 
-#define DISPLAY
-#define GPS
-#define GTUNE
-#define SERIAL_RX
-#define TELEMETRY
-#define USE_SERVOS
+//#define DISPLAY
+//#define GPS
+//#define GTUNE
+//#define SERIAL_RX
+//#define TELEMETRY
+//#define USE_SERVOS
 #define USE_CLI
 #define USE_EXTI
 
