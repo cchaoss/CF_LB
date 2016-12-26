@@ -27,7 +27,7 @@ uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
 
-void send_328p_buf(uint8_t len, uint8_t *buf)
+static inline void send_328p_buf(uint8_t len, uint8_t *buf)
 {
 	while(len)
 	{
@@ -38,31 +38,28 @@ void send_328p_buf(uint8_t len, uint8_t *buf)
 	}
 }
 
-bool NRF_Write_Reg(uint8_t reg, uint8_t data)
+static inline void NRF_Write_Reg(uint8_t reg, uint8_t data)
 {
     SPI_CSN_L();
     spiTransferByte(SPI2, reg + 0x20);
     spiTransferByte(SPI2, data);
     SPI_CSN_H();
-    return true;
 }
 
-bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length)
+static inline void NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 {
     SPI_CSN_L();
     spiTransferByte(SPI2, reg + 0x20);
     spiTransfer(SPI2, NULL, data, length);
     SPI_CSN_H();
-    return true;
 }
 
-bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
+static inline void NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 {
     SPI_CSN_L();
     spiTransferByte(SPI2, reg); // read transaction
     spiTransfer(SPI2, data, NULL, length);
     SPI_CSN_H();
-    return true;
 }
 
 
@@ -70,7 +67,7 @@ bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 bool nrf_rx(void)
 {
     uint8_t sta;
-    static uint8_t count;
+    static uint8_t count,flag;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR)){
 		//LED_C_ON;//
@@ -88,14 +85,17 @@ bool nrf_rx(void)
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		//NRF_Write_Reg(FLUSH_RX - 0X20,0xff);//
 		count = 0;
+		if(flag == 0)
+			flag = 1;
      }
 	else {
 		count++;
 		//LED_C_OFF;//
 	}
-	if(count > 45){//判断2.4G数据是否丢失
-		count = 45;
-		beeper(3);//rc_lost_beep
+	if(count > 60){//判断2.4G数据是否丢失
+		count = 60;
+		if(flag == 1)
+			beeper(3);//rc_lost_beep
 		return false;
 	}else return true;
 }
@@ -157,7 +157,7 @@ void rx_data_process(int16_t *buf)
 			msp_328p.cmd = 255;
 		}
 		
-		debug[3] = t_mspData.key;
+		//debug[3] = t_mspData.key;
 #endif
 
 		//give and bound the rc_stick data

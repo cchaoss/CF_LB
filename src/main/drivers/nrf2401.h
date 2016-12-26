@@ -164,11 +164,6 @@ extern golbal_flag flag;
 
 #define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
 
-void send_328p_buf(uint8_t len, uint8_t *buf);
-bool NRF_Write_Reg(uint8_t reg, uint8_t data);
-bool NRF_Write_Buf(uint8_t reg, uint8_t *data, uint8_t length);
-bool NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length);
-
 bool NRF24L01_INIT(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);

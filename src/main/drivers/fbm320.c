@@ -62,7 +62,6 @@ bool fbm320_init(void)
 	i2cRead(FMTISensorAdd_I2C,0x6b,1,&whoami);
 	if(whoami == 0x42) {
 		read_offset();
-
 		start_temperature();				 
 		delay(3);																					
 		FB.UT = Read_data();
@@ -81,7 +80,7 @@ bool fbm320_init(void)
 }
 
 #define SCALE 0.4
-uint32_t baroPressureSum;
+static uint32_t baroPressureSum;
 void taskFbm320(void)
 {
 	static float alt;
