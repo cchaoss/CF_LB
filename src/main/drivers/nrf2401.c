@@ -70,7 +70,6 @@ bool nrf_rx(void)
     static uint8_t count,flag;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR)){
-		//LED_C_ON;//
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
 		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
 		if(!(t_mspData.mspCmd & OFFLINE))
@@ -83,19 +82,14 @@ bool nrf_rx(void)
 				mspData.motor[THR] = 1000;
 			 }
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
-		//NRF_Write_Reg(FLUSH_RX - 0X20,0xff);//
 		count = 0;
 		if(flag == 0)
 			flag = 1;
-     }
-	else {
-		count++;
-		//LED_C_OFF;//
-	}
+     }else	count++;
+
 	if(count > 60){//判断2.4G数据是否丢失
 		count = 60;
-		if(flag == 1)
-			beeper(3);//rc_lost_beep
+		if(flag == 1) beeper(3);//rc_lost_beep
 		return false;
 	}else return true;
 }

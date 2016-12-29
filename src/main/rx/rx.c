@@ -600,62 +600,58 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		if(!nrf_rx() || flag.batt_low){
 			if(mspData.mspCmd & ONLINE)	
 				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制
-
 			if(!flag.batt_low){
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-/*
-			mspData.motor[THR] = 1000;//定高模式下
-			if(flag.height <= 150){	
-				flag.alt = false;//关定高
-				b++;
-				if(b > 90){
-					b = 90;
-					mspData.motor[THR] = 1000;
-					mspData.mspCmd &= ~ARM;
-				}else mspData.motor[THR] = 1500;
-			}else {b =0;flag.alt = true;}
-		}
-*/
-			if (!FLIGHT_MODE(BARO_MODE)) {//开定高
+#ifdef THRO_DIRECT
+			if(!FLIGHT_MODE(BARO_MODE)) {//开定高
 				mspData.mspCmd |= ALTHOLD;
 				rcData[3] = 1550;
 				m = rcData[3];
-			}else	mspData.motor[THR] = m - 55;//
-		
-		
-			if(flag.height < 110) {	
+			}else mspData.motor[THR] = m - 55;//
+
+#else
+			mspData.motor[THR] = 1100;//
+#endif
+
+			if(flag.height < 100){	
+#ifdef THRO_DIRECT
 				mspData.mspCmd &= ~ALTHOLD;//关定高
+#else
+				flag.alt = false;
+#endif
 				b++;
 				if(b > 70){
 					b = 70;
-					mspData.motor[THR] = 1100;
+					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
 				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1530;
+				else if(flag.batt < 95) mspData.motor[THR] = 1520;
 						else mspData.motor[THR] = 1470;
-			}else b = 0;
-		}else b = 0;
+			}
+			else{
+					b = 0;
+					flag.alt = true;
+			}
 
-
-	if(tx_flag == 4)SetTX_Mode();
+		}
+		if(tx_flag == 4)SetTX_Mode();
 	}
 
 	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
 	
-
 	//限制高度6m 左右
 	//debug[0] = flag.height;
 	static uint8_t a;
-	if(flag.height > 800){
+	if((flag.height > 800.0) && (flag.height < 1200.0)){
 		a++;
 		if(a > 20){
 			a = 20;
 			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1450;
 				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;
-					else mspData.motor[THR] = 1350;
+					else mspData.motor[THR] = 1360;
 		}
 	}else a = 0;
 
