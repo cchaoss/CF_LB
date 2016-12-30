@@ -748,7 +748,11 @@ void configureScheduler(void)
 #endif
 #if defined(BARO) || defined(SONAR)
     //setTaskEnabled(TASK_ALTITUDE, sensors(SENSOR_BARO) || sensors(SENSOR_SONAR));
+#ifdef FBM320
+	if(FB.calibrate_finished)	setTaskEnabled(TASK_ALTITUDE, true);
+#else
 	setTaskEnabled(TASK_ALTITUDE, true);
+#endif
 #endif
 #ifdef DISPLAY
     setTaskEnabled(TASK_DISPLAY, feature(FEATURE_DISPLAY));

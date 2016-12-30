@@ -607,20 +607,21 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 			}
 #ifdef THRO_DIRECT
 			if(!FLIGHT_MODE(BARO_MODE)) {//开定高
+				rcData[3] = 1500;
 				mspData.mspCmd |= ALTHOLD;
-				rcData[3] = 1550;
-				m = rcData[3];
-			}else mspData.motor[THR] = m - 55;//
-			if(flag.height < 100){	
+			}
+			m = rcData[3];
+			mspData.motor[THR] = m - 50;//
+			if(flag.height < 90.0){	
 				mspData.mspCmd &= ~ALTHOLD;//关定高
 				b++;
-				if(b > 70){
-					b = 70;
+				if(b > 80){
+					b = 80;
 					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
 				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1530;
-						else mspData.motor[THR] = 1470;
+				else if(flag.batt < 95) mspData.motor[THR] = 1540;
+						else mspData.motor[THR] = 1480;
 			}else b = 0;
 #else
 

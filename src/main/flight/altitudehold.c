@@ -111,7 +111,7 @@ static void applyMultirotorAltHold(void)
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
             // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
 #ifdef THRO_DIRECT
-            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 2;
+            setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 4;
 #else
 			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;
 #endif
@@ -141,9 +141,15 @@ void applyAltHold(void)
 {
     if (STATE(FIXED_WING)) {
         applyFixedWingAltHold();
-    } else {
+    }
+#ifdef FBM320	
+	else if(FB.calibrate_finished)
+        applyMultirotorAltHold();
+#else 
+	else {
         applyMultirotorAltHold();
     }
+#endif
 }
 
 
@@ -152,7 +158,11 @@ void updateAltHoldState(void)
 
 #ifdef NRF
 #ifdef THRO_DIRECT
+#ifdef FBM320
+	if((mspData.mspCmd & ALTHOLD) && FB.calibrate_finished)
+#else
 	if(mspData.mspCmd & ALTHOLD)
+#endif
 	{	
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
@@ -204,9 +214,11 @@ void updateAltHoldState(void)
 		else debug[2] = 0;
 	if(flag.alt)debug[3] = 100;
 		else debug[3] = 0;
-	
-	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
+#ifdef FBM320
+	if((alt_on && flag.alt) && FB.calibrate_finished)
+#else
 	if(alt_on && flag.alt)
+#endif	
 	{	
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{

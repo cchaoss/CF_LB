@@ -21,8 +21,9 @@
 
 #define NRF
 #define FBM320
-//#define USE_ALTHOLD
-//#define DEBUG_ALT_HOLD
+#define THRO_DIRECT
+#define VerSion	110
+
 
 #ifndef NRF
 #define BLACKBOX
