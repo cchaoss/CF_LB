@@ -168,15 +168,15 @@ void updateAltHoldState(void)
 #else
 
 	static bool  alt_on = false,x = true;
-	static uint8_t i;
+	static uint8_t i,j;
 	static uint32_t a,b;
 	if(mspData.mspCmd & ARM)
 	{
 		//手动降落贴地面不上下抖动不降落
-		if(rcData[3] < 1150){
+		if((rcData[3] < 1030) && (flag.height < -20.0)){
 			i++;
-			if((i > 150) && (flag.height < -30)){
-				i = 150;
+			if(i > 65){
+				i = 65;
 				flag.alt = false;
 			}
 		}else i = 0;
@@ -189,7 +189,21 @@ void updateAltHoldState(void)
 				flag.alt = true;
 			}
 		}else x = true;
-	}else {alt_on = false;flag.alt = true;}
+		j = 0;
+	}
+	else{
+		j++;
+		if(j > 50){
+			j = 50;
+			alt_on = false;
+			flag.alt = true;
+		}
+	}
+	
+	if(alt_on)debug[2] = 100;
+		else debug[2] = 0;
+	if(flag.alt)debug[3] = 100;
+		else debug[3] = 0;
 	
 	//这种飞行模式严重依赖高度数据，如果气压计损坏情况下，该如何处理？待测试再改进->2016.11.28
 	if(alt_on && flag.alt)

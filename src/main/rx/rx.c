@@ -611,39 +611,40 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				rcData[3] = 1550;
 				m = rcData[3];
 			}else mspData.motor[THR] = m - 55;//
-
-#else
-			mspData.motor[THR] = 1100;//
-#endif
-
 			if(flag.height < 100){	
-#ifdef THRO_DIRECT
 				mspData.mspCmd &= ~ALTHOLD;//关定高
-#else
-				flag.alt = false;
-#endif
 				b++;
 				if(b > 70){
 					b = 70;
 					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
 				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1520;
+				else if(flag.batt < 95) mspData.motor[THR] = 1530;
 						else mspData.motor[THR] = 1470;
-			}
-			else{
-					b = 0;
-					flag.alt = true;
-			}
+			}else b = 0;
+#else
 
+			mspData.motor[THR] = 1000;//
+			if(flag.height < 50.0){	
+				flag.alt = false;
+				b++;
+				if(b > 60){
+					b = 60;
+					mspData.motor[THR] = 1100;
+					mspData.mspCmd &= ~ARM;
+				}
+				else if(flag.batt < 95) mspData.motor[THR] = 1470;
+						else mspData.motor[THR] = 1420;
+			}else b = 0;
+#endif
 		}
+
 		if(tx_flag == 4)SetTX_Mode();
 	}
 
 	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
 	
 	//限制高度6m 左右
-	//debug[0] = flag.height;
 	static uint8_t a;
 	if((flag.height > 800.0) && (flag.height < 1200.0)){
 		a++;

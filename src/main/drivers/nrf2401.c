@@ -15,7 +15,7 @@
 #include "io/beeper.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",110,0,0,0,0,0,0,0,0,true};
+golbal_flag flag = {"EMT",111,0,0,0,0,0,0,0,0,true};
 package_328p msp_328p;
 dataPackage mspData;
 dataPackage t_mspData;
@@ -304,7 +304,7 @@ void SetTX_Mode(void)
   	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
   	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
   	NRF_Write_Reg(RF_CH,40);       
-  	NRF_Write_Reg(RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
+  	NRF_Write_Reg(RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   250kb+0dbm:0x26 1M+0dbm:0x06 
   	NRF_Write_Reg(CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
 	SPI_CE_H();
   

@@ -175,7 +175,7 @@ void updateBattery(void)
 	//if(flag.batt < 10)	beeperSilence();
 	static bool a;
 	static uint32_t b,c;
-	if(batteryState == BATTERY_WARNING)
+	if((batteryState == BATTERY_WARNING) && (vbat > 20))
 	{
 		if(a)	{b = millis();	a = false;}
 		c = millis();
