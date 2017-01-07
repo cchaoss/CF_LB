@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include "common/maths.h"
 #include <platform.h>
 #include "build/debug.h"
@@ -14,13 +15,11 @@
 #include "common/crc.h"
 #include "optflow.h"
 #include "rx/rx.h"
-#ifdef NRF
-#include "nrf2401.h"
-#endif
 
 struct flow_data flow;
 
 static void flowDataReceive(uint16_t data);
+static void flow_stab(void);
 
 void flow_init(void)
 {
@@ -102,95 +101,118 @@ void flowDataReceive(uint16_t data)
 
 
 #ifdef PX4FLOW
+
+#define rol 0
+#define pit 1
+
 struct flow_stab stab;
-uint8_t PID_Roll[3] = {200,100,80};//X
-uint8_t PID_Pitch[3] = {200,100,80};//Y
+struct angle angle_flow;
 
 void taskOptflow(void)
 {	
-	//AUX1
-	if(rcData[4] > 1800){
-		if((rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550)){
-			/*
-			static float old_error_x,old_error_y;
+	if((rcData[4] > 1800) \
+	 && (rcData[0] > 1450) && (rcData[0] < 1550) && (rcData[1] > 1450) && (rcData[1] < 1550))
+		flow_stab();
+	else {
+		stab.cmd[rol] = 0;
+		stab.cmd[pit] = 0;
+		stab.error_vx_int = 0;
+		stab.error_vy_int = 0;
+		stab.error_x = 0;
+		stab.error_y = 0;
+	}
 
-			stab.error_x -= flow.comp_x / 50;//uint:cm/s
-			stab.error_y += flow.comp_y / 50;			
+	debug[2] = stab.cmd[rol];
+	debug[3] = stab.cmd[pit];
+}
+#endif
 
-			debug[0] = stab.error_x;
-			debug[1] = stab.error_y;		
 
-			stab.error_vx_int += stab.error_x;
-			stab.error_vy_int += stab.error_y;
-			debug[2] = stab.error_vx_int;
-			debug[3] = stab.error_vy_int;
-			
-			stab.cmd[0] = PID_Roll[0] * stab.error_x +
-							PID_Roll[1] * constrainf(stab.error_vx_int, -100,100) +
-							PID_Roll[2] * constrainf((stab.error_x - old_error_x),-100,100);
-			//debug[2] = error_vx - old_error_vx;//+-100
+//				 roll  pitch
+float KP1[2] = {0.8, 0.8};
+float KP2[2] = {2.0, 2.0};
+float KI[2]  = {1.2, 1.2};
+float KD[2]  = {1.8, 1.8};
+/*
+float KP2[2] = {1.8, 1.8};
+float KI[2]  = {0.1, 0.1};
+float KD[2]  = {0.6, 0.6};
+*/
 
-			stab.cmd[1] = PID_Pitch[0] * stab.error_y +
-							PID_Pitch[1] * constrainf(stab.error_vy_int,-100,100) +
-							PID_Pitch[2] * constrainf((stab.error_y - old_error_y),-100,100);
-			//debug[0] = error_vy - old_error_vy;//
-			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-130,130);
-			stab.cmd[1] = constrainf((stab.cmd[1] / 100),-130,130);
-			old_error_x = stab.error_x;
-			old_error_y = stab.error_y;
-			*/
-			
+void flow_stab(void)
+{
 			static float old_error_vx,old_error_vy;
-			float error_vx = -flow.comp_x;//cm/s
-			float error_vy = flow.comp_y;
+			if((flow.comp_x < 6.0) && (flow.comp_x > -6.0))
+				flow.comp_x = 0;
+			if((flow.comp_y < 6.0) && (flow.comp_y > -6.0))
+				flow.comp_y = 0;
 
+			float error_vx = constrainf(-flow.comp_x,-40,40);
+			float error_vy = constrainf(flow.comp_y,-40,40);
 			//float error_vx = -flow.x * flow.height/2;//cm/s
 			//float error_vy = flow.y * flow.height/2;
 			//debug[0] = error_vx;//+-60
 
 			stab.error_vx_int += error_vx / 50;
+			stab.error_vx_int = constrainf(stab.error_vx_int,-40,40);
 			stab.error_vy_int += error_vy / 50;
-			//debug[1] = stab.error_vx_int;//+-50
+			stab.error_vy_int = constrainf(stab.error_vy_int,-40,40);
+			//debug[0] = stab.error_vx_int;//+-30
 
-			//PID
-			stab.cmd[0] = constrainf((PID_Roll[0] * error_vx),-10000,10000) +
-							constrainf((PID_Roll[1] * stab.error_vx_int),-4000,4000) +
-							constrainf((PID_Roll[2] * (error_vx - old_error_vx)),-2500,2500);
-			//debug[2] = error_vx - old_error_vx;//+-30
-
-			stab.cmd[1] = constrainf((PID_Pitch[0] * error_vy),-10000,10000) +
-							constrainf((PID_Pitch[1] * stab.error_vy_int),-4000,4000) +
-							constrainf((PID_Pitch[2] * (error_vy - old_error_vy)),-2500,2500);
-
-			stab.cmd[0] = constrainf((stab.cmd[0] / 100),-150,150);
-			stab.cmd[1] = constrainf((stab.cmd[1] / 100),-150,150);
+			stab.cmd[rol] = constrainf((KP2[rol] * error_vx),-100,100) + \
+							constrainf((KI[rol] * stab.error_vx_int),-40,40) + \
+							constrainf((KD[rol] * (error_vx - old_error_vx)),-40,40);
+			stab.cmd[pit] = constrainf((KP2[pit] * error_vy),-100,100) + \
+							constrainf((KI[pit] * stab.error_vy_int),-40,40) + \
+							constrainf((KD[pit] * (error_vy - old_error_vy)),-40,40);
+			stab.cmd[rol] = constrainf(stab.cmd[rol],-150,150);
+			stab.cmd[pit] = constrainf(stab.cmd[pit],-150,150);
+			//debug[1] = error_vx - old_error_vx;//+-15
 			old_error_vx = error_vx;
 			old_error_vy = error_vy;
 
-			debug[0] = stab.cmd[0];//roll
-			debug[1] = stab.cmd[1];//pitch
-		}
-		else{
-			stab.cmd[0] = 0;
-			stab.cmd[1] = 0;
-			stab.error_vx_int = 0;
-			stab.error_vy_int = 0;
 
-			stab.error_x = 0;
-			stab.error_y = 0;
-		}
-	}
-	else{
-		stab.cmd[0] = 0;
-		stab.cmd[1] = 0;
-		stab.error_vx_int = 0;
-		stab.error_vy_int = 0;
-		
-		stab.error_x = 0;
-		stab.error_y = 0;
-	}
-}
-#endif
+/*
+			static float old_error_vx,old_error_vy;			
+			if((flow.comp_x < 6.0) && (flow.comp_x > -6.0))
+				flow.comp_x = 0;
+			if((flow.comp_y < 6.0) && (flow.comp_y > -6.0))
+				flow.comp_y = 0;
+			//debug[0] = flow.comp_x;
+			
 
-        
+			stab.error_x += flow.comp_x / 50;
+			stab.error_y -= flow.comp_y / 50;	
+			stab.error_x = constrainf(stab.error_x,-50,50);
+			stab.error_y = constrainf(stab.error_y,-50,50);
+			//debug[1] = stab.error_x;//5 < 50 
+
+			float error_vx = -stab.error_x * KP1[rol] - flow.comp_x;
+			float error_vy = -stab.error_y * KP1[pit] - flow.comp_y;
+			error_vx = constrainf(error_vx,-60,60);
+			error_vy = constrainf(error_vy,-60,60);
+			//debug[1] = error_vx;//30-50
+
+			stab.error_vx_int += error_vx / 50;
+			stab.error_vy_int += error_vy / 50;
+			stab.error_vx_int = constrainf(stab.error_vx_int,-400,400);
+			stab.error_vy_int = constrainf(stab.error_vy_int,-400,400);
+			//debug[2] = stab.error_vx_int;//100-200
+
+			stab.cmd[rol] = constrainf((KP2[rol] * error_vx),-120,120) +  \
+							constrainf((KI[rol] * stab.error_vx_int),-40,40) + \
+							constrainf((KD[rol] * (error_vx - old_error_vx)),-50,50);
+			stab.cmd[pit] = constrainf((KP2[pit] * error_vy),-150,150) + \
+							constrainf((KI[pit] * stab.error_vy_int),-40,40) + \
+							constrainf((KD[pit] * (error_vy - old_error_vy)),-50,50);
+
+			stab.cmd[rol] = constrainf(stab.cmd[rol],-150,150);
+			stab.cmd[pit] = constrainf(stab.cmd[pit],-150,150);
+			debug[2] = stab.cmd[rol];
+			debug[3] = stab.cmd[pit];
+			//debug[3] = error_vx - old_error_vx;//80
+			old_error_vx = error_vx;
+			old_error_vy = error_vy;
+*/
+}   
                 

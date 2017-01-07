@@ -274,8 +274,8 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
 
 #ifdef PX4FLOW
 #define SONAR
-int16_t sonarCfAltCm = 150;
-int16_t sonarMaxAltWithTiltCm = 270;
+int16_t sonarCfAltCm = 140;
+int16_t sonarMaxAltWithTiltCm = 280;
 #endif
 
 void calculateEstimatedAltitude(uint32_t currentTime)
@@ -400,7 +400,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
-	debug[3] = EstAlt;//display
+	//debug[3] = EstAlt;//display
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)

@@ -20,6 +20,13 @@ float error_vy_int;
 };
 extern struct flow_stab stab;
 
+struct angle{
+int16_t rol2;
+int16_t pit2;
+int16_t yaw2;
+};
+extern struct angle angle_flow;
+
 void flow_init(void);
 
 #define Bound(val,min,max) ((val) > (max)? (max) : (val) < (min)? (min) : (val))

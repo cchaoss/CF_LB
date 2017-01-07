@@ -59,6 +59,9 @@
 #ifdef NRF
 #include "drivers/nrf2401.h"
 #endif
+#ifdef OPTFLOW
+#include "drivers/optflow.h"
+#endif
 
 // the limit (in degrees/second) beyond which we stop integrating
 // omega_I. At larger spin rates the DCM PI controller can get 'dizzy'
@@ -381,6 +384,11 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void)
 	flag.roll1 = attitude.values.roll;
 	flag.pitch1= attitude.values.pitch;
 	flag.yaw1  = attitude.values.yaw;
+#endif
+#ifdef OPTFLOW
+	angle_flow.rol2 = attitude.values.roll;
+	angle_flow.pit2 = attitude.values.pitch;
+	angle_flow.yaw2 = attitude.values.yaw;
 #endif
 }
 
