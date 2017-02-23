@@ -50,24 +50,6 @@
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
 //************************************************************************
-#define beep_off	1
-#define beep_s		2
-#define beep_m		3
-#define beep_l		4
-#define beep_on		5	
-#define LEDA	(1<<0)
-#define LEDB	(1<<1)
-#define LEDC	(1<<2)
-#define LEDD	(1<<3)
-#define	BLACK 	0
-#define WHITE 	1
-#define RED 	2
-#define ORANGE 	3
-#define YELLOW 	4	
-#define GREEN 	5
-#define BLUE 	6
-#define PINK 	7
-#define VIOLET 	8
 
 #define ROL	0
 #define PIT	1
@@ -87,23 +69,6 @@ enum MSP_CMD{
 	MOTOR = 1<<7,
 };
 
-//328 cmd
-enum _CMD{
-	ARM_P = 1,
-	ARM_OFF,
-	CAL_P,
-	ALT_P,
-	ALT_OFF,
-	LED_P,
-	LED_RGB,
-	BEEP_P,
-	ROLL_P = 9,
-	PITC_P = 10,
-	YAW_P = 11,
-	THRO_P,
-	MOTOR_P,
-};
-
 //nrf2401 data
 typedef struct _dataPackage
 {
@@ -117,15 +82,6 @@ typedef struct _dataPackage
 	uint8_t key;
 }dataPackage;
 extern dataPackage mspData;
-
-//328 data
-typedef struct _328p
-{
-	uint8_t cmd;
-	uint8_t length;
-	uint8_t data[4];
-}package_328p;
-extern package_328p msp_328p;
 
 typedef struct flag
 {

@@ -781,6 +781,8 @@ int main(void) {
 #ifdef FBM320
 	fbm320_init();
 #endif
+	
+	wifi_uart_init();
 
 	configureScheduler();
 

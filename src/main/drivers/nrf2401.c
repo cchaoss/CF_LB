@@ -1,3 +1,4 @@
+#include "stdio.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -5,20 +6,16 @@
 #include <math.h>
 #include <string.h>
 #include <platform.h>
-#include "nrf2401.h"
-#include "stdio.h"
 #include "bus_spi.h"
 #include "bus_i2c.h"
 #include "system.h"
 #include "gpio.h"
-#include "sound_beeper.h"
-#include "io/beeper.h"
+#include "nrf2401.h"
+#include "app.h"
 #include "build/debug.h"
 
 golbal_flag flag = {"EMT",VerSion,0,0,0,0,0,0,0,0,true};
-package_328p msp_328p;
 dataPackage mspData;
-dataPackage t_mspData;
 
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
 uint8_t  TX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//tx_address
@@ -26,17 +23,6 @@ uint8_t  TX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//tx_address
 uint8_t  RXDATA[RX_PLOAD_WIDTH];//rx_data
 uint8_t  RX_ADDRESS[RX_ADR_WIDTH]= {0x11,0xff,0xff,0xff,0xff};//rx_address
 
-
-static inline void send_328p_buf(uint8_t len, uint8_t *buf)
-{
-	while(len)
-	{
-		i2cWrite(0x08,0,*buf);
-		delayMicroseconds(8);
-		buf++;
-		len--;
-	}
-}
 
 static inline void NRF_Write_Reg(uint8_t reg, uint8_t data)
 {
@@ -67,38 +53,54 @@ static inline void NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 bool nrf_rx(void)
 {
     uint8_t sta;
-    static uint8_t count,flag;
+	static uint8_t count;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
     if(sta & (1<<RX_DR)){
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
-		memcpy(&t_mspData,RXDATA,sizeof(t_mspData));
-		if(!(t_mspData.mspCmd & OFFLINE))
-			mspData = t_mspData;
-		else if(!(mspData.mspCmd & OFFLINE)){
-				mspData.mspCmd |= OFFLINE;
-				mspData.motor[ROL] = 1500;
-				mspData.motor[PIT] = 1500;
-				mspData.motor[YA ] = 1500;
-				mspData.motor[THR] = 1000;
-			 }
+		memcpy(&mspData,RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
-		if(flag == 0)
-			flag = 1;
-     }else	count++;
+     }else count++;
 
-	if(count > 60){//判断2.4G数据是否丢失
+	if(count > 60) {
 		count = 60;
-		if(flag == 1) beeper(3);//rc_lost_beep
 		return false;
 	}else return true;
 }
 
 void rx_data_process(int16_t *buf)
 {
-	static uint8_t x = 0;
 	static bool arm_flag = false,roll_flag = false;
-	if(!strcmp("$M<",(char *)mspData.checkCode)){
+
+	if(App_data_ok) {
+		if(App_data[4] & APP_ARM) {
+			mspData.mspCmd |= ARM;
+			debug[0] = 100;
+		}
+		if(App_data[4] & APP_DIS) {
+			mspData.mspCmd &= ~ARM;
+			debug[0] = 1;
+		}
+
+		if(App_data[4] & APP_ALT) {
+			mspData.mspCmd |= ALTHOLD;
+			debug[1] = 100;
+		}
+		else { mspData.mspCmd &= ~ALTHOLD;debug[1] = 1;}
+
+		if(App_data[4] & APP_CAL) {
+			mspData.mspCmd |= CALIBRATION;
+			debug[2] = 100;
+		}
+		else {mspData.mspCmd &= ~CALIBRATION;debug[2] = 1;}
+	
+		mspData.motor[0] = (App_data[0]<<2) + 988;
+		mspData.motor[1] = (App_data[1]<<2) + 988;
+		mspData.motor[2] = (App_data[3]<<2) + 988;
+		mspData.motor[3] = (App_data[2]<<2) + 988;
+	}
+
+	if(!strcmp("$M<",(char *)mspData.checkCode) || App_data_ok){
 		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 			if(arm_flag && roll_flag)	mwArm();
 				else  mwDisarm();
@@ -116,74 +118,13 @@ void rx_data_process(int16_t *buf)
 			accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
 		}
 
-#if 1
-		//offline process
-		if(mspData.mspCmd & OFFLINE){
-			LED_A_ON;
-			i2cRead(0x08,0xff,1, &msp_328p.cmd);//debug[0] = msp_328p.cmd;
-			i2cRead(0x08,0xff,1, &msp_328p.length);//debug[1] = msp_328p.length;
-			for(uint8_t i = 0;i < msp_328p.length;i++)	
-				i2cRead(0x08,0xff,1, &msp_328p.data[i]);
-			//debug[2] = msp_328p.data[0];
-
-			if(msp_328p.cmd == 255 && t_mspData.key != 0)
-					i2cWrite(0x08,0,t_mspData.key);
-		
-			switch(msp_328p.cmd){  
-				case ARM_P:mspData.mspCmd |= ARM;break;
-				case ARM_OFF:mspData.mspCmd &= ~ARM;break;
-				case CAL_P:mspData.mspCmd |= CALIBRATION;break;
-				case ALT_P:mspData.mspCmd |= ALTHOLD;break;
-				case ALT_OFF:mspData.mspCmd &= ~ALTHOLD;break;
-				case LED_P:mspData.led = msp_328p.data[0];break;
-				case LED_RGB:mspData.led_rgb = msp_328p.data[0];break;
-				case BEEP_P:mspData.beep = msp_328p.data[0];break;
-				case ROLL_P:mspData.motor[ROL] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-				case PITC_P:mspData.motor[PIT] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-				case YAW_P :mspData.motor[YA ] = 1500 + (msp_328p.data[0] > 100 ? 100 - msp_328p.data[0] : msp_328p.data[0]);break;
-				case THRO_P:mspData.motor[THR] = 1100 + (flag.batt > 100 ? 124 - flag.batt : 0) * 12 + 4 * msp_328p.data[0];break;//Voltage compensation throttle
-				case MOTOR_P:for(uint8_t i = 0;i < 4;i++)	mspData.motor[i] = 1000+4*msp_328p.data[i];break;
-				default:break;
-			}
-		}
-		else{
-			LED_A_OFF;
-			msp_328p.cmd = 255;
-		}
-		
-		//debug[3] = t_mspData.key;
-#endif
-
 		//give and bound the rc_stick data
-		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1000);
-		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
-			for(uint8_t i = 0;i<4;i++)	buf[i] = mspData.motor[i];
-
-		//just for beeper
-		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){
-			if(mspData.beep == beep_off)BEEP_OFF;
-			if(mspData.beep == beep_s){
-				x++;
-				if(x < 10) BEEP_ON;
-				else if(x < 120) BEEP_OFF;else x = 0;
-			}
-			else if(mspData.beep == beep_m){
-				x++;
-				if(x < 40) BEEP_ON;
-				else if(x < 120) BEEP_OFF;else x = 0;
-			}
-			else if(mspData.beep == beep_l){
-				x++;
-				if(x < 70) BEEP_ON;
-				else if(x < 120) BEEP_OFF;else x = 0;
-			}else x = 0;
-			if(mspData.beep == beep_on)BEEP_ON;
-		}
+		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
 }
 
 
-/****************NRF24L01_TX*********************/
+/*
 void nrf_tx(void)
 {
 	bool a = true;
@@ -209,7 +150,7 @@ void nrf_tx(void)
 	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
 	if(sta & MAX_TX)NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//达到最大重发次数，清除TX FIFO寄存器
 }
-
+*/
 
 /************NFR24L01_Init************/
 bool NRF24L01_INIT(void)

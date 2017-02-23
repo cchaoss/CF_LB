@@ -258,6 +258,7 @@ SYSTEM_SRC = \
 		   msp/msp_serial.c \
 			drivers/nrf2401.c \
 			drivers/fbm320.c \
+			drivers/app.c\
 		   $(TARGET_SRC) \
 		   $(CMSIS_SRC) \
 		   $(DEVICE_STDPERIPH_SRC)
@@ -336,7 +337,6 @@ HIGHEND_SRC = \
 		   flight/gps_conversion.c \
 		   common/colorconversion.c \
 		   io/gps.c \
-		   io/ledstrip.c \
 		   io/display.c \
 		   telemetry/telemetry.c \
 		   telemetry/frsky.c \

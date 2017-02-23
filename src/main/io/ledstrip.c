@@ -42,10 +42,6 @@
 #include "drivers/system.h"
 #include "drivers/serial.h"
 
-#ifdef	NRF
-#include "drivers/nrf2401.h"
-#endif
-
 #include "flight/pid.h"
 #include "flight/failsafe.h"
 
@@ -987,25 +983,6 @@ void updateLedStrip(void)
         return;
     }
 
-#ifdef NRF	
-	if(mspData.mspCmd & ONLINE || mspData.mspCmd & OFFLINE){	
-		if(mspData.led & LEDA) LED_A_ON;else LED_A_OFF;
-		if(mspData.led & LEDB) LED_B_ON;else LED_B_OFF;
-		if(mspData.led & LEDC) LED_C_ON;else LED_C_OFF;
-		if(mspData.led & LEDD) LED_D_ON;else LED_D_OFF;
-		switch(mspData.led_rgb) {
-			case BLACK:setStripColor(&HSV(BLACK));break;
-			case WHITE:setStripColor(&HSV(WHITE));break;
-			case RED:setStripColor(&HSV(RED));break;
-			case ORANGE:setStripColor(&HSV(ORANGE));break;
-			case YELLOW:setStripColor(&HSV(YELLOW));break;
-			case GREEN:setStripColor(&HSV(GREEN));break;
-			case BLUE:setStripColor(&HSV(BLUE));break;
-			case PINK:setStripColor(&HSV(DEEP_PINK));break;
-			case VIOLET:setStripColor(&HSV(DARK_VIOLET));break;
-		}
-	}
-#else
     if (rcModeIsActive(BOXLEDLOW)) {
         if (ledStripEnabled) {
             ledStripDisable();
@@ -1159,19 +1136,6 @@ void ledStripEnable(void)
     ws2811LedStripInit();
 	setStripColor(&HSV(BLACK));
 	ws2811UpdateStrip();
-	setStripColor(&HSV(RED));
-	ws2811UpdateStrip();
-	delay(120);
-	setStripColor(&HSV(GREEN));
-	ws2811UpdateStrip();
-	delay(120);
-	setStripColor(&HSV(BLUE));
-	ws2811UpdateStrip();
-	delay(280);
-	setStripColor(&HSV(BLACK));
-	ws2811UpdateStrip();
-
-
 }
 
 static void ledStripDisable(void)
@@ -1180,4 +1144,3 @@ static void ledStripDisable(void)
 
 	ws2811UpdateStrip();
 }
-#endif
