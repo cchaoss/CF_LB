@@ -573,7 +573,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
 	
 	rxUpdateAt = currentTime + (1000000 / 60);
-    //rxUpdateAt = currentTime + DELAY_50_HZ;
 
     // only proceed when no more samples to skip and suspend period is over
     if (skipRxSamples) {
@@ -584,35 +583,34 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-#ifndef NRF
-    detectAndApplySignalLossBehaviour();
-#endif	
+
 	rcSampleIndex++;
 
 
 #ifdef NRF	
-	static uint8_t b = 0;
+	static uint8_t b,a;
 	static uint16_t m;
 
 		//低电压降落+失控保护——use height
-		if(!nrf_rx() || flag.batt_low){
+		if(!nrf_rx() || flag.batt_low) {
 			
-			if(!flag.batt_low){
+			if(!flag.batt_low) {
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
-#ifdef THRO_DIRECT
-			if(!FLIGHT_MODE(BARO_MODE)) {//开定高
+			//不是定高模式下则开启定高模式
+			if(!FLIGHT_MODE(BARO_MODE)) {
 				rcData[3] = 1500;
 				mspData.mspCmd |= ALTHOLD;
 			}
 			m = rcData[3];
-			mspData.motor[THR] = m - 50;//
-			if(flag.height < 90.0){	
-				mspData.mspCmd &= ~ALTHOLD;//关定高
+			mspData.motor[THR] = m - 50;
+
+			if(flag.height < 90.0) {	
+				mspData.mspCmd &= ~ALTHOLD;
 				b++;
-				if(b > 80){
+				if(b > 80) {
 					b = 80;
 					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
@@ -620,28 +618,12 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				else if(flag.batt < 95) mspData.motor[THR] = 1540;
 						else mspData.motor[THR] = 1480;
 			}else b = 0;
-#else
-
-			mspData.motor[THR] = 1000;//
-			if(flag.height < 50.0){	
-				flag.alt = false;
-				b++;
-				if(b > 60){
-					b = 60;
-					mspData.motor[THR] = 1100;
-					mspData.mspCmd &= ~ARM;
-				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1470;
-						else mspData.motor[THR] = 1420;
-			}else b = 0;
-#endif
 		}
 	
 	//限制高度6m 左右
-	static uint8_t a;
-	if((flag.height > 800.0) && (flag.height < 1200.0)){
+	if((flag.height > 800.0) && (flag.height < 1200.0)) {
 		a++;
-		if(a > 20){
+		if(a > 20) {
 			a = 20;
 			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1450;
 				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;

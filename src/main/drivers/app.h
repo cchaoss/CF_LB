@@ -3,7 +3,6 @@
 
 #define APP_DATA_LENGTH 	5
 
-
 enum APP_CMD{
 	APP_ARM = 1<<0,
 	APP_DIS = 1<<1,

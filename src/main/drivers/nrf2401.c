@@ -49,14 +49,14 @@ static inline void NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 }
 
 
-/****************NRF24L01_Receive*********************/
+//NRF24L01_Data_Receive
 bool nrf_rx(void)
 {
     uint8_t sta;
 	static uint8_t count;
     NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
-    if(sta & (1<<RX_DR)){
-        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer
+    if(sta & (1<<RX_DR)) {
+        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);
 		memcpy(&mspData,RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
 		count = 0;
@@ -68,57 +68,46 @@ bool nrf_rx(void)
 	}else return true;
 }
 
+
 void rx_data_process(int16_t *buf)
 {
 	static bool arm_flag = false,roll_flag = false;
 
 	if(App_data_ok) {
-		if(App_data[4] & APP_ARM) {
+		if(App_data[4] & APP_ALT) 
 			mspData.mspCmd |= ARM;
-			debug[0] = 100;
-		}
-		if(App_data[4] & APP_DIS) {
-			mspData.mspCmd &= ~ARM;
-			debug[0] = 1;
-		}
+		else mspData.mspCmd &= ~ARM;
 
-		if(App_data[4] & APP_ALT) {
-			mspData.mspCmd |= ALTHOLD;
-			debug[1] = 100;
-		}
-		else { mspData.mspCmd &= ~ALTHOLD;debug[1] = 1;}
-
-		if(App_data[4] & APP_CAL) {
+		if(App_data[4] & APP_CAL) 
 			mspData.mspCmd |= CALIBRATION;
-			debug[2] = 100;
-		}
-		else {mspData.mspCmd &= ~CALIBRATION;debug[2] = 1;}
-	
+		else mspData.mspCmd &= ~CALIBRATION;
+
 		mspData.motor[0] = (App_data[0]<<2) + 988;
 		mspData.motor[1] = (App_data[1]<<2) + 988;
-		mspData.motor[2] = (App_data[3]<<2) + 988;
+		mspData.motor[2] = (App_data[3]<<2) + 996;
 		mspData.motor[3] = (App_data[2]<<2) + 988;
 	}
 
-	if(!strcmp("$M<",(char *)mspData.checkCode) || App_data_ok){
-		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+	if(!strcmp("$M<",(char *)mspData.checkCode) || App_data_ok) {
+		//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+		if(mspData.mspCmd & ARM) {
 			if(arm_flag && roll_flag)	mwArm();
 				else  mwDisarm();
-			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
+			//侧翻超过65度上锁
+			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650)
 				mwDisarm();roll_flag = false;
-			}
 		}		
-		else{	
+		else {	
 			mwDisarm();
 			roll_flag = true;
+			//电压小于 10/3 V 不可解锁
 			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}
 		if(mspData.mspCmd & CALIBRATION){
-			accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
+			accSetCalibrationCycles(400);
 		}
 
-		//give and bound the rc_stick data
 		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
 }
@@ -152,22 +141,24 @@ void nrf_tx(void)
 }
 */
 
-/************NFR24L01_Init************/
+
+//NFR24L01_Init
 bool NRF24L01_INIT(void)
 {
 	uint8_t sta;
 	nrf24l01HardwareInit();
-	if(NRF24L01_Check()){
+	if(NRF24L01_Check()) {
 		SetRX_Mode();//default:0x11 ...
-		for(uint8_t i = 0;i<5;i++){
+		for(uint8_t i = 0;i<5;i++) {
 			NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
 			delay(10);
 		}
-		if(sta & (1<<RX_DR)){
+
+		if(sta & (1<<RX_DR)) {
 	        NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);// read receive payload from RX_FIFO buffer 
 			memcpy(&mspData,RXDATA,sizeof(mspData));
 			NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
-			if(mspData.mspCmd & NEWADDRESS){
+			if(mspData.mspCmd & NEWADDRESS) {
 				RX_ADDRESS[0] = mspData.motor[2];
 				RX_ADDRESS[1] = mspData.motor[2] >> 8;
 				RX_ADDRESS[2] = mspData.motor[3];
