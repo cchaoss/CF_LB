@@ -210,10 +210,6 @@ void updateAltHoldState(void)
 		}
 	}
 	
-	if(alt_on)debug[2] = 100;
-		else debug[2] = 0;
-	if(flag.alt)debug[3] = 100;
-		else debug[3] = 0;
 #ifdef FBM320
 	if((alt_on && flag.alt) && FB.calibrate_finished)
 #else
@@ -350,7 +346,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
-	debug[0] = FB.Altitude;
+	//debug[0] = FB.Altitude;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
@@ -407,7 +403,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 
 #ifdef NRF
 	flag.height = accAlt;
-	debug[1] = accAlt;//
+	//debug[1] = accAlt;//
 #endif
     imuResetAccelerationSum();
 

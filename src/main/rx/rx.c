@@ -43,6 +43,10 @@
 #include "fc/runtime_config.h"
 #endif
 
+#ifdef WIFI_APP
+#include "drivers/app.h"
+#endif
+
 #include "io/serial.h"
 
 #include "fc/rc_controls.h"
@@ -573,7 +577,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
 	
 	rxUpdateAt = currentTime + (1000000 / 60);
-    //rxUpdateAt = currentTime + DELAY_50_HZ;
 
     // only proceed when no more samples to skip and suspend period is over
     if (skipRxSamples) {
@@ -584,72 +587,61 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
     }
 
     readRxChannelsApplyRanges();
-#ifndef NRF
-    detectAndApplySignalLossBehaviour();
-#endif	
+
 	rcSampleIndex++;
 
 
 #ifdef NRF	
-	static uint8_t tx_flag = 0,b = 0;
+	static uint8_t a,b,c;
 	static uint16_t m;
-	tx_flag++;
-	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠，下个版本不需要
-	if(tx_flag <= 4){
-		//低电压降落+失控保护——use height
-		if(!nrf_rx() || flag.batt_low){
-			if(mspData.mspCmd & ONLINE)	
-				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制
-			if(!flag.batt_low){
-				mspData.motor[PIT] = 1500;
-				mspData.motor[ROL] = 1500;
-				mspData.motor[YA ] = 1500;
-			}
-#ifdef THRO_DIRECT
-			if(!FLIGHT_MODE(BARO_MODE)) {//开定高
-				rcData[3] = 1500;
-				mspData.mspCmd |= ALTHOLD;
-			}
-			m = rcData[3];
-			mspData.motor[THR] = m - 50;//
-			if(flag.height < 90.0){	
-				mspData.mspCmd &= ~ALTHOLD;//关定高
-				b++;
-				if(b > 80){
-					b = 80;
-					mspData.motor[THR] = 1000;
-					mspData.mspCmd &= ~ARM;
-				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1540;
-						else mspData.motor[THR] = 1480;
-			}else b = 0;
-#else
 
-			mspData.motor[THR] = 1000;//
-			if(flag.height < 50.0){	
-				flag.alt = false;
-				b++;
-				if(b > 60){
-					b = 60;
-					mspData.motor[THR] = 1100;
-					mspData.mspCmd &= ~ARM;
-				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1470;
-						else mspData.motor[THR] = 1420;
-			}else b = 0;
-#endif
+	c++;
+	if(c > 60) {
+		c = 0;
+		if(APP_DATA_FLAG == true) {
+			APP_DATA_FLAG = false;
+			WIFI_DATA_OK = true;
 		}
-
-		if(tx_flag == 4)SetTX_Mode();
+		else WIFI_DATA_OK = false;
 	}
 
-	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
+	if(nrf_rx() || WIFI_DATA_OK)	flag.single_loss = false;
+		else flag.single_loss = true;
+	
+	//低电压降落+失控保护——use height
+ 	if(flag.single_loss || flag.batt_low) {
+		
+		if(!flag.batt_low) {
+			mspData.motor[PIT] = 1500;
+			mspData.motor[ROL] = 1500;
+			mspData.motor[YA ] = 1500;
+		}
+		//不是定高模式下则开启定高模式
+		if(!FLIGHT_MODE(BARO_MODE)) {
+			rcData[3] = 1500;
+			mspData.mspCmd |= ALTHOLD;
+		}
+		m = rcData[3];
+		mspData.motor[THR] = m - 50;
+
+		if(flag.height < 90.0) {	
+			mspData.mspCmd &= ~ALTHOLD;
+			b++;
+			if(b > 80) {
+				b = 80;
+				mspData.motor[THR] = 1000;
+				mspData.mspCmd &= ~ARM;
+			}
+			else if(flag.batt < 95) mspData.motor[THR] = 1540;
+					else mspData.motor[THR] = 1480;
+		}else b = 0;
+	}
+
 	
 	//限制高度6m 左右
-	static uint8_t a;
-	if((flag.height > 800.0) && (flag.height < 1200.0)){
+	if((flag.height > 800.0) && (flag.height < 1200.0)) {
 		a++;
-		if(a > 20){
+		if(a > 20) {
 			a = 20;
 			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1450;
 				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;
@@ -659,56 +651,6 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 	//rx_process
 	rx_data_process(rcData); 
-#endif
-#if 0	//test i2c read and write
-/*
-	static uint8_t sta;
-	static uint16_t j = 0,i=0,x=0;
-	if(mspData.mspCmd & OFFLINE)
-	{
-		for(char a = 0;a<8;a++)
-		{
-			i2cRead(0x08,0xff,1, &sta);
-			if(sta == j) {i++;}
-				else {j = sta;x++;}
-			j++;
-			if(j == 256) {i=0;j=0;}
-		}
-		for(uint16_t a =0;a<8;a++)
-		{
-			i2cWrite(0x08,0,a);
-			delayMicroseconds(25);
-		}
-	}
-	rcData[6] = sta;
-	rcData[7] = i;
-	rcData[8] = x;
-*/
-/*
-		static uint8_t sta,length,x;
-		if(mspData.mspCmd & OFFLINE)
-		{
-			i2cRead(0x08,0xff,1, &sta);
-			if(sta == 4) 
-			{	i2cRead(0x08,0xff,1, &sta);
-				if(sta == 5) 
-				{
-					i2cRead(0x08,0xff,1, &length);
-					for(uint8_t i = 0;i<length;i++) 
-					{
-						i2cRead(0x08,0xff,1, &sta);
-						if(sta == (i+7)) x++;				
-					}
-				}
-			}
-			for(uint16_t a =0;a<8;a++)
-			{
-				i2cWrite(0x08,0,a);
-				delayMicroseconds(25);
-			}
-		}else x =0;
-		rcData[8] = x;
-*/
 #endif
 }
 

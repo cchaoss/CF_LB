@@ -761,23 +761,6 @@ void taskMainPidLoop(void)
         writeMotors();
     }
 
-#ifdef NRF 
-	if(mspData.mspCmd & ONLINE)
-	{	
-		if(mspData.mspCmd & MOTOR && !(mspData.mspCmd & ARM))//上锁状态
-		{
-			for(uint8_t i = 0;i<4;i++)
-				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
-		}
-	}
-	if(mspData.mspCmd & OFFLINE)
-	{
-		if(msp_328p.cmd == MOTOR_P && !(mspData.mspCmd & ARM))
-			for(uint8_t i = 0;i<4;i++)
-				pwmWriteMotor(i,bound(mspData.motor[i],1300,1000));
-	}
-#endif 
-
 
 #ifdef USE_SDCARD
         afatfs_poll();
