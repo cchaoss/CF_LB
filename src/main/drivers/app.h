@@ -10,7 +10,7 @@ enum APP_CMD{
 	APP_ALT = 1<<4,
 };
 extern uint8_t App_data[APP_DATA_LENGTH];
-extern bool App_data_ok;
+extern bool APP_DATA_FLAG,WIFI_DATA_OK;
 
 extern void wifi_uart_init(void);
 #endif

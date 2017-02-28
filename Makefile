@@ -259,6 +259,7 @@ SYSTEM_SRC = \
 			drivers/nrf2401.c \
 			drivers/fbm320.c \
 			drivers/app.c\
+			drivers/led.c\
 		   $(TARGET_SRC) \
 		   $(CMSIS_SRC) \
 		   $(DEVICE_STDPERIPH_SRC)

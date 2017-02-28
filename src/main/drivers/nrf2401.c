@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <math.h>
 #include <string.h>
 #include <platform.h>
@@ -14,7 +13,7 @@
 #include "app.h"
 #include "build/debug.h"
 
-golbal_flag flag = {"EMT",VerSion,0,0,0,0,0,0,0,0,true};
+golbal_flag flag;
 dataPackage mspData;
 
 uint8_t  TXData[TX_PLOAD_WIDTH];//tx_data
@@ -71,84 +70,68 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
-	static bool arm_flag = false,roll_flag = false;
+	static bool roll_flag,arm_flag;
 
-	if(App_data_ok) {
-		if(App_data[4] & APP_ALT) 
+	if(WIFI_DATA_OK) {
+		if(App_data[4] & APP_ARM) 
 			mspData.mspCmd |= ARM;
-		else mspData.mspCmd &= ~ARM;
+		if(App_data[4] & APP_DIS)
+			mspData.mspCmd &= ~ARM;
+		
+		if(App_data[4] & APP_ALT)
+			mspData.mspCmd |= ALTHOLD;
+		else mspData.mspCmd &= ~ALTHOLD;
 
 		if(App_data[4] & APP_CAL) 
 			mspData.mspCmd |= CALIBRATION;
 		else mspData.mspCmd &= ~CALIBRATION;
 
+
+
 		mspData.motor[0] = (App_data[0]<<2) + 988;
 		mspData.motor[1] = (App_data[1]<<2) + 988;
-		mspData.motor[2] = (App_data[3]<<2) + 996;
+		mspData.motor[2] = (App_data[3]<<2) + 988;
 		mspData.motor[3] = (App_data[2]<<2) + 988;
 	}
 
-	if(!strcmp("$M<",(char *)mspData.checkCode) || App_data_ok) {
+	if(!strcmp("$M<",(char *)mspData.checkCode) || WIFI_DATA_OK) {
 		//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 		if(mspData.mspCmd & ARM) {
-			if(arm_flag && roll_flag)	mwArm();
+			if(roll_flag && arm_flag)	mwArm();
 				else  mwDisarm();
-			//侧翻超过65度上锁
-			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650)
-				mwDisarm();roll_flag = false;
+			//侧翻超过70度上锁
+			if(fabs(flag.pitch) > 700 || fabs(flag.roll) > 700) {
+				roll_flag = false;
+				mwDisarm();
+			}
 		}		
 		else {	
 			mwDisarm();
 			roll_flag = true;
-			//电压小于 10/3 V 不可解锁
-			if(flag.batt < 100) arm_flag = false;
+			if(flag.batt < 95) arm_flag = false;
 				else arm_flag = true;
 		}
-		if(mspData.mspCmd & CALIBRATION){
+
+		if(mspData.mspCmd & CALIBRATION) {
+			flag.calibration = true;
 			accSetCalibrationCycles(400);
-		}
+		}else flag.calibration = false;
 
 		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
 }
 
 
-/*
-void nrf_tx(void)
-{
-	bool a = true;
-	uint8_t sta;
-
-	flag.cmd = mspData.mspCmd;
-	flag.key = mspData.key;
-	memcpy(TXData,&flag,sizeof(flag));
-	
-	SPI_CE_L();
-	NRF_Write_Buf(WR_TX_PLOAD - 0x20,TXData,TX_PLOAD_WIDTH);//写数据到TX BUF  32个字节
- 	SPI_CE_H();//启动发送
-	flag.yaw1 = 0;
-	//while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0));
-
-	while(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) && a){
-		delayMicroseconds(10);
-		flag.yaw1++;
-		if(flag.yaw1 > 700)a = false;
-	}
-
-	NRF_Read_Buf(NRFRegSTATUS,&sta,1); //读取状态寄存器的值	   
-	NRF_Write_Reg(NRFRegSTATUS,sta); //清除TX_DS或MAX_RT中断标志
-	if(sta & MAX_TX)NRF_Write_Reg(FLUSH_TX - 0X20,0xff);//达到最大重发次数，清除TX FIFO寄存器
-}
-*/
-
-
-//NFR24L01_Init
-bool NRF24L01_INIT(void)
+//NFR24L01初始化
+bool NRF24L01_init(void)
 {
 	uint8_t sta;
+
 	nrf24l01HardwareInit();
+
 	if(NRF24L01_Check()) {
-		SetRX_Mode();//default:0x11 ...
+		SetRX_Mode();//default:0x11
+
 		for(uint8_t i = 0;i<5;i++) {
 			NRF_Read_Buf(NRFRegSTATUS, &sta, 1);
 			delay(10);
@@ -164,11 +147,6 @@ bool NRF24L01_INIT(void)
 				RX_ADDRESS[2] = mspData.motor[3];
 				RX_ADDRESS[3] = mspData.motor[3] >> 8;
 
-				TX_ADDRESS[0] = mspData.motor[2] + 1;
-				TX_ADDRESS[1] = mspData.motor[2] >> 8;
-				TX_ADDRESS[2] = mspData.motor[3];
-				TX_ADDRESS[3] = mspData.motor[3] >> 8;
-
 				//save new_address to flash
 				FLASH_Unlock();
 				FLASH_ErasePage(0x0803E800);
@@ -176,24 +154,20 @@ bool NRF24L01_INIT(void)
 				FLASH_ProgramWord(0x0803E820, mspData.motor[3]);
 				FLASH_Lock();
 				SetRX_Mode();//use the new_address!
-				for(uint8_t i = 0; i<5;i++)		{LED_D_ON;delay(50);LED_D_OFF;delay(50);}
 			}
 		}
-		else{	//load the address form flash!
+		//load the address form flash!
+		else {	
 			RX_ADDRESS[0] = *(uint16_t *)0x0803E800;
 			RX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
 			RX_ADDRESS[2] = *(uint16_t *)0x0803E820;
 			RX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
 
-			TX_ADDRESS[0] = *(uint16_t *)0x0803E800 + 1;
-			TX_ADDRESS[1] = *(uint16_t *)0x0803E800 >> 8;
-			TX_ADDRESS[2] = *(uint16_t *)0x0803E820;
-			TX_ADDRESS[3] = *(uint16_t *)0x0803E820 >> 8;
-
 			SetRX_Mode();//use the new_address!
 		}
 		return true;
 	}else return false;
+
 }
 
 
@@ -217,7 +191,7 @@ void SetRX_Mode(void)
   	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)RX_ADDRESS,RX_ADR_WIDTH);//写RX节点地址
    	NRF_Write_Reg(EN_AA,0x01);       //使能通道0的自动应答    
   	NRF_Write_Reg(EN_RXADDR,0x01);   //使能通道0的接收地址  	 
-  	NRF_Write_Reg(RF_CH,40);	 //设置RF通信频率		  
+  	NRF_Write_Reg(RF_CH,40);	 	//设置RF通信频率		  
   	NRF_Write_Reg(RX_PW_P0,RX_PLOAD_WIDTH);//选择通道0的有效数据宽度 	    
   	NRF_Write_Reg(RF_SETUP,0x0f);   //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   
   	NRF_Write_Reg(CONFIG, 0x0f);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式 
@@ -225,22 +199,6 @@ void SetRX_Mode(void)
 
 } 
 
-//发送模式
-void SetTX_Mode(void)
-{
-	SPI_CE_L();
-	NRF_Write_Reg(FLUSH_TX,0xff);//清除TX FIFO寄存器
-	NRF_Write_Buf(TX_ADDR,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH);	//写TX节点地址 
-  	NRF_Write_Buf(RX_ADDR_P0,(uint8_t*)TX_ADDRESS,TX_ADR_WIDTH); 	//设置TX节点地址,主要为了使能ACK	  
-  	NRF_Write_Reg(EN_AA,0x01);     //使能通道0的自动应答    
-  	NRF_Write_Reg(EN_RXADDR,0x01); //使能通道0的接收地址  
-  	NRF_Write_Reg(SETUP_RETR,0x1a);//设置自动重发间隔时间:500us + 86us;最大自动重发次数:10次
-  	NRF_Write_Reg(RF_CH,40);       
-  	NRF_Write_Reg(RF_SETUP,0x0f);  //设置TX发射参数,0db增益,2Mbps,低噪声增益开启   250kb+0dbm:0x26 1M+0dbm:0x06 
-  	NRF_Write_Reg(CONFIG,0x0e);    //配置基本工作模式的参数;PWR_UP,EN_CRC,16BIT_CRC,接收模式,开启所有中断
-	SPI_CE_H();
-  
-} 
 
 void nrf24l01HardwareInit(void)
 {
@@ -261,38 +219,6 @@ void nrf24l01HardwareInit(void)
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
 	gpioInit(GPIOB,&CE);
-
-	gpio_config_t LED;//init led pins
-
-	LED.pin = Pin_3 | Pin_4 | Pin_5 | Pin_2;
-	LED.mode = Mode_Out_PP;
-	LED.speed = Speed_2MHz;
-	
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
-	gpioInit(GPIOB,&LED);
-	
-	LED_A_ON;delay(80);LED_A_OFF;
-	LED_B_ON;delay(80);LED_B_OFF;
-	LED_C_ON;delay(80);LED_C_OFF;
-	LED_D_ON;delay(80);LED_D_OFF;
 }
 
-void led_beep_sleep(void)
-{
-	gpio_config_t led0;	
-
-	led0.pin = Pin_11;
-	led0.mode = Mode_AIN;
-	
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
-	gpioInit(GPIOB,&led0);
-
-	gpio_config_t beep;	
-
-	beep.pin = Pin_15;
-	beep.mode = Mode_AIN;
-	
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
-	gpioInit(GPIOC,&beep);
-}
 

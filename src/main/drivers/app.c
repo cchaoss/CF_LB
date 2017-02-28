@@ -19,7 +19,7 @@
 
 
 uint8_t App_data[APP_DATA_LENGTH];
-bool App_data_ok = false;
+bool APP_DATA_FLAG = false,WIFI_DATA_OK = false;
 
 static void App_DataReceive(uint16_t data);
 
@@ -31,7 +31,7 @@ void wifi_uart_init(void)
 
 void App_DataReceive(uint16_t data)
 {
-	static uint8_t count, i, n, buffer[APP_DATA_LENGTH+1];
+	static uint8_t count, i, buffer[APP_DATA_LENGTH+1];
 
 	switch(count)
 	{
@@ -44,7 +44,7 @@ void App_DataReceive(uint16_t data)
 		
 		case 2:if(buffer[5] == ((buffer[0]^buffer[1]^buffer[2]^buffer[3]^buffer[4])&0xff)) {
 					memcpy(App_data,buffer,APP_DATA_LENGTH);
-					n = ++n>250?250:n;
+					APP_DATA_FLAG = true;
 				}
 				count = 0;
 				break;
@@ -52,10 +52,4 @@ void App_DataReceive(uint16_t data)
 		default:count = 0;i = 0;break;
 	}
 
-	if(n > 60)//大概3s的样子 
-		App_data_ok = true;
-		else App_data_ok = false;
-
-	//debug[0] = App_data[4];
-	debug[3] = n;
 }

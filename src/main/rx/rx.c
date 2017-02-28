@@ -43,6 +43,10 @@
 #include "fc/runtime_config.h"
 #endif
 
+#ifdef WIFI_APP
+#include "drivers/app.h"
+#endif
+
 #include "io/serial.h"
 
 #include "fc/rc_controls.h"
@@ -588,37 +592,51 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 
 #ifdef NRF	
-	static uint8_t b,a;
+	static uint8_t a,b,c;
 	static uint16_t m;
 
-		//低电压降落+失控保护——use height
-		if(!nrf_rx() || flag.batt_low) {
-			
-			if(!flag.batt_low) {
-				mspData.motor[PIT] = 1500;
-				mspData.motor[ROL] = 1500;
-				mspData.motor[YA ] = 1500;
-			}
-			//不是定高模式下则开启定高模式
-			if(!FLIGHT_MODE(BARO_MODE)) {
-				rcData[3] = 1500;
-				mspData.mspCmd |= ALTHOLD;
-			}
-			m = rcData[3];
-			mspData.motor[THR] = m - 50;
-
-			if(flag.height < 90.0) {	
-				mspData.mspCmd &= ~ALTHOLD;
-				b++;
-				if(b > 80) {
-					b = 80;
-					mspData.motor[THR] = 1000;
-					mspData.mspCmd &= ~ARM;
-				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1540;
-						else mspData.motor[THR] = 1480;
-			}else b = 0;
+	c++;
+	if(c > 60) {
+		c = 0;
+		if(APP_DATA_FLAG == true) {
+			APP_DATA_FLAG = false;
+			WIFI_DATA_OK = true;
 		}
+		else WIFI_DATA_OK = false;
+	}
+
+	if(nrf_rx() || WIFI_DATA_OK)	flag.single_loss = false;
+		else flag.single_loss = true;
+	
+	//低电压降落+失控保护——use height
+ 	if(flag.single_loss || flag.batt_low) {
+		
+		if(!flag.batt_low) {
+			mspData.motor[PIT] = 1500;
+			mspData.motor[ROL] = 1500;
+			mspData.motor[YA ] = 1500;
+		}
+		//不是定高模式下则开启定高模式
+		if(!FLIGHT_MODE(BARO_MODE)) {
+			rcData[3] = 1500;
+			mspData.mspCmd |= ALTHOLD;
+		}
+		m = rcData[3];
+		mspData.motor[THR] = m - 50;
+
+		if(flag.height < 90.0) {	
+			mspData.mspCmd &= ~ALTHOLD;
+			b++;
+			if(b > 80) {
+				b = 80;
+				mspData.motor[THR] = 1000;
+				mspData.mspCmd &= ~ARM;
+			}
+			else if(flag.batt < 95) mspData.motor[THR] = 1540;
+					else mspData.motor[THR] = 1480;
+		}else b = 0;
+	}
+
 	
 	//限制高度6m 左右
 	if((flag.height > 800.0) && (flag.height < 1200.0)) {
