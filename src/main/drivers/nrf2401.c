@@ -1,3 +1,60 @@
+/*				                                                                                                     
+                                                 oo                                        
+                                                 ooo                                      
+                                                 ooo                                         
+                                                oooo                                          
+                                               ooooo                                          
+                                         o    ooooo                                           
+                                       oo    oooo                                             
+                                      oo     oooo                                             
+                                     oo      ooo                                              
+                                    ooo   o  ooo                                              
+                          oo       ooo    o  ooo       oo                                     
+                           ooo     ooo    o   o      ooo                                      
+                            oooo  ooooo    o       ooooo                                      
+                            ooooooooooo     oo    oooooo                                      
+                            oooooooooooo     oo  oooooo                                       
+                            oooooooooooo     oo ooooooo                                       
+                            ooooooooooooo     oooooooooo                                      
+                           ooooooooooooooo     ooooooooo                                      
+                          ooooooooooooooooo o oooooooooo                                     
+                         ooooooooooooooooooooooooooooooooo                                    
+                         oooooooooooooooooooooooooooooooooo                                   
+                        ooooooooooooooooooooooooooooooooooo                                   
+                        oooooooooooooooooooooooooooooooooooo                                  
+                       ooooooooooooooooooooooooooooooooooooo                                  
+                       ooooooooooo ooooooooooooo ooooooooooo                                  
+                        ooooooooo  ooooooooooooo  oooooooooo                                  
+                        oooooooo    ooooooooooo    oooooooo                                   
+                         ooooooo      oooooooo      oooooo                                    
+                          ooooo        ooooo        ooooo                                     
+                           oooo                     oooo                                      
+                          ooooo   oooo       oooo   ooooo                                     
+                          oooooo   ooo       ooo   oooooo                                     
+                              oo                   ooo                                        
+                             oooo                 ooooo                                       
+                            oooooo               oooooo                                       
+                             oo ooo            ooo  oo                                       
+                                 ooooooooooooooooo                                            
+                                  ooooooooooooooo                                             
+                                   o    ooo     o                                             
+                                                                                                  
+                                                                                                  
+oooo        oooo            ooo                               oooo  ooo                      +---+  
+ooooo      ooooo            ooo   ooo                        ooo                             | R |
+oooooo    oooooo   ooooooo  ooo  oooo    oooooooo  ooo  oo ooooooo  ooo  ooo  oo   oooooooo  +---+ 
+ooooooo  ooo ooo      ooooo ooooooo     ooo    ooo ooo oo  ooooooo  ooo  ooo oo   ooo    ooo  
+ooo  oooooo  ooo   oooooooo ooooo      ooo    oooo ooooo     ooo    ooo  ooooo   ooo    oooo  
+ooo   oooo   ooo ooo    ooo ooooooo    oooooooooo  oooo      ooo    ooo  oooo    oooooooooo        
+ooo   oooo   ooo ooo    ooo ooo  oooo  ooo         ooo       ooo    ooo  ooo     ooo        
+ooo   oooo   ooo  oooo ooo  ooo   ooo   oooooooo   ooo       ooo    ooo  ooo      oooooooo   
+
+Author:	吴栋(cchaoss) 、李楷模(kaimo)
+E-mail: 862281335@qq.com
+编译链:arm-none-eabi-gcc-4.9.3
+版  本:v1.0
+*/
+
 #include "stdio.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -12,6 +69,7 @@
 #include "nrf2401.h"
 #include "app.h"
 #include "build/debug.h"
+
 
 golbal_flag flag;
 dataPackage mspData;
@@ -58,36 +116,39 @@ bool nrf_rx(void)
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);
 		memcpy(&mspData,RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
+		
 		count = 0;
      }else count++;
 
 	if(count > 60) {
 		count = 60;
 		return false;
-	}else return true;
+	}
+	else return true;
+		
 }
 
 
 void rx_data_process(int16_t *buf)
 {
-	static bool roll_flag,arm_flag;
+	static bool roll_flag,arm_flag,gg;
 
 	if(WIFI_DATA_OK) {
-		if(App_data[4] & APP_ARM) 
+
+		if(App_data[4] & APP_ARM)\
 			mspData.mspCmd |= ARM;
-		if(App_data[4] & APP_DIS)
+
+		if(App_data[4] & APP_DIS)\
 			mspData.mspCmd &= ~ARM;
 		
 		if(App_data[4] & APP_ALT)
 			mspData.mspCmd |= ALTHOLD;
 		else mspData.mspCmd &= ~ALTHOLD;
-
+		
 		if(App_data[4] & APP_CAL) 
 			mspData.mspCmd |= CALIBRATION;
 		else mspData.mspCmd &= ~CALIBRATION;
-
-
-
+		
 		mspData.motor[0] = (App_data[0]<<2) + 988;
 		mspData.motor[1] = (App_data[1]<<2) + 988;
 		mspData.motor[2] = (App_data[3]<<2) + 988;
@@ -96,7 +157,8 @@ void rx_data_process(int16_t *buf)
 
 	if(!strcmp("$M<",(char *)mspData.checkCode) || WIFI_DATA_OK) {
 		//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
-		if(mspData.mspCmd & ARM) {
+		
+		if((mspData.mspCmd & ARM) && gg) { debug[2] = 1;
 			if(roll_flag && arm_flag)	mwArm();
 				else  mwDisarm();
 			//侧翻超过70度上锁
@@ -105,22 +167,27 @@ void rx_data_process(int16_t *buf)
 				mwDisarm();
 			}
 		}		
-		else {	
+		else {	debug[2] = 0;
 			mwDisarm();
 			roll_flag = true;
-			if(flag.batt < 95) arm_flag = false;
+			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}
 
-		if(mspData.mspCmd & CALIBRATION) {
-			flag.calibration = true;
-			accSetCalibrationCycles(400);
-		}else flag.calibration = false;
 
+		if(mspData.mspCmd & CALIBRATION) {
+			accSetCalibrationCycles(400);
+			flag.calibration = true;
+		}else if(isAccelerationCalibrationComplete())
+			flag.calibration = false;
+		
 		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
-}
 
+	if(mspData.mspCmd & ARM) gg = 1;
+		else gg = 0;
+	debug[3] = gg;
+}
 
 //NFR24L01初始化
 bool NRF24L01_init(void)

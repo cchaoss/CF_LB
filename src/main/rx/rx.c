@@ -575,7 +575,6 @@ static void detectAndApplySignalLossBehaviour(void)
 
 void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 {
-	
 	rxUpdateAt = currentTime + (1000000 / 60);
 
     // only proceed when no more samples to skip and suspend period is over
@@ -592,9 +591,7 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 
 #ifdef NRF	
-	static uint8_t a,b,c;
-	static uint16_t m;
-
+	static uint8_t a,c;
 	c++;
 	if(c > 60) {
 		c = 0;
@@ -605,38 +602,27 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		else WIFI_DATA_OK = false;
 	}
 
-	if(nrf_rx() || WIFI_DATA_OK)	flag.single_loss = false;
+	if(nrf_rx() || WIFI_DATA_OK) flag.single_loss = false;
 		else flag.single_loss = true;
 	
+
 	//低电压降落+失控保护——use height
- 	if(flag.single_loss || flag.batt_low) {
-		
+	if(flag.single_loss || flag.batt_low) {
+
 		if(!flag.batt_low) {
 			mspData.motor[PIT] = 1500;
 			mspData.motor[ROL] = 1500;
 			mspData.motor[YA ] = 1500;
 		}
-		//不是定高模式下则开启定高模式
-		if(!FLIGHT_MODE(BARO_MODE)) {
-			rcData[3] = 1500;
+		//if(!FLIGHT_MODE(BARO_MODE))\
 			mspData.mspCmd |= ALTHOLD;
-		}
-		m = rcData[3];
-		mspData.motor[THR] = m - 50;
-
-		if(flag.height < 90.0) {	
-			mspData.mspCmd &= ~ALTHOLD;
-			b++;
-			if(b > 80) {
-				b = 80;
-				mspData.motor[THR] = 1000;
+		if(flag.height < 5.0) {
+				//mspData.mspCmd &= ~ALTHOLD;
 				mspData.mspCmd &= ~ARM;
-			}
-			else if(flag.batt < 95) mspData.motor[THR] = 1540;
-					else mspData.motor[THR] = 1480;
-		}else b = 0;
-	}
-
+		}
+		//flag.land = true;
+	}else flag.land  = false;
+	
 	
 	//限制高度6m 左右
 	if((flag.height > 800.0) && (flag.height < 1200.0)) {

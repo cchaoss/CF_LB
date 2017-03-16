@@ -83,9 +83,11 @@ typedef struct
 	int16_t pitch;
 	int16_t yaw;
 	float height;
+	uint8_t batt_low;
 	bool alt;
-	bool batt_low;
 	bool single_loss;
+	bool take_off;
+	bool land;
 	bool calibration;
 }golbal_flag;
 extern golbal_flag flag;

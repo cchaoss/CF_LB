@@ -23,7 +23,7 @@
 #define FBM320
 #define LED_FLASH
 #define WIFI_APP
-
+#define THRO_DIRECT
 
 #ifndef NRF
 #define BLACKBOX

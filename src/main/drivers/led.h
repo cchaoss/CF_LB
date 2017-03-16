@@ -12,6 +12,7 @@
 #define CALI	1
 #define BATL	2
 #define LOST	3
+#define LAND	4
 
 #define LedA_on    GPIO_SetBits(GPIOB, GPIO_Pin_2)
 #define LedA_off   GPIO_ResetBits(GPIOB, GPIO_Pin_2)
