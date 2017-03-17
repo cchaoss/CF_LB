@@ -131,7 +131,7 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
-	static bool roll_flag,arm_flag,gg;
+	static bool roll_flag,arm_flag;
 
 	if(WIFI_DATA_OK) {
 
@@ -158,7 +158,7 @@ void rx_data_process(int16_t *buf)
 	if(!strcmp("$M<",(char *)mspData.checkCode) || WIFI_DATA_OK) {
 		//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
 		
-		if((mspData.mspCmd & ARM) && gg) { debug[2] = 1;
+		if(mspData.mspCmd & ARM) {
 			if(roll_flag && arm_flag)	mwArm();
 				else  mwDisarm();
 			//侧翻超过70度上锁
@@ -167,7 +167,7 @@ void rx_data_process(int16_t *buf)
 				mwDisarm();
 			}
 		}		
-		else {	debug[2] = 0;
+		else {
 			mwDisarm();
 			roll_flag = true;
 			if(flag.batt < 100) arm_flag = false;
@@ -178,15 +178,13 @@ void rx_data_process(int16_t *buf)
 		if(mspData.mspCmd & CALIBRATION) {
 			accSetCalibrationCycles(400);
 			flag.calibration = true;
-		}else if(isAccelerationCalibrationComplete())
-			flag.calibration = false;
+		}
+		//}else if(isAccelerationCalibrationComplete())
+			//flag.calibration = false;
 		
 		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
 
-	if(mspData.mspCmd & ARM) gg = 1;
-		else gg = 0;
-	debug[3] = gg;
 }
 
 //NFR24L01初始化

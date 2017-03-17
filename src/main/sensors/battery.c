@@ -179,7 +179,7 @@ void updateBattery(void)
 		if(a)	{b = millis();	a = false;}
 		c = millis();
 
-		if(c-b > 15000)	
+		if(c-b > 12000)	
 			flag.batt_low = 2;
 		else if(c-b > 6000)	flag.batt_low = 1;
 

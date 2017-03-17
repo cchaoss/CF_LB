@@ -138,7 +138,7 @@ void LEDReflash(void)
 //事件驱动层 10Hz
 void LED_loop(void)
 {
-
+	static char a,b;
 	LEDCtrl.event = READY;
 
 	if(flag.batt_low == 1)	LEDCtrl.event = BATL;
@@ -147,13 +147,18 @@ void LED_loop(void)
 	
 	if(flag.single_loss)	LEDCtrl.event = LOST;	
 
-	if(flag.calibration) 	LEDCtrl.event = CALI;
-		
+	if(flag.calibration) 	{
+		a++;
+		if(a > 8) {a = 0;flag.calibration = false;}
+		LEDCtrl.event = CALI;
+	}
+
 	switch(LEDCtrl.event) {
 		case READY: LEDBuf.byte = 0X0F;
 					break;
 
-		case CALI :	LEDBuf.byte = LA|LB;
+		case CALI :	if(b) {b = 0;LEDBuf.byte = LA|LB|LC|LD;}
+					else  {b = 1;LEDBuf.byte = LA|LB;}
 					break;
 
 		case BATL : if(++LEDCtrl.cnt >= 3)	LEDCtrl.cnt = 0;

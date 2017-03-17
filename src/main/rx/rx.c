@@ -591,7 +591,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 
 #ifdef NRF	
-	static uint8_t a,c;
+	static uint8_t a,b,c,d = 1;
+	static uint16_t m;
 	c++;
 	if(c > 60) {
 		c = 0;
@@ -607,33 +608,38 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 	
 
 	//低电压降落+失控保护——use height
-	if(flag.single_loss || flag.batt_low) {
+	if(flag.single_loss || (flag.batt_low==2)) {
 
 		if(!flag.batt_low) {
 			mspData.motor[PIT] = 1500;
 			mspData.motor[ROL] = 1500;
 			mspData.motor[YA ] = 1500;
 		}
-		//if(!FLIGHT_MODE(BARO_MODE))\
+		if(!FLIGHT_MODE(BARO_MODE))\
 			mspData.mspCmd |= ALTHOLD;
-		if(flag.height < 5.0) {
-				//mspData.mspCmd &= ~ALTHOLD;
+		if(flag.height < 20.0) {
+			b++;
+			mspData.mspCmd &= ~ALTHOLD;
+			mspData.motor[THR] = 1380;
+			if(b > 60) {
+				b = 60;
 				mspData.mspCmd &= ~ARM;
-		}
-		//flag.land = true;
+			}
+		}else b = 0;
+		flag.land = true;
 	}else flag.land  = false;
 	
 	
 	//限制高度6m 左右
 	if((flag.height > 800.0) && (flag.height < 1200.0)) {
 		a++;
-		if(a > 20) {
-			a = 20;
-			if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1450;
-				else if(mspData.motor[THR] >= 1490)mspData.motor[THR] = 1400;
-					else mspData.motor[THR] = 1360;
-		}
 	}else a = 0;
+	if(a > 10) {
+		a = 10;
+		if(mspData.motor[THR] >= 1650)mspData.motor[THR] = 1580;
+			else if(mspData.motor[THR] >= 1495)mspData.motor[THR] = 1420;
+				else mspData.motor[THR] = 1400;
+	}
 
 	//rx_process
 	rx_data_process(rcData); 
