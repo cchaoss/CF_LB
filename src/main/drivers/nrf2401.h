@@ -50,24 +50,6 @@
 #define TX_OK   		0x20  //TX发送完成中断
 #define RX_OK   		0x40  //接收到数据中断
 //************************************************************************
-#define beep_off	1
-#define beep_s		2
-#define beep_m		3
-#define beep_l		4
-#define beep_on		5	
-#define LEDA	(1<<0)
-#define LEDB	(1<<1)
-#define LEDC	(1<<2)
-#define LEDD	(1<<3)
-#define	BLACK 	0
-#define WHITE 	1
-#define RED 	2
-#define ORANGE 	3
-#define YELLOW 	4	
-#define GREEN 	5
-#define BLUE 	6
-#define PINK 	7
-#define VIOLET 	8
 
 #define ROL	0
 #define PIT	1
@@ -82,79 +64,34 @@ enum MSP_CMD{
 	ALTHOLD = 1<<2,
 	CALIBRATION = 1<<3,
 	NEWADDRESS = 1<<4,
-	ONLINE = 1<<5,
-	OFFLINE = 1<<6,
-	MOTOR = 1<<7,
-};
-
-//328 cmd
-enum _CMD{
-	ARM_P = 1,
-	ARM_OFF,
-	CAL_P,
-	ALT_P,
-	ALT_OFF,
-	LED_P,
-	LED_RGB,
-	BEEP_P,
-	ROLL_P = 9,
-	PITC_P = 10,
-	YAW_P = 11,
-	THRO_P,
-	MOTOR_P,
 };
 
 //nrf2401 data
-typedef struct _dataPackage
+typedef struct 
 {
 	uint8_t checkCode[4];
 	uint8_t length;
 	uint16_t mspCmd;
 	uint16_t motor[4];
-	uint8_t led;
-	uint8_t led_rgb;
-	uint8_t beep;
-	uint8_t key;
 }dataPackage;
 extern dataPackage mspData;
 
-//328 data
-typedef struct _328p
+typedef struct 
 {
-	uint8_t cmd;
-	uint8_t length;
-	uint8_t data[4];
-}package_328p;
-extern package_328p msp_328p;
-
-typedef struct flag
-{
-	uint8_t checkCode[4];
-	uint8_t version;
-	uint16_t cmd;
-	uint8_t key;
 	uint16_t batt;
-	int16_t roll1;
-	int16_t pitch1;
-	int16_t yaw1;
+	int16_t roll;
+	int16_t pitch;
+	int16_t yaw;
 	float height;
-	bool batt_low;//default -> false
-	bool alt;//default -> true
+	uint8_t batt_low;
+	bool alt;
+	bool single_loss;
+	bool take_off;
+	bool land;
+	bool calibration;
 }golbal_flag;
 extern golbal_flag flag;
 
-
-#define LED_A_ON	GPIO_SetBits(GPIOB, GPIO_Pin_3)
-#define LED_A_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_3)
-
-#define LED_B_ON	GPIO_SetBits(GPIOB, GPIO_Pin_4)
-#define LED_B_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_4)
-
-#define LED_C_ON	GPIO_SetBits(GPIOB, GPIO_Pin_5)
-#define LED_C_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_5)
-
-#define LED_D_ON	GPIO_SetBits(GPIOB, GPIO_Pin_2)
-#define LED_D_OFF	GPIO_ResetBits(GPIOB, GPIO_Pin_2)
 
 #define SPI_CE_H()   GPIO_SetBits(GPIOB, GPIO_Pin_1)//CE
 #define SPI_CE_L()   GPIO_ResetBits(GPIOB, GPIO_Pin_1)
@@ -164,19 +101,13 @@ extern golbal_flag flag;
 
 #define bound(val,max,min) ((val) > (max)? (max) : (val) < (min)? (min) : (val))
 
-bool NRF24L01_INIT(void);
+bool NRF24L01_init(void);
 bool NRF24L01_Check(void); 
 void nrf24l01HardwareInit(void);
-void led_beep_sleep(void);
 
 void rx_data_process(int16_t *buf);
 bool nrf_rx(void);
 void SetRX_Mode(void);
-
-void nrf_scheduler(int16_t *buf);
-void nrf_tx(void);
-void SetTX_Mode(void);
-
 
 #endif
 
