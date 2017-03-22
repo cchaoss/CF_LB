@@ -52,11 +52,6 @@ typedef enum {
 #ifdef LED_STRIP
     TASK_LEDSTRIP,
 #endif
-
-#ifdef LED_FLASH
-	TASK_LEDFLASH,
-#endif
-
 #ifdef TRANSPONDER
     TASK_TRANSPONDER,
 #endif
@@ -86,10 +81,6 @@ void taskTelemetry(void);
 void taskLedStrip(void);
 void taskTransponder(void);
 void taskSystem(void);
-
-#ifdef LED_FLASH
-void LED_loop(void);
-#endif
 
 #ifdef FBM320
 void taskFbm320(void);

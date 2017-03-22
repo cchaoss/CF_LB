@@ -169,20 +169,11 @@ cfTask_t cfTasks[] = {
     },
 #endif
 
-#ifdef LED_FLASH
-    [TASK_LEDFLASH] = {
-        .taskName = "LEDFLASH",
-        .taskFunc = LED_loop,
-        .desiredPeriod = 1000000 / 10,         // 10 Hz, every 100 ms
-        .staticPriority = TASK_PRIORITY_IDLE,
-    },
-#endif
-
 #ifdef FBM320
     [TASK_FBM320] = {
         .taskName = "FBM320",
         .taskFunc = taskFbm320,
-        .desiredPeriod = 1000000 / 50,         // 50 Hz, every 20 ms
+        .desiredPeriod = 1000000 / 50,         // 100 Hz, every 10 ms
         .staticPriority = TASK_PRIORITY_MEDIUM,
     },
 #endif

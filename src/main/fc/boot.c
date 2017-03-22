@@ -67,14 +67,9 @@
 #ifdef NRF
 #include "drivers/nrf2401.h"
 #endif
-#ifdef LED_FLASH
-#include "drivers/led.h"
-#endif
+
 #ifdef FBM320
 #include "drivers/fbm320.h"
-#endif
-#ifdef WIFI_APP
-#include "drivers/app.h"
 #endif
 
 #include "rx/rx.h"
@@ -178,6 +173,21 @@ typedef enum {
 
 static uint8_t systemState = SYSTEM_STATE_INITIALISING;
 
+void flashLedsAndBeep(void)
+{
+    LED1_ON;
+    LED0_OFF;
+    for (uint8_t i = 0; i < 10; i++) {
+        LED1_TOGGLE;
+        LED0_TOGGLE;
+        delay(25);
+        BEEP_ON;
+        delay(25);
+        BEEP_OFF;
+    }
+    LED0_OFF;
+    LED1_OFF;
+}
 
 #ifdef BUTTONS
 void buttonsInit(void)
@@ -228,6 +238,8 @@ void buttonsHandleColdBootButtonPresses(void)
     if (secondsRemaining < 5) {
 
         usbGenerateDisconnectPulse();
+
+        flashLedsAndBeep();
 
         systemResetToBootloader();
     }
@@ -543,6 +555,8 @@ void init(void)
 
     systemState |= SYSTEM_STATE_SENSORS_READY;
 
+    flashLedsAndBeep();
+
 #ifdef USE_SERVOS
     mixerInitialiseServoFiltering(targetLooptime);
 #endif
@@ -678,6 +692,10 @@ void init(void)
     }
 #endif
 
+#ifdef CJMCU
+    LED2_ON;
+#endif
+
     // Latch active features AGAIN since some may be modified by init().
     latchActiveFeatures();
     motorControlEnable = true;
@@ -736,16 +754,17 @@ void configureScheduler(void)
 	setTaskEnabled(TASK_ALTITUDE, true);
 #endif
 #endif
-
+#ifdef DISPLAY
+    setTaskEnabled(TASK_DISPLAY, feature(FEATURE_DISPLAY));
+#endif
+#ifdef TELEMETRY
+    setTaskEnabled(TASK_TELEMETRY, feature(FEATURE_TELEMETRY));
+#endif
 #ifdef LED_STRIP
 	setTaskEnabled(TASK_LEDSTRIP, true);
 #endif
 #ifdef TRANSPONDER
     setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));
-#endif
-
-#ifdef LED_FLASH
-	setTaskEnabled(TASK_LEDFLASH,true);
 #endif
 
 #ifdef FBM320
@@ -754,23 +773,13 @@ void configureScheduler(void)
 }
 
 int main(void) {
-
     init();
 
 #ifdef NRF
-	NRF24L01_init();
+	NRF24L01_INIT();
 #endif
-
-#ifdef LED_FLASH
-	LED_init();
-#endif
-
 #ifdef FBM320
 	fbm320_init();
-#endif
-	
-#ifdef WIFI_APP
-	wifi_uart_init();
 #endif
 
 	configureScheduler();
