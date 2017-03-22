@@ -349,7 +349,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
-	debug[0] = FB.Altitude;
+	//debug[0] = FB.Altitude;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
@@ -406,7 +406,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 
 #ifdef NRF
 	flag.height = accAlt;
-	debug[1] = accAlt;//
+	debug[0] = accAlt;//
 #endif
     imuResetAccelerationSum();
 

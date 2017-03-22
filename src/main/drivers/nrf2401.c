@@ -106,6 +106,7 @@ static inline void NRF_Read_Buf(uint8_t reg, uint8_t *data, uint8_t length)
 }
 
 
+
 //NRF24L01_Data_Receive
 bool nrf_rx(void)
 {
@@ -116,8 +117,7 @@ bool nrf_rx(void)
         NRF_Read_Buf(RD_RX_PLOAD,RXDATA,RX_PLOAD_WIDTH);
 		memcpy(&mspData,RXDATA,sizeof(mspData));
 		NRF_Write_Reg(NRFRegSTATUS, sta);//清除nrf的中断标志位
-		
-		count = 0;
+		count = 0;	
      }else count++;
 
 	if(count > 60) {
@@ -179,9 +179,7 @@ void rx_data_process(int16_t *buf)
 			accSetCalibrationCycles(400);
 			flag.calibration = true;
 		}
-		//}else if(isAccelerationCalibrationComplete())
-			//flag.calibration = false;
-		
+	
 		for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],2000,1000);
 	}
 

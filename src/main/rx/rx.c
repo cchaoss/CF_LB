@@ -593,6 +593,11 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF	
 	static uint8_t a,b,c,d = 1;
 	static uint16_t m;
+
+	//debug[1] = WIFI_DATA_OK;////////////
+	//if(WIFI_DATA_OK) debug[1]++;\
+		else debug[0]++;
+
 	c++;
 	if(c > 60) {
 		c = 0;
