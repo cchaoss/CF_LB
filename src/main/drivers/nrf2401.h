@@ -109,5 +109,12 @@ void rx_data_process(int16_t *buf);
 bool nrf_rx(void);
 void SetRX_Mode(void);
 
+/******************************************************/
+uint8_t LT8900_Read_REG_U8(uint8_t reg);
+void LT8900_Write_REG_U8(uint8_t reg, uint8_t data);
+void LT8900_Write_REG(uint8_t reg, uint8_t dataH, uint8_t dataL);
+void LT8900_init(void);
+
+
 #endif
 

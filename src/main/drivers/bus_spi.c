@@ -291,7 +291,7 @@ void initSpi2(void)
 
 #ifdef NRF
     spi.SPI_CPOL = SPI_CPOL_Low;
-    spi.SPI_CPHA = SPI_CPHA_1Edge;
+    spi.SPI_CPHA = SPI_CPHA_2Edge;
 #endif
 
 #ifdef STM32F303xC

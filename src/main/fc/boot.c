@@ -758,7 +758,7 @@ int main(void) {
     init();
 
 #ifdef NRF
-	NRF24L01_init();
+	LT8900_init();//NRF24L01_init();
 #endif
 
 #ifdef LED_FLASH

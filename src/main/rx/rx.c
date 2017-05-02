@@ -607,8 +607,8 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 		}
 		else WIFI_DATA_OK = false;
 	}
-
-	if(nrf_rx() || WIFI_DATA_OK) flag.single_loss = false;
+//nrf_rx() ||
+	if(LT8900_Recv_Data() || WIFI_DATA_OK) flag.single_loss = false;
 		else flag.single_loss = true;
 	
 
