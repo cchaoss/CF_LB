@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include "common/maths.h"
 #include <platform.h>
@@ -8,6 +9,7 @@
 #include "fc/fc_tasks.h"
 #include "config/parameter_group.h"
 #include "drivers/dma.h"
+#include "drivers/nrf2401.h"
 #include "drivers/system.h"
 #include "drivers/serial.h"
 #include "drivers/serial_uart.h"
@@ -23,16 +25,46 @@ static void flow_stab(void);
 
 void flow_init(void)
 {
-	openSerialPort(SERIAL_PORT_UART2,FUNCTION_TELEMETRY_MAVLINK, flowDataReceive, 115200, MODE_RX, SERIAL_NOT_INVERTED);//SERIAL_STOPBITS_1
+	openSerialPort(SERIAL_PORT_UART2,FUNCTION_TELEMETRY_MAVLINK, flowDataReceive, 57600, MODE_RX, SERIAL_NOT_INVERTED);//SERIAL_STOPBITS_1
 	stab.cmd[0] = 0;
 	stab.cmd[1] = 0;
 	stab.error_vx_int = 0;
 	stab.error_vy_int = 0;
 }
 
+
 uint8_t flow_buf[30],flow_state[4];
 void flowDataReceive(uint16_t data)
 {
+	static uint8_t count, i, buffer[5];
+
+	switch(count)
+	{
+   		case 0: if(data == 0xAA)	
+				count = 1;
+				break;
+
+ 		case 1: if(i < 4)	
+					buffer[i++] = data;
+				else {buffer[i] = data;i = 0;count = 2;}
+				break;
+		
+		case 2:if(buffer[4] == ((buffer[0]^buffer[1]^buffer[2]^buffer[3])&0xFF)) {
+					memcpy(&flow.x,&buffer[0],2);
+					memcpy(&flow.y,&buffer[2],2);
+				}
+				count = 0;
+				break;
+
+		default:count = 0;i = 0;break;
+	}
+	
+	debug[0] = bound(flow.x,200,-200);	
+	debug[1] = bound(flow.y,200,-200);
+	
+
+
+/*
 	static uint8_t check = 0,data_cnt = 0;
 	uint8_t temp[4];
 	float *p = (float*)temp;
@@ -97,6 +129,7 @@ void flowDataReceive(uint16_t data)
 	//debug[2] = flow.y;
 	//debug[1] = flow.comp_x;
 	//debug[2] = flow.comp_y;
+*/
 }
 
 
