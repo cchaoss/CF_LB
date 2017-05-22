@@ -43,9 +43,10 @@ void pgResetFn_controlRateProfiles(controlRateConfig_t *instance)
 {
     for (int i = 0; i < MAX_CONTROL_RATE_PROFILE_COUNT; i++) {
         RESET_CONFIG(controlRateConfig_t, &instance[i],
-            .rcRate8 = 90,
+            .rcRate8 = 109,
             .rcExpo8 = 65,
-            .thrMid8 = 50,
+            .thrMid8 = 52,
+			.thrExpo8 = 40,
             .tpa_breakpoint = 1500,
         );
     }

@@ -109,12 +109,8 @@ static void applyMultirotorAltHold(void)
     } else {
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
-            // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
-#ifdef THRO_DIRECT
+            // set velocity proportional to stick movement +400 throttle gives ~ +100 cm/s
             setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 4;
-#else
-			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;
-#endif
             velocityControl = 1;
             isAltHoldChanged = 1;
         } else if (isAltHoldChanged) {
@@ -122,6 +118,13 @@ static void applyMultirotorAltHold(void)
             velocityControl = 0;
             isAltHoldChanged = 0;
         }
+
+		//failsafe
+		if(flag.land) {
+			velocityControl = 1;
+			setVelocity = -25;//unit:cm/s
+		}//
+		
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
@@ -210,10 +213,6 @@ void updateAltHoldState(void)
 		}
 	}
 	
-	if(alt_on)debug[2] = 100;
-		else debug[2] = 0;
-	if(flag.alt)debug[3] = 100;
-		else debug[3] = 0;
 #ifdef FBM320
 	if((alt_on && flag.alt) && FB.calibrate_finished)
 #else
@@ -350,7 +349,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
-	debug[0] = FB.Altitude;
+	//debug[0] = FB.Altitude;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
@@ -407,7 +406,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 
 #ifdef NRF
 	flag.height = accAlt;
-	debug[1] = accAlt;//
+	debug[0] = accAlt;//
 #endif
     imuResetAccelerationSum();
 
