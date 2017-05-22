@@ -273,7 +273,7 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
 }
 
 #ifdef PX4FLOW
-#define SONAR
+//#define SONAR
 int16_t sonarCfAltCm = 140;
 int16_t sonarMaxAltWithTiltCm = 280;
 #endif

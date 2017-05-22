@@ -59,8 +59,10 @@ void flowDataReceive(uint16_t data)
 		default:count = 0;i = 0;break;
 	}
 	
-	debug[0] = bound(flow.x,200,-200);	
-	debug[1] = bound(flow.y,200,-200);
+	flow.comp_x = bound(flow.x,200,-200);	
+	flow.comp_y = bound(flow.y,200,-200);
+	debug[0] = flow.x;
+	debug[1] = flow.y;
 	
 
 
@@ -155,17 +157,15 @@ void taskOptflow(void)
 		stab.error_y = 0;
 	}
 
-	debug[2] = stab.cmd[rol];
-	debug[3] = stab.cmd[pit];
 }
 #endif
 
 
 //				 roll  pitch
-float KP1[2] = {0.8, 0.8};
-float KP2[2] = {2.0, 2.0};
-float KI[2]  = {1.2, 1.2};
-float KD[2]  = {1.8, 1.8};
+float KP1[2] = {0.6, 0.6};
+float KP2[2] = {1.8, 1.8};
+float KI[2]  = {1.0, 1.1};
+float KD[2]  = {1.6, 1.6};
 /*
 float KP2[2] = {1.8, 1.8};
 float KI[2]  = {0.1, 0.1};
@@ -180,8 +180,8 @@ void flow_stab(void)
 			if((flow.comp_y < 6.0) && (flow.comp_y > -6.0))
 				flow.comp_y = 0;
 
-			float error_vx = constrainf(-flow.comp_x,-40,40);
-			float error_vy = constrainf(flow.comp_y,-40,40);
+			float error_vx = constrainf(flow.comp_x,-40,40);
+			float error_vy = constrainf(-flow.comp_y,-40,40);
 			//float error_vx = -flow.x * flow.height/2;//cm/s
 			//float error_vy = flow.y * flow.height/2;
 			//debug[0] = error_vx;//+-60
@@ -200,6 +200,9 @@ void flow_stab(void)
 							constrainf((KD[pit] * (error_vy - old_error_vy)),-40,40);
 			stab.cmd[rol] = constrainf(stab.cmd[rol],-150,150);
 			stab.cmd[pit] = constrainf(stab.cmd[pit],-150,150);
+
+			debug[2] = stab.cmd[rol];
+			debug[3] = stab.cmd[pit];
 			//debug[1] = error_vx - old_error_vx;//+-15
 			old_error_vx = error_vx;
 			old_error_vy = error_vy;
