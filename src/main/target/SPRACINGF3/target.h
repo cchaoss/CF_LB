@@ -21,9 +21,9 @@
 
 #define NRF
 #define FBM320
+#define LED_FLASH
+#define WIFI_APP
 #define THRO_DIRECT
-#define VerSion	110
-
 
 #ifndef NRF
 #define BLACKBOX
@@ -31,15 +31,6 @@
 #define USE_FLASHFS//spi2 to 18MHz
 #define USE_FLASH_M25P16
 #endif
-
-#define LED0_GPIO   GPIOB
-#define LED0_PIN    Pin_11
-#define LED0_PERIPHERAL RCC_AHBPeriph_GPIOB
-
-#define BEEP_GPIO   GPIOC
-#define BEEP_PIN    Pin_15
-#define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
-#define BEEPER_INVERTED
 
 #define USABLE_TIMER_CHANNEL_COUNT 17
 
@@ -67,12 +58,20 @@
 //#define USE_MAG_HMC5883
 //#define MAG_HMC5883_ALIGN CW270_DEG
 
+//#define LED_STRIP
+//#define LED_STRIP_TIMER TIM1
 
-
-#define LED0
-#define BEEPER
-
-
+#define WS2811_GPIO                     GPIOA
+#define WS2811_GPIO_AHB_PERIPHERAL      RCC_AHBPeriph_GPIOA
+#define WS2811_GPIO_AF                  GPIO_AF_6
+#define WS2811_PIN                      GPIO_Pin_8
+#define WS2811_PIN_SOURCE               GPIO_PinSource8
+#define WS2811_TIMER                    TIM1
+#define WS2811_TIMER_APB2_PERIPHERAL    RCC_APB2Periph_TIM1
+#define WS2811_DMA_CHANNEL              DMA1_Channel2
+#define WS2811_IRQ                      DMA1_Channel2_IRQn
+#define WS2811_DMA_TC_FLAG              DMA1_FLAG_TC2
+#define WS2811_DMA_HANDLER_IDENTIFER    DMA1Channel2Descriptor
 
 #define USE_UART1
 #define USE_UART2
@@ -148,20 +147,6 @@
 #define ADC_CURRENT     ADC_CHANNEL1
 #define ADC_RSSI        ADC_CHANNEL2
 
-#define LED_STRIP
-#define LED_STRIP_TIMER TIM1
-
-#define WS2811_GPIO                     GPIOA
-#define WS2811_GPIO_AHB_PERIPHERAL      RCC_AHBPeriph_GPIOA
-#define WS2811_GPIO_AF                  GPIO_AF_6
-#define WS2811_PIN                      GPIO_Pin_8
-#define WS2811_PIN_SOURCE               GPIO_PinSource8
-#define WS2811_TIMER                    TIM1
-#define WS2811_TIMER_APB2_PERIPHERAL    RCC_APB2Periph_TIM1
-#define WS2811_DMA_CHANNEL              DMA1_Channel2
-#define WS2811_IRQ                      DMA1_Channel2_IRQn
-#define WS2811_DMA_TC_FLAG              DMA1_FLAG_TC2
-#define WS2811_DMA_HANDLER_IDENTIFER    DMA1Channel2Descriptor
 
 
 #define DEFAULT_RX_FEATURE FEATURE_RX_PPM
