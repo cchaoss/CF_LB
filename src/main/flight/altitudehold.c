@@ -109,11 +109,11 @@ static void applyMultirotorAltHold(void)
     } else {
         // slow alt changes, mostly used for aerial photography
         if (ABS(rcData[THROTTLE] - initialRawThrottleHold) > rcControlsConfig()->alt_hold_deadband) {
-            // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s
+            // set velocity proportional to stick movement +400 throttle gives ~ +50 cm/s (8 = 400/50)
 #ifdef THRO_DIRECT
             setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 4;
 #else
-			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 9;
+			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 8;
 #endif
             velocityControl = 1;
             isAltHoldChanged = 1;
@@ -162,7 +162,7 @@ void updateAltHoldState(void)
 	if((mspData.mspCmd & ALTHOLD) && FB.calibrate_finished)
 #else
 	if(mspData.mspCmd & ALTHOLD)
-#endif
+#endif//endif FBM320
 	{	
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
@@ -175,15 +175,15 @@ void updateAltHoldState(void)
 		}
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
 
-#else
-
+#else//else for THRO_DIRECT
+/*
 	static bool  alt_on = false,x = true;
 	static uint8_t i,j;
 	static uint32_t a,b;
 	if(mspData.mspCmd & ARM)
 	{
 		//手动降落贴地面不上下抖动不降落
-		if((rcData[3] < 1030) && (flag.height < -20.0)){
+		if((rcData[3] < 1030) && (flag.height < -20.0)) {
 			i++;
 			if(i > 65){
 				i = 65;
@@ -191,46 +191,50 @@ void updateAltHoldState(void)
 			}
 		}else i = 0;
 
-		if(rcData[3] > 1500){
+		//油们大于1500 0.5s后开定高
+		if(rcData[3] > 1500) {
 			if(x) {a = millis();x = false;}
 			b = millis();
-			if((b - a) > 550){
+			if((b - a) > 20){
 				alt_on = true;
 				flag.alt = true;
 			}
 		}else x = true;
 		j = 0;
 	}
-	else{
+
+	else {
 		j++;
-		if(j > 50){
-			j = 50;
+		if(j > 20) {
+			j = 20;
 			alt_on = false;
 			flag.alt = true;
 		}
 	}
-	
-	if(alt_on)debug[2] = 100;
-		else debug[2] = 0;
-	if(flag.alt)debug[3] = 100;
-		else debug[3] = 0;
+*/
+	static bool alt_on = false;
+	if(mspData.mspCmd & ARM) {
+		if(rcData[3] > 1520) alt_on = true;
+	}
+	else alt_on = false;
+
 #ifdef FBM320
 	if((alt_on && flag.alt) && FB.calibrate_finished)
 #else
-	if(alt_on && flag.alt)
+	if(alt_on && flag.alt)	
 #endif	
 	{	
 		if (!FLIGHT_MODE(BARO_MODE)) 
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1510;
-		    initialThrottleHold = 1510;
+		    initialRawThrottleHold = 1500;
+		    initialThrottleHold = 1500;
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
-#endif
+#endif//endif THRO_DIRECT
 
 #else
 
@@ -247,7 +251,7 @@ void updateAltHoldState(void)
         errorVelocityI = 0;
         altHoldThrottleAdjustment = 0;
     }
-#endif
+#endif//endif NRF
 
 }
 

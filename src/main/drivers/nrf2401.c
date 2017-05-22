@@ -97,24 +97,32 @@ bool nrf_rx(void)
 void rx_data_process(int16_t *buf)
 {
 	static uint8_t x = 0;
-	static bool arm_flag = false,roll_flag = false;
-	if(!strcmp("$M<",(char *)mspData.checkCode)){
-		if(mspData.mspCmd & ARM){//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+	static bool arm_flag = false,roll_flag = false,flag1=false;
+
+	if(!strcmp("$M<",(char *)mspData.checkCode)) {
+		//低电压不可以解锁，开机检测遥控为解锁状态需再次解锁
+		if(mspData.mspCmd & ARM) {
 			if(arm_flag && roll_flag)	mwArm();
 				else  mwDisarm();
-			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650){//侧翻保护
-				mwDisarm();roll_flag = false;
+			if(fabs(flag.pitch1) > 650 || fabs(flag.roll1) > 650) { //侧翻保护
+				mwDisarm();
+				roll_flag = false;
 			}
+
+			//遥感归中定高的处理
+			if(mspData.motor[THR] >= 1520) flag1 = true;
+			if(!flag1)	mspData.motor[THR] = 1150;
 		}		
-		else{	
+		else {				
 			mwDisarm();
+			flag1=false;
 			roll_flag = true;
 			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}
-		if(mspData.mspCmd & CALIBRATION){
+
+		if(mspData.mspCmd & CALIBRATION)
 			accSetCalibrationCycles(400);//mspData.mspCmd &= ~CALIBRATION;
-		}
 
 #if 1
 		//offline process
@@ -155,9 +163,8 @@ void rx_data_process(int16_t *buf)
 #endif
 
 		//give and bound the rc_stick data
-		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1000);
 		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
-			for(uint8_t i = 0;i<4;i++)	buf[i] = mspData.motor[i];
+			for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],1950,1000);
 
 		//just for beeper
 		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){

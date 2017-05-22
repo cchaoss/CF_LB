@@ -593,25 +593,26 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #ifdef NRF	
 	static uint8_t tx_flag = 0,b = 0;
 	static uint16_t m;
+
 	tx_flag++;
-	//if(flag.batt < 20 && millis() > 3000)	led_beep_sleep();//充电休眠，下个版本不需要
-	if(tx_flag <= 4){
+	if(tx_flag <= 4) {
 		//低电压降落+失控保护——use height
-		if(!nrf_rx() || flag.batt_low){
+		if(!nrf_rx() || flag.batt_low) {
 			if(mspData.mspCmd & ONLINE)	
 				mspData.mspCmd &= ~MOTOR;//在线模式控制电机转时遥控断电，电机一直转，无法控制
-			if(!flag.batt_low){
+			if(!flag.batt_low) {
 				mspData.motor[PIT] = 1500;
 				mspData.motor[ROL] = 1500;
 				mspData.motor[YA ] = 1500;
 			}
+
 #ifdef THRO_DIRECT
 			if(!FLIGHT_MODE(BARO_MODE)) {//开定高
 				rcData[3] = 1500;
 				mspData.mspCmd |= ALTHOLD;
 			}
 			m = rcData[3];
-			mspData.motor[THR] = m - 50;//
+			mspData.motor[THR] = m - 50;
 			if(flag.height < 90.0){	
 				mspData.mspCmd &= ~ALTHOLD;//关定高
 				b++;
@@ -623,15 +624,15 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 				else if(flag.batt < 95) mspData.motor[THR] = 1540;
 						else mspData.motor[THR] = 1480;
 			}else b = 0;
+
 #else
 
 			mspData.motor[THR] = 1000;//
-			if(flag.height < 50.0){	
+			if(flag.height < 50.0) {	
 				flag.alt = false;
-				b++;
-				if(b > 60){
+				if(b++ > 60) {
 					b = 60;
-					mspData.motor[THR] = 1100;
+					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
 				}
 				else if(flag.batt < 95) mspData.motor[THR] = 1470;
@@ -640,10 +641,14 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 #endif
 		}
 
-		if(tx_flag == 4)SetTX_Mode();
+		if(tx_flag == 4)	SetTX_Mode();
 	}
 
-	if(tx_flag > 4){nrf_tx();SetRX_Mode(); tx_flag = 0;}
+	if(tx_flag > 4) {
+		nrf_tx();
+		SetRX_Mode();
+		tx_flag = 0;
+	}
 	
 	//限制高度6m 左右
 	static uint8_t a;
@@ -659,7 +664,9 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 	//rx_process
 	rx_data_process(rcData); 
+
 #endif
+
 #if 0	//test i2c read and write
 /*
 	static uint8_t sta;
