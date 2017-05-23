@@ -96,7 +96,7 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
-	static uint8_t x = 0;
+	static uint8_t x,y;
 	static bool arm_flag = false,roll_flag = false,flag1=false;
 
 	if(!strcmp("$M<",(char *)mspData.checkCode)) {
@@ -110,12 +110,18 @@ void rx_data_process(int16_t *buf)
 			}
 
 			//遥感归中定高的处理
-			if(mspData.motor[THR] >= 1520) flag1 = true;
-			if(!flag1)	mspData.motor[THR] = 1150;
+			if(mspData.motor[THR] > 1530) flag1 = true;
+				else y+=2;
+			if(y > 150) y = 150;
+			if(!flag1)	mspData.motor[THR] = 1051+y;
 		}		
 		else {				
 			mwDisarm();
-			flag1=false;
+			mspData.motor[ROL] = 1500;
+			mspData.motor[PIT] = 1500;
+			mspData.motor[YA] = 1500;
+			y = 0;
+			flag1 = false;
 			roll_flag = true;
 			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
@@ -163,8 +169,9 @@ void rx_data_process(int16_t *buf)
 #endif
 
 		//give and bound the rc_stick data
+		for(uint8_t i = 0;i<4;i++)	mspData.motor[i] = bound(mspData.motor[i],1950,1000);
 		if(!((mspData.mspCmd & MOTOR) || (msp_328p.cmd == MOTOR_P)))//当要控制电机的时候，不把motor[]的值传给rcData
-			for(uint8_t i = 0;i<4;i++)	buf[i] = bound(mspData.motor[i],1950,1000);
+			for(uint8_t i = 0;i<4;i++)	buf[i] = mspData.motor[i];
 
 		//just for beeper
 		if(mspData.mspCmd & OFFLINE || mspData.mspCmd & ONLINE){

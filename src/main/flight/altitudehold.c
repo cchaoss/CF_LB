@@ -113,7 +113,7 @@ static void applyMultirotorAltHold(void)
 #ifdef THRO_DIRECT
             setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 4;
 #else
-			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 8;
+			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 6;
 #endif
             velocityControl = 1;
             isAltHoldChanged = 1;
@@ -176,45 +176,10 @@ void updateAltHoldState(void)
 	}else	DISABLE_FLIGHT_MODE(BARO_MODE);
 
 #else//else for THRO_DIRECT
-/*
-	static bool  alt_on = false,x = true;
-	static uint8_t i,j;
-	static uint32_t a,b;
-	if(mspData.mspCmd & ARM)
-	{
-		//手动降落贴地面不上下抖动不降落
-		if((rcData[3] < 1030) && (flag.height < -20.0)) {
-			i++;
-			if(i > 65){
-				i = 65;
-				flag.alt = false;
-			}
-		}else i = 0;
 
-		//油们大于1500 0.5s后开定高
-		if(rcData[3] > 1500) {
-			if(x) {a = millis();x = false;}
-			b = millis();
-			if((b - a) > 20){
-				alt_on = true;
-				flag.alt = true;
-			}
-		}else x = true;
-		j = 0;
-	}
-
-	else {
-		j++;
-		if(j > 20) {
-			j = 20;
-			alt_on = false;
-			flag.alt = true;
-		}
-	}
-*/
 	static bool alt_on = false;
 	if(mspData.mspCmd & ARM) {
-		if(rcData[3] > 1520) alt_on = true;
+		if(rcData[3] > 1530) alt_on = true;
 	}
 	else alt_on = false;
 
@@ -228,8 +193,8 @@ void updateAltHoldState(void)
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1500;
-		    initialThrottleHold = 1500;
+		    initialRawThrottleHold = 1530;
+		    initialThrottleHold = 1530;
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}

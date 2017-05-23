@@ -627,16 +627,17 @@ void calculateRxChannelsAndUpdateFailsafe(uint32_t currentTime)
 
 #else
 
-			mspData.motor[THR] = 1000;//
-			if(flag.height < 50.0) {	
+			mspData.motor[THR] = 1200;//
+			if(flag.height < 40.0) {	
 				flag.alt = false;
-				if(b++ > 60) {
+				b++;
+				if(b > 60) {
 					b = 60;
 					mspData.motor[THR] = 1000;
 					mspData.mspCmd &= ~ARM;
 				}
-				else if(flag.batt < 95) mspData.motor[THR] = 1470;
-						else mspData.motor[THR] = 1420;
+				else if(flag.batt < 95) mspData.motor[THR] = 1500;
+						else mspData.motor[THR] = 1450;
 			}else b = 0;
 #endif
 		}
