@@ -85,7 +85,7 @@ PG_RESET_TEMPLATE(pidProfile_t, pidProfile,
     .P8[PIDYAW] = 85,
     .I8[PIDYAW] = 45,
     .D8[PIDYAW] = 0,
-    .P8[PIDALT] = 60,//11/16
+    .P8[PIDALT] = 50,//11/16
     .I8[PIDALT] = 0,
     .D8[PIDALT] = 0,
     .P8[PIDPOS] = 15,   // POSHOLD_P * 100
@@ -101,7 +101,7 @@ PG_RESET_TEMPLATE(pidProfile_t, pidProfile,
     .I8[PIDLEVEL] = 10,
     .D8[PIDLEVEL] = 100,
     .P8[PIDMAG] = 40,
-    .P8[PIDVEL] = 120,//11/16
+    .P8[PIDVEL] = 110,//11/16
     .I8[PIDVEL] = 45,
     .D8[PIDVEL] = 1,
 

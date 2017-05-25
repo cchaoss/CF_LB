@@ -113,7 +113,7 @@ static void applyMultirotorAltHold(void)
 #ifdef THRO_DIRECT
             setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 4;
 #else
-			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 6;
+			setVelocity = (rcData[THROTTLE] - initialRawThrottleHold) / 5;
 #endif
             velocityControl = 1;
             isAltHoldChanged = 1;
@@ -125,7 +125,6 @@ static void applyMultirotorAltHold(void)
         rcCommand[THROTTLE] = constrain(initialThrottleHold + altHoldThrottleAdjustment, motorAndServoConfig()->minthrottle, motorAndServoConfig()->maxthrottle);
     }
 	rcData[11] = rcCommand[THROTTLE];//just for display.
-	
 }
 
 static void applyFixedWingAltHold(void)
@@ -179,7 +178,7 @@ void updateAltHoldState(void)
 
 	static bool alt_on = false;
 	if(mspData.mspCmd & ARM) {
-		if(rcData[3] > 1530) alt_on = true;
+		if(rcData[3] > 1600) alt_on = true;
 	}
 	else alt_on = false;
 
@@ -193,8 +192,9 @@ void updateAltHoldState(void)
 		{
 		    ENABLE_FLIGHT_MODE(BARO_MODE);
 		    AltHold = EstAlt;
-		    initialRawThrottleHold = 1530;
-		    initialThrottleHold = 1530;
+		    initialRawThrottleHold = 1500;
+			if(flag.batt > 116)	initialThrottleHold = 1480;
+				else initialThrottleHold = 1600;
 		    errorVelocityI = 0;
 		    altHoldThrottleAdjustment = 0;
 		}
@@ -267,7 +267,6 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
     // P
     error = setVel - vel_tmp;
     result = constrain((pidProfile()->P8[PIDVEL] * error / 32), -300, +300);
-
     // I
     errorVelocityI += (pidProfile()->I8[PIDVEL] * error);
     errorVelocityI = constrain(errorVelocityI, -(8192 * 200), (8192 * 200));
@@ -319,7 +318,6 @@ void calculateEstimatedAltitude(uint32_t currentTime)
         accAlt = 0;	
 	}
 	BaroAlt = FB.Altitude;
-	debug[0] = FB.Altitude;
 #else 
     if (!isBaroCalibrationComplete()) {
         performBaroCalibrationCycle();
@@ -376,7 +374,7 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 
 #ifdef NRF
 	flag.height = accAlt;
-	debug[1] = accAlt;//
+	debug[0] = accAlt;
 #endif
     imuResetAccelerationSum();
 

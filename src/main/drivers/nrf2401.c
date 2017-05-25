@@ -96,7 +96,7 @@ bool nrf_rx(void)
 
 void rx_data_process(int16_t *buf)
 {
-	static uint8_t x,y;
+	static uint8_t x;
 	static bool arm_flag = false,roll_flag = false,flag1=false;
 
 	if(!strcmp("$M<",(char *)mspData.checkCode)) {
@@ -110,19 +110,17 @@ void rx_data_process(int16_t *buf)
 			}
 
 			//遥感归中定高的处理
-			if(mspData.motor[THR] > 1530) flag1 = true;
-				else y+=2;
-			if(y > 150) y = 150;
-			if(!flag1)	mspData.motor[THR] = 1051+y;
+			if(mspData.motor[THR] > 1520) flag1 = true;
+			if(!flag1)	mspData.motor[THR] = 1150;
 		}		
 		else {				
 			mwDisarm();
 			mspData.motor[ROL] = 1500;
 			mspData.motor[PIT] = 1500;
 			mspData.motor[YA] = 1500;
-			y = 0;
 			flag1 = false;
 			roll_flag = true;
+			flag.alt = true;
 			if(flag.batt < 100) arm_flag = false;
 				else arm_flag = true;
 		}

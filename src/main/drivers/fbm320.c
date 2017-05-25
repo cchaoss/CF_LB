@@ -79,7 +79,7 @@ bool fbm320_init(void)
 	}
 }
 
-#define SCALE 0.4
+#define SCALE 0.5
 static uint32_t baroPressureSum;
 void taskFbm320(void)
 {
@@ -96,7 +96,7 @@ void taskFbm320(void)
 				baroPressureSum = recalculateBarometerTotal(SAMPLE_COUNT_MAX, baroPressureSum, FB.RP);
 				alt = Rel_Altitude(baroPressureSum/(SAMPLE_COUNT_MAX-1),FB.Reff_P) * 100;//unit:cm
 				FB.Altitude = SCALE*alt + (1-SCALE)*FB.Altitude;
-				//debug[3] = (int16_t)alt;
+				//debug[0] = FB.Altitude;
 				state = 0;
 				break;
 		default:break;

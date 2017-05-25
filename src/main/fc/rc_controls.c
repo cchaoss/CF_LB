@@ -78,7 +78,7 @@ STATIC_UNIT_TESTED uint32_t rcModeActivationMask; // one bit per mode defined in
 PG_RESET_TEMPLATE(rcControlsConfig_t, rcControlsConfig,
     .deadband = 5,
     .yaw_deadband = 20,
-    .alt_hold_deadband = 50, // 40
+    .alt_hold_deadband = 20, // 40
     .alt_hold_fast_change = 1,//速率模式,it make me confused.
     .yaw_control_direction = 1,
     .deadband3d_throttle = 50,

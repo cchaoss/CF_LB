@@ -173,7 +173,7 @@ cfTask_t cfTasks[] = {
     [TASK_FBM320] = {
         .taskName = "FBM320",
         .taskFunc = taskFbm320,
-        .desiredPeriod = 1000000 / 50,         // 100 Hz, every 10 ms
+        .desiredPeriod = 1000000 / 50,
         .staticPriority = TASK_PRIORITY_MEDIUM,
     },
 #endif
