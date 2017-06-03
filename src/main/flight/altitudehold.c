@@ -125,7 +125,6 @@ static void applyMultirotorAltHold(void)
 	rcCommand[THROTTLE] = bound(rcCommand[THROTTLE],1850,1050);//bound for slow down.
 	//rcData[11] = rcCommand[THROTTLE];//just for display.
 #endif
-	
 }
 
 static void applyFixedWingAltHold(void)
@@ -272,11 +271,6 @@ int32_t calculateAltHoldThrottleAdjustment(int32_t vel_tmp, float accZ_tmp, floa
     return result;
 }
 
-#ifdef PX4FLOW
-//#define SONAR
-int16_t sonarCfAltCm = 140;
-int16_t sonarMaxAltWithTiltCm = 280;
-#endif
 
 void calculateEstimatedAltitude(uint32_t currentTime)
 {
@@ -317,12 +311,9 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #endif
 
 #ifdef SONAR
-#ifdef PX4FLOW
-	sonarAlt = flow.height * 100;
-#else
     sonarAlt = sonarRead();
     sonarAlt = sonarCalculateAltitude(sonarAlt, getCosTiltAngle());
-#endif
+
 
     if (sonarAlt > 0 && sonarAlt < sonarCfAltCm) {
         // just use the SONAR
@@ -363,6 +354,9 @@ void calculateEstimatedAltitude(uint32_t currentTime)
 #ifdef NRF
 	flag.height = accAlt;
 #endif
+#ifdef PX4FLOW
+	flow.height = accAlt;
+#endif
     imuResetAccelerationSum();
 
 #ifdef BARO
@@ -400,7 +394,6 @@ void calculateEstimatedAltitude(uint32_t currentTime)
     altHoldThrottleAdjustment = calculateAltHoldThrottleAdjustment(vel_tmp, accZ_tmp, accZ_old);
 
     accZ_old = accZ_tmp;
-	//debug[3] = EstAlt;//display
 }
 
 int32_t altitudeHoldGetEstimatedAltitude(void)

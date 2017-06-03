@@ -368,9 +368,10 @@ void init(void)
     sonarGPIOConfig_t sonarGPIOConfig;
     if (feature(FEATURE_SONAR)) {
         sonarHardware = sonarGetHardwareConfiguration(batteryConfig()->currentMeterType);
-        sonarGPIOConfig.triggerGPIO = sonarHardware->trigger_gpio;
+		sonarGPIOConfig.gpio = SONAR_GPIO;
+        //sonarGPIOConfig.triggerGPIO = sonarHardware->trigger_gpio;
         sonarGPIOConfig.triggerPin = sonarHardware->trigger_pin;
-        sonarGPIOConfig.echoGPIO = sonarHardware->echo_gpio;
+        //sonarGPIOConfig.echoGPIO = sonarHardware->echo_gpio;
         sonarGPIOConfig.echoPin = sonarHardware->echo_pin;
         pwm_params.sonarGPIOConfig = &sonarGPIOConfig;
     }

@@ -59,7 +59,7 @@
 #ifdef NRF
 #include "drivers/nrf2401.h"
 #endif
-#ifdef OPTFLOW
+#ifdef PX4FLOW
 #include "drivers/optflow.h"
 #endif
 
@@ -385,7 +385,7 @@ STATIC_UNIT_TESTED void imuUpdateEulerAngles(void)
 	flag.pitch1= attitude.values.pitch;
 	flag.yaw1  = attitude.values.yaw;
 #endif
-#ifdef OPTFLOW
+#ifdef PX4FLOW
 	angle_flow.rol2 = attitude.values.roll;
 	angle_flow.pit2 = attitude.values.pitch;
 	angle_flow.yaw2 = attitude.values.yaw;
