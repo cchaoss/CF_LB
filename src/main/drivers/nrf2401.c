@@ -349,7 +349,7 @@ void nrf24l01HardwareInit(void)
 	LED.speed = Speed_2MHz;
 	
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
-	gpioInit(GPIOB,&LED);
+	//gpioInit(GPIOB,&LED);
 	
 	LED_A_ON;delay(80);LED_A_OFF;
 	LED_B_ON;delay(80);LED_B_OFF;
