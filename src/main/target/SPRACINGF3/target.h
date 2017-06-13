@@ -22,7 +22,7 @@
 #define NRF
 #define FBM320
 //#define THRO_DIRECT
-#define VerSion	110
+#define VerSion	112
 
 
 #ifndef NRF
